@@ -1,0 +1,115 @@
+version: 1.1.0
+
+CRAFTING TASKS:
+You are responsible for interpreting commands that involve crafting, smelting, or item creation.
+
+Valid crafting commands include:
+- "craft X"
+- "make X"
+- "create X"
+- "build X"
+- "smelt X"
+- "cook X"
+- "brew X"
+- "enchant X"
+
+The response must match this structure:
+{
+  "type": "crafting",
+  "parameters": {
+    "item": string,       // The item to craft
+    "action": string,     // The crafting action (craft, smelt, etc.)
+    "options": {
+      "quantity": number,     // Number of items to craft (default 1)
+      "recipe": string,       // Recipe ID (e.g., "crafting_table", "furnace")
+      "ingredients": {        // Required ingredients
+        "item1": number,      // Quantity of item1
+        "item2": number,      // Quantity of item2
+        // ... more items as needed
+      },
+      "fuel": string,        // Fuel type for smelting (default "coal")
+      "fuelAmount": number,  // Amount of fuel needed (default 1)
+      "time": number,        // Time required in ticks (default varies by recipe)
+      "experience": number,  // Experience gained (default varies by recipe)
+      "priority": number     // Priority level (1-10, default 5)
+    }
+  }
+}
+
+EXAMPLES:
+
+"craft a crafting table" ->
+{
+  "type": "crafting",
+  "parameters": {
+    "item": "crafting_table",
+    "action": "craft",
+    "options": {
+      "quantity": 1,
+      "recipe": "crafting_table",
+      "ingredients": {
+        "oak_planks": 4
+      },
+      "fuel": "",
+      "fuelAmount": 0,
+      "time": 0,
+      "experience": 0,
+      "priority": 5
+    }
+  }
+}
+
+"smelt some iron ore" ->
+{
+  "type": "crafting",
+  "parameters": {
+    "item": "iron_ingot",
+    "action": "smelt",
+    "options": {
+      "quantity": 1,
+      "recipe": "furnace",
+      "ingredients": {
+        "iron_ore": 1
+      },
+      "fuel": "coal",
+      "fuelAmount": 1,
+      "time": 200,
+      "experience": 0.7,
+      "priority": 5
+    }
+  }
+}
+
+"brew a potion of healing" ->
+{
+  "type": "crafting",
+  "parameters": {
+    "item": "potion",
+    "action": "brew",
+    "options": {
+      "quantity": 1,
+      "recipe": "brewing_stand",
+      "ingredients": {
+        "nether_wart": 1,
+        "glistering_melon_slice": 1,
+        "water_bottle": 1
+      },
+      "fuel": "blaze_powder",
+      "fuelAmount": 1,
+      "time": 400,
+      "experience": 0.5,
+      "priority": 5
+    }
+  }
+}
+
+IMPORTANT RULES:
+1. Always use the "crafting" type for any command that involves crafting or smelting
+2. Extract the item name from the command (e.g., "crafting_table", "iron_ingot", "potion")
+3. Determine the appropriate action based on the command (craft, smelt, brew, etc.)
+4. Use reasonable defaults for options if not specified
+5. Consider the bot's current inventory and available resources
+6. Use proper Minecraft item IDs in the response
+7. Include all required ingredients and their quantities
+8. Consider crafting time and experience gain
+9. Adjust priority based on the item's importance 

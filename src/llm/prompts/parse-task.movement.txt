@@ -1,0 +1,114 @@
+version: 1.1.0
+
+MOVEMENT TASKS:
+You are responsible for interpreting commands that involve movement, navigation, or positioning.
+
+Valid movement commands include:
+- "go to X"
+- "move to X"
+- "walk to X"
+- "run to X"
+- "jump to X"
+- "climb to X"
+- "swim to X"
+- "fly to X"
+- "teleport to X"
+- "follow X"
+- "lead X to Y"
+- "circle around X"
+- "patrol around X"
+- "wander around X"
+- "explore X"
+
+The response must match this structure:
+{
+  "type": "movement",
+  "parameters": {
+    "destination": string,  // The target location or entity
+    "action": string,       // The movement action (go, follow, patrol, etc.)
+    "options": {
+      "speed": string,          // Movement speed (walk, run, sprint)
+      "mode": string,           // Movement mode (ground, swim, fly, climb)
+      "pathfinding": boolean,   // Whether to use pathfinding (default true)
+      "avoidDanger": boolean,   // Whether to avoid dangerous areas (default true)
+      "maxDistance": number,    // Maximum distance to travel (default 1000)
+      "duration": number,       // Maximum duration in ticks (default 1200)
+      "radius": number,         // Radius for circular/patrol movement (default 10)
+      "height": number,         // Height for flying/climbing (default varies)
+      "priority": number        // Priority level (1-10, default 5)
+    }
+  }
+}
+
+EXAMPLES:
+
+"go to the village" ->
+{
+  "type": "movement",
+  "parameters": {
+    "destination": "village",
+    "action": "go",
+    "options": {
+      "speed": "walk",
+      "mode": "ground",
+      "pathfinding": true,
+      "avoidDanger": true,
+      "maxDistance": 1000,
+      "duration": 1200,
+      "radius": 0,
+      "height": 0,
+      "priority": 5
+    }
+  }
+}
+
+"follow the player" ->
+{
+  "type": "movement",
+  "parameters": {
+    "destination": "player",
+    "action": "follow",
+    "options": {
+      "speed": "run",
+      "mode": "ground",
+      "pathfinding": true,
+      "avoidDanger": true,
+      "maxDistance": 5,
+      "duration": 1200,
+      "radius": 0,
+      "height": 0,
+      "priority": 7
+    }
+  }
+}
+
+"patrol around the base" ->
+{
+  "type": "movement",
+  "parameters": {
+    "destination": "base",
+    "action": "patrol",
+    "options": {
+      "speed": "walk",
+      "mode": "ground",
+      "pathfinding": true,
+      "avoidDanger": true,
+      "maxDistance": 1000,
+      "duration": 1200,
+      "radius": 10,
+      "height": 0,
+      "priority": 4
+    }
+  }
+}
+
+IMPORTANT RULES:
+1. Always use the "movement" type for any command that involves changing position
+2. Extract the destination from the command (e.g., "village", "player", "base")
+3. Determine the appropriate action based on the command (go, follow, patrol, etc.)
+4. Use reasonable defaults for options if not specified
+5. Consider the bot's current position and environment
+6. Use proper Minecraft location/entity IDs in the response
+7. Adjust speed and mode based on the situation
+8. Consider obstacles and terrain when setting options
+9. Adjust priority based on the importance of the movement 

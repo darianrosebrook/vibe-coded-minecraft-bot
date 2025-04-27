@@ -1,0 +1,345 @@
+import { Bot } from 'mineflayer';
+import { Vec3 } from 'vec3';
+import { GameState } from '../../llm/context/manager';
+import { ContextManager } from '../../llm/context/manager';
+import { mlMetrics } from '../../utils/observability/metrics';
+import { ResourceNeedPredictor, PlayerRequestPredictor, TaskDurationPredictor } from './models';
+import { EnhancedGameState } from './types';
+import { saveModel, loadModel, deserializeModel } from './serialization';
+import { Biome } from 'prismarine-biome';
+
+interface MLStatePrediction {
+  resourceNeeds: {
+    type: string;
+    quantity: number;
+    confidence: number;
+  }[];
+  playerRequests: {
+    type: string;
+    confidence: number;
+    expectedTime: number;
+  }[];
+  taskDurations: {
+    taskType: string;
+    expectedDuration: number;
+    confidence: number;
+  }[];
+}
+
+interface ContextWeight {
+  relevance: number;
+  temporalDecay: number;
+  priority: number;
+}
+
+// State space definition
+export interface MinecraftState {
+    position: Vec3;
+    inventory: {
+        items: Array<{
+            type: string;
+            quantity: number;
+        }>;
+        totalSlots: number;
+        usedSlots: number;
+    };
+    health: number;
+    food: number;
+    nearbyBlocks: Array<{
+        type: string;
+        position: Vec3;
+    }>;
+    nearbyEntities: Array<{
+        type: string;
+        position: Vec3;
+    }>;
+    biome: {
+        name: string;
+        temperature: number;
+        rainfall: number;
+    };
+    timeOfDay: number;
+}
+
+export class MLStateManager {
+  private contextManager: ContextManager;
+  private predictions: MLStatePrediction;
+  private contextWeights: Map<string, ContextWeight>;
+  private lastUpdateTime: number;
+  private predictionInterval: number;
+  private decayRate: number;
+  private resourceNeedPredictor: ResourceNeedPredictor;
+  private playerRequestPredictor: PlayerRequestPredictor;
+  private taskDurationPredictor: TaskDurationPredictor;
+  private bot: Bot;
+  private gameState: MinecraftState;
+
+  constructor(bot: Bot) {
+    this.bot = bot;
+    this.gameState = this.initializeGameState();
+    this.contextManager = new ContextManager(bot);
+    this.predictionInterval = 5000; // 5 seconds
+    this.decayRate = 0.1; // 10% decay per interval
+    this.lastUpdateTime = Date.now();
+    this.predictions = {
+      resourceNeeds: [],
+      playerRequests: [],
+      taskDurations: []
+    };
+    this.contextWeights = new Map();
+    
+    // Initialize predictors
+    this.resourceNeedPredictor = new ResourceNeedPredictor();
+    this.playerRequestPredictor = new PlayerRequestPredictor();
+    this.taskDurationPredictor = new TaskDurationPredictor();
+  }
+
+  public async getState(): Promise<EnhancedGameState> {
+    this.gameState.timestamp = Date.now();
+    this.gameState.players = {};
+    for (const player of Object.values(this.bot.players)) {
+      this.gameState.players[player.username] = {
+        username: player.username,
+        position: player.entity.position, 
+      };
+    }
+    return this.gameState;
+  }
+
+  public convertToGameState(enhancedState: EnhancedGameState): GameState {
+    const biome = this.bot.world.getBiome(enhancedState.position);
+    return {
+      position: enhancedState.position,
+      health: this.bot.health,
+      food: this.bot.food,
+      inventory: {
+        items: enhancedState.inventory.items().map(item => ({
+          type: item.name,
+          quantity: item.count
+        })),
+        totalSlots: 36,
+        usedSlots: 36 - enhancedState.inventory.emptySlots()
+      },
+      biome: {
+        name: biome.name,
+        temperature: biome.temperature,
+        rainfall: biome.rainfall
+      },
+      timeOfDay: this.bot.time.timeOfDay,
+      isRaining: this.bot.isRaining,
+      nearbyBlocks: this.bot.findBlocks({
+        maxDistance: 16,
+        count: 10
+      }).map(block => ({
+        type: block.name,
+        position: block.position
+      })),
+      nearbyEntities: Object.values(enhancedState.players).map(player => ({
+        type: 'player',
+        position: player.position,
+        distance: player.position.distanceTo(enhancedState.position)
+      })),
+      movement: {
+        velocity: this.bot.entity.velocity,
+        yaw: this.bot.entity.yaw,
+        pitch: this.bot.entity.pitch,
+        control: {
+          sprint: this.bot.controlState.sprint,
+          sneak: this.bot.controlState.sneak
+        }
+      },
+      environment: {
+        blockAtFeet: this.bot.blockAt(this.bot.entity.position.offset(0, -1, 0)).name,
+        blockAtHead: this.bot.blockAt(this.bot.entity.position.offset(0, 1, 0)).name,
+        lightLevel: this.bot.blockAt(this.bot.entity.position).light,
+        isInWater: this.bot.isInWater,
+        onGround: this.bot.entity.onGround
+      },
+      recentTasks: enhancedState.tasks.map(task => ({
+        type: task.type,
+        parameters: {},
+        status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
+        timestamp: task.startTime
+      }))
+    };
+  }
+
+  public updateState(state: Partial<EnhancedGameState>): void {
+    this.gameState = {
+      ...this.gameState,
+      ...state
+    };
+  }
+
+  public async updateState(): Promise<void> {
+    const currentTime = Date.now();
+    if (currentTime - this.lastUpdateTime < this.predictionInterval) {
+      return;
+    }
+
+    const startTime = Date.now();
+    const gameState = await this.contextManager.getGameState();
+    
+    await this.updatePredictions(gameState);
+    await this.updateContextWeights(gameState);
+    
+    this.lastUpdateTime = currentTime;
+    
+    // Update metrics
+    mlMetrics.stateUpdates.inc({ type: 'full_update' });
+    mlMetrics.predictionLatency.observe(
+      { type: 'full_update' },
+      (Date.now() - startTime) / 1000
+    );
+  }
+
+  private async updatePredictions(gameState: GameState): Promise<void> {
+    const startTime = Date.now();
+    
+    // Predict resource needs based on current state and recent tasks
+    this.predictions.resourceNeeds = await this.resourceNeedPredictor.predict(gameState);
+    mlMetrics.predictionLatency.observe(
+      { type: 'resource_needs' },
+      (Date.now() - startTime) / 1000
+    );
+    
+    // Predict likely player requests based on context
+    this.predictions.playerRequests = await this.playerRequestPredictor.predict(gameState);
+    mlMetrics.predictionLatency.observe(
+      { type: 'player_requests' },
+      (Date.now() - startTime) / 1000
+    );
+    
+    // Predict task durations based on historical data
+    this.predictions.taskDurations = await this.taskDurationPredictor.predict(gameState);
+    mlMetrics.predictionLatency.observe(
+      { type: 'task_durations' },
+      (Date.now() - startTime) / 1000
+    );
+
+    // Update prediction accuracy metrics
+    this.updatePredictionAccuracy();
+  }
+
+  private updatePredictionAccuracy(): void {
+    // Calculate and update accuracy metrics for each prediction type
+    const resourceAccuracy = this.calculateResourcePredictionAccuracy();
+    const requestAccuracy = this.calculateRequestPredictionAccuracy();
+    const durationAccuracy = this.calculateDurationPredictionAccuracy();
+
+    mlMetrics.predictionAccuracy.set({ type: 'resource_needs' }, resourceAccuracy);
+    mlMetrics.predictionAccuracy.set({ type: 'player_requests' }, requestAccuracy);
+    mlMetrics.predictionAccuracy.set({ type: 'task_durations' }, durationAccuracy);
+  }
+
+  private calculateResourcePredictionAccuracy(): number {
+    // TODO: Implement actual accuracy calculation based on historical data
+    return 0.8; // Placeholder
+  }
+
+  private calculateRequestPredictionAccuracy(): number {
+    // TODO: Implement actual accuracy calculation based on historical data
+    return 0.7; // Placeholder
+  }
+
+  private calculateDurationPredictionAccuracy(): number {
+    // TODO: Implement actual accuracy calculation based on historical data
+    return 0.75; // Placeholder
+  }
+
+  private async updateContextWeights(gameState: GameState): Promise<void> {
+    // Update weights for different context aspects
+    const aspects = ['inventory', 'position', 'health', 'nearbyEntities', 'timeOfDay'];
+    
+    for (const aspect of aspects) {
+      const weight = await this.calculateContextWeight(aspect, gameState);
+      this.contextWeights.set(aspect, weight);
+    }
+  }
+
+  private async calculateContextWeight(
+    aspect: string,
+    gameState: GameState
+  ): Promise<ContextWeight> {
+    // Calculate weight based on aspect importance and recent changes
+    let relevance = 1.0;
+    let priority = 1.0;
+
+    switch (aspect) {
+      case 'inventory':
+        // Higher weight if inventory is getting full
+        const inventoryRatio = gameState.inventory.usedSlots / gameState.inventory.totalSlots;
+        relevance = Math.min(1.0, inventoryRatio * 1.5);
+        priority = inventoryRatio > 0.8 ? 1.5 : 1.0;
+        break;
+      case 'health':
+        // Higher weight if health is low
+        relevance = Math.max(0.5, 1.0 - (gameState.health / 20));
+        priority = gameState.health < 10 ? 1.5 : 1.0;
+        break;
+      case 'nearbyEntities':
+        // Higher weight if there are nearby entities
+        relevance = Math.min(1.0, gameState.nearbyEntities.length / 10);
+        priority = gameState.nearbyEntities.some(e => e.isHostile) ? 1.5 : 1.0;
+        break;
+      case 'timeOfDay':
+        // Higher weight during dangerous times (night)
+        const isDay = gameState.timeOfDay < 13000 || gameState.timeOfDay > 23000;
+        relevance = isDay ? 0.5 : 1.0;
+        priority = isDay ? 1.0 : 1.2;
+        break;
+    }
+
+    return {
+      relevance,
+      temporalDecay: this.decayRate,
+      priority
+    };
+  }
+
+  public getPredictions(): MLStatePrediction {
+    return this.predictions;
+  }
+
+  public getContextWeights(): Map<string, ContextWeight> {
+    return this.contextWeights;
+  }
+
+  private initializeGameState(): MinecraftState {
+    return {
+      position: new Vec3(0, 64, 0),
+      health: 20,
+      food: 20,
+      inventory: {
+        items: [],
+        totalSlots: 36,
+        usedSlots: 0
+      },
+      biome: {
+        name: 'plains',
+        temperature: 0.8,
+        rainfall: 0.4
+      },
+      timeOfDay: 0,
+      nearbyBlocks: [],
+      nearbyEntities: [],
+      movement: {
+        velocity: new Vec3(0, 0, 0),
+        yaw: 0,
+        pitch: 0,
+        control: {
+          sprint: false,
+          sneak: false
+        }
+      },
+      environment: {
+        blockAtFeet: 'grass',
+        blockAtHead: 'air',
+        lightLevel: 15,
+        isInWater: false,
+        onGround: true
+      },
+      recentTasks: []
+    };
+  }
+} 

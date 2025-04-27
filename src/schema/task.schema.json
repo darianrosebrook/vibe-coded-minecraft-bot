@@ -1,0 +1,455 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["mining", "farming", "navigation", "inventory", "redstone", "query", "chat", "crafting", "gathering", "processing", "construction", "exploration", "storage", "combat"]
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "block": {
+          "type": "string",
+          "description": "The type of block to interact with"
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "The quantity of items to collect",
+          "minimum": 1
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "z": { "type": "number" }
+          }
+        },
+        "cropType": {
+          "type": "string",
+          "enum": ["wheat", "carrots", "potatoes", "beetroot"]
+        },
+        "action": {
+          "type": "string",
+          "enum": ["toggle", "monitor", "manage_farm"],
+          "description": "The redstone action to perform"
+        },
+        "target": {
+          "type": "object",
+          "description": "The redstone device or circuit to interact with",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["lever", "button", "pressure_plate", "redstone_torch", "redstone_block", "repeater", "comparator"]
+            },
+            "position": {
+              "type": "object",
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" },
+                "z": { "type": "number" }
+              }
+            },
+            "state": { "type": "boolean" }
+          }
+        },
+        "circuit": {
+          "type": "object",
+          "description": "Redstone circuit configuration",
+          "properties": {
+            "devices": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["lever", "button", "pressure_plate", "redstone_torch", "redstone_block", "repeater", "comparator"]
+                  },
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": { "type": "number" },
+                      "y": { "type": "number" },
+                      "z": { "type": "number" }
+                    }
+                  },
+                  "state": { "type": "boolean" }
+                }
+              }
+            },
+            "connections": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": { "type": "integer" },
+                  "to": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "farmConfig": {
+          "type": "object",
+          "description": "Automated farm configuration",
+          "properties": {
+            "cropTypes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "radius": { "type": "number" },
+            "checkInterval": { "type": "number" },
+            "requiresWater": { "type": "boolean" },
+            "minWaterBlocks": { "type": "number" }
+          }
+        },
+        "queryType": {
+          "type": "string",
+          "enum": ["location", "inventory", "health", "time", "weather", "biome"],
+          "description": "The type of query to perform"
+        },
+        "message": {
+          "type": "string",
+          "description": "The message to process"
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "lastMessage": {
+              "type": "string",
+              "description": "The previous message in the conversation"
+            },
+            "playerName": {
+              "type": "string",
+              "description": "The name of the player sending the message"
+            },
+            "botState": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "z": { "type": "number" }
+                  }
+                },
+                "health": { "type": "number" },
+                "food": { "type": "number" },
+                "inventory": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "count": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "itemType": { "type": "string" },
+        "containerLocation": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "z": { "type": "number" }
+          }
+        },
+        "targetContainer": {
+          "type": "string",
+          "enum": ["chest", "barrel", "shulker_box", "hopper", "dispenser", "dropper"]
+        },
+        "category": {
+          "type": "string",
+          "enum": ["tools", "weapons", "armor", "food", "blocks", "resources", "misc"]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "parameters": { "type": "object" },
+              "required": { "type": "boolean" }
+            },
+            "required": ["type", "parameters"]
+          }
+        },
+        "requirements": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "quantity": { "type": "integer", "minimum": 1 },
+                  "required": { "type": "boolean" }
+                },
+                "required": ["type", "quantity"]
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "material": { "type": "string" },
+                  "required": { "type": "boolean" }
+                },
+                "required": ["type", "material"]
+              }
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "quantity": { "type": "integer", "minimum": 1 },
+                  "required": { "type": "boolean" }
+                },
+                "required": ["type", "quantity"]
+              }
+            },
+            "entities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "quantity": { "type": "integer", "minimum": 1 },
+                  "required": { "type": "boolean" }
+                },
+                "required": ["type", "quantity"]
+              }
+            }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "preChecks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "condition": { "type": "string" },
+                  "error": { "type": "string" }
+                },
+                "required": ["type", "condition", "error"]
+              }
+            },
+            "postChecks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "condition": { "type": "string" },
+                  "error": { "type": "string" }
+                },
+                "required": ["type", "condition", "error"]
+              }
+            }
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 50
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "default": 30000
+        },
+        "retry": {
+          "type": "object",
+          "properties": {
+            "maxAttempts": { "type": "integer", "minimum": 0, "default": 3 },
+            "backoff": { "type": "number", "minimum": 1, "default": 2 },
+            "maxDelay": { "type": "integer", "minimum": 1000, "default": 30000 }
+          }
+        }
+      }
+    }
+  },
+  "required": ["type", "parameters"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "mining" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": ["block"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "farming" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": ["cropType", "action"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "navigation" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "inventory" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": ["action", "itemType"],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": ["store", "retrieve", "organize", "drop", "craft", "check", "count", "sort", "transfer"]
+              },
+              "itemType": { "type": "string" },
+              "quantity": { 
+                "type": "integer",
+                "minimum": 1
+              },
+              "containerLocation": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "z": { "type": "number" }
+                }
+              },
+              "targetContainer": {
+                "type": "string",
+                "enum": ["chest", "barrel", "shulker_box", "hopper", "dispenser", "dropper"]
+              },
+              "category": {
+                "type": "string",
+                "enum": ["tools", "weapons", "armor", "food", "blocks", "resources", "misc"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "redstone" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": ["action"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "query" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": ["queryType"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": { "const": "crafting" }
+        }
+      },
+      "then": {
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "required": ["itemType", "quantity", "requirements"],
+            "properties": {
+              "itemType": { "type": "string" },
+              "quantity": { "type": "integer", "minimum": 1 },
+              "requirements": {
+                "type": "object",
+                "required": ["items", "tools"],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string" },
+                        "quantity": { "type": "integer", "minimum": 1 }
+                      },
+                      "required": ["type", "quantity"]
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string" },
+                        "material": { "type": "string" }
+                      },
+                      "required": ["type", "material"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+} 

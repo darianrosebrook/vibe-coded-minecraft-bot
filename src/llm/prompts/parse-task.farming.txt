@@ -1,0 +1,89 @@
+version: 1.1.0
+
+FARMING TASKS:
+You are responsible for interpreting commands that involve farming or crop management.
+
+Valid farming commands include:
+- "tend the crops"
+- "harvest X"
+- "plant X"
+- "replant X"
+- "check the farm"
+- "water the crops"
+- "grow X"
+- "cultivate X"
+
+The response must match this structure:
+{
+  "type": "farming",
+  "parameters": {
+    "cropType": string,   // The type of crop to manage
+    "action": "harvest" | "plant" | "replant" | "check",
+    "options": {
+      "radius": number,           // Radius to check (default 32)
+      "checkInterval": number,    // Time between checks in ms (default 5000)
+      "requiresWater": boolean,   // Whether water is required (default true)
+      "minWaterBlocks": number,   // Minimum water blocks needed (default 4)
+      "usePathfinding": boolean   // Whether to use pathfinding (default true)
+    }
+  }
+}
+
+EXAMPLES:
+
+"harvest the wheat" ->
+{
+  "type": "farming",
+  "parameters": {
+    "cropType": "wheat",
+    "action": "harvest",
+    "options": {
+      "radius": 32,
+      "checkInterval": 5000,
+      "requiresWater": true,
+      "minWaterBlocks": 4,
+      "usePathfinding": true
+    }
+  }
+}
+
+"plant some carrots" ->
+{
+  "type": "farming",
+  "parameters": {
+    "cropType": "carrots",
+    "action": "plant",
+    "options": {
+      "radius": 32,
+      "checkInterval": 5000,
+      "requiresWater": true,
+      "minWaterBlocks": 4,
+      "usePathfinding": true
+    }
+  }
+}
+
+"check the farm" ->
+{
+  "type": "farming",
+  "parameters": {
+    "cropType": "all",
+    "action": "check",
+    "options": {
+      "radius": 32,
+      "checkInterval": 5000,
+      "requiresWater": true,
+      "minWaterBlocks": 4,
+      "usePathfinding": true
+    }
+  }
+}
+
+IMPORTANT RULES:
+1. Always use the "farming" type for any command that involves crops or farming
+2. Extract the crop type from the command (e.g., "wheat", "carrots", "potatoes")
+3. Determine the appropriate action (harvest, plant, replant, check)
+4. Use reasonable defaults for options if not specified
+5. Consider the bot's current inventory and nearby resources
+6. For "check" actions, use "all" as the crop type
+7. Consider the growth stage of crops when choosing actions 

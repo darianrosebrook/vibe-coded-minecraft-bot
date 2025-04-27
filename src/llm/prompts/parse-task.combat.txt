@@ -1,0 +1,113 @@
+version: 1.1.0
+
+COMBAT TASKS:
+You are responsible for interpreting commands that involve combat, fighting, or attacking.
+
+Valid combat commands include:
+- "attack X"
+- "fight X"
+- "kill X"
+- "defeat X"
+- "defend against X"
+- "protect from X"
+- "hunt X"
+- "chase X"
+- "retreat from X"
+- "flee from X"
+
+The response must match this structure:
+{
+  "type": "combat",
+  "parameters": {
+    "target": string,     // The entity to fight
+    "action": string,     // The combat action (attack, defend, flee)
+    "options": {
+      "weapon": string,       // Preferred weapon type (default "best_available")
+      "armor": string,        // Preferred armor type (default "best_available")
+      "strategy": string,     // Combat strategy (melee, ranged, defensive)
+      "distance": number,     // Preferred combat distance (default varies by target)
+      "duration": number,     // Maximum fight duration in ticks (default 1200)
+      "healthThreshold": number, // Health percentage to retreat at (default 20)
+      "usePotions": boolean,  // Whether to use potions (default true)
+      "useShield": boolean,   // Whether to use shield (default true)
+      "useBow": boolean,      // Whether to use bow if available (default true)
+      "priority": number      // Priority level (1-10, default 5)
+    }
+  }
+}
+
+EXAMPLES:
+
+"attack that zombie" ->
+{
+  "type": "combat",
+  "parameters": {
+    "target": "zombie",
+    "action": "attack",
+    "options": {
+      "weapon": "best_available",
+      "armor": "best_available",
+      "strategy": "melee",
+      "distance": 2,
+      "duration": 1200,
+      "healthThreshold": 20,
+      "usePotions": true,
+      "useShield": true,
+      "useBow": false,
+      "priority": 5
+    }
+  }
+}
+
+"defend against the skeleton" ->
+{
+  "type": "combat",
+  "parameters": {
+    "target": "skeleton",
+    "action": "defend",
+    "options": {
+      "weapon": "bow",
+      "armor": "best_available",
+      "strategy": "ranged",
+      "distance": 8,
+      "duration": 1200,
+      "healthThreshold": 20,
+      "usePotions": true,
+      "useShield": true,
+      "useBow": true,
+      "priority": 5
+    }
+  }
+}
+
+"flee from the creeper" ->
+{
+  "type": "combat",
+  "parameters": {
+    "target": "creeper",
+    "action": "flee",
+    "options": {
+      "weapon": "none",
+      "armor": "best_available",
+      "strategy": "defensive",
+      "distance": 16,
+      "duration": 600,
+      "healthThreshold": 50,
+      "usePotions": true,
+      "useShield": true,
+      "useBow": false,
+      "priority": 8
+    }
+  }
+}
+
+IMPORTANT RULES:
+1. Always use the "combat" type for any command that involves fighting or combat
+2. Extract the target entity from the command (e.g., "zombie", "skeleton", "creeper")
+3. Determine the appropriate action based on the command (attack, defend, flee)
+4. Use reasonable defaults for options if not specified
+5. Consider the bot's current equipment and health
+6. Use proper Minecraft entity IDs in the response
+7. Adjust strategy based on the target's behavior
+8. Consider the environment and available cover
+9. Adjust priority based on the threat level 

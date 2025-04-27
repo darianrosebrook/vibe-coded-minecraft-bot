@@ -1,0 +1,63 @@
+services:
+  bot:
+    build:
+      context: .
+      target: production
+    environment:
+      - NODE_ENV=production
+      - MINECRAFT_HOST=${MINECRAFT_HOST}
+      - MINECRAFT_PORT=${MINECRAFT_PORT}
+      - MINECRAFT_USERNAME=${MINECRAFT_USERNAME}
+      - OLLAMA_HOST=http://ollama:11434
+    ports:
+      - "3000:3000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: always
+    networks:
+      - bot-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: always
+    networks:
+      - bot-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  bot-network:
+    driver: bridge 

@@ -1,0 +1,131 @@
+version: 1.1.0
+
+Example Commands and Responses:
+
+1. Navigation Examples:
+   "go to my base" ->
+   {
+     "type": "navigation",
+     "parameters": {
+       "location": {
+         "x": 100,
+         "y": 64,
+         "z": -200
+       },
+       "options": {
+         "avoidObstacles": true,
+         "useExistingPaths": true,
+         "minimizeElevation": true,
+         "allowSwimming": true,
+         "allowClimbing": true
+       }
+     }
+   }
+
+   "explore the area" ->
+   {
+     "type": "navigation",
+     "parameters": {
+       "location": {
+         "x": 0,
+         "y": 64,
+         "z": 0
+       },
+       "options": {
+         "avoidObstacles": true,
+         "useExistingPaths": false,
+         "minimizeElevation": false,
+         "allowSwimming": true,
+         "allowClimbing": true
+       }
+     }
+   }
+
+2. Query Examples:
+   "what's in your inventory?" ->
+   {
+     "type": "query",
+     "parameters": {
+       "queryType": "inventory",
+       "filters": {}
+     }
+   }
+
+   "what's nearby?" ->
+   {
+     "type": "query",
+     "parameters": {
+       "queryType": "nearby",
+       "filters": {
+         "radius": 16
+       }
+     }
+   }
+
+3. Mining Examples:
+   "mine 64 cobblestone" ->
+   {
+     "type": "mining",
+     "parameters": {
+       "blockType": "cobblestone",
+       "quantity": 64,
+       "tool": "pickaxe",
+       "preferredYLevel": 64
+     }
+   }
+
+4. Farming Examples:
+   "tend the wheat farm" ->
+   {
+     "type": "farming",
+     "parameters": {
+       "cropType": "wheat",
+       "radius": 32,
+       "checkInterval": 5000,
+       "requiresWater": true,
+       "minWaterBlocks": 4
+     }
+   }
+
+5. Redstone Examples:
+   "toggle the lever at 100 64 -200" ->
+   {
+     "type": "redstone",
+     "parameters": {
+       "action": "toggle",
+       "target": {
+         "type": "lever",
+         "position": {
+           "x": 100,
+           "y": 64,
+           "z": -200
+         },
+         "state": false
+       }
+     }
+   }
+
+6. Chat Examples:
+   "tell me about yourself" ->
+   {
+     "type": "chat",
+     "parameters": {
+       "message": "I am a Minecraft bot that can help with various tasks like mining, farming, and navigation. I can also answer questions about my status and surroundings."
+     }
+   }
+
+NAVIGATION TASKS (CORRECT):
+"come here" -> {"type":"navigation","parameters":{}}
+"follow me" -> {"type":"navigation","parameters":{}}
+"can you find me" -> {"type":"navigation","parameters":{}}
+"where are you" -> {"type":"navigation","parameters":{}}
+
+QUERY TASKS (CORRECT):
+"what are your exact coordinates?" -> {"type":"query","parameters":{"queryType":"location"}}
+"how many diamonds do you have?" -> {"type":"query","parameters":{"queryType":"inventory"}}
+"what is your current health?" -> {"type":"query","parameters":{"queryType":"health"}}
+
+INCORRECT USAGE (DO NOT DO THIS):
+"can you find me" -> {"type":"query","parameters":{"queryType":"location"}}  # WRONG
+"where are you" -> {"type":"query","parameters":{"queryType":"location"}}  # WRONG
+"come here" -> {"type":"query","parameters":{"queryType":"location"}}  # WRONG 
