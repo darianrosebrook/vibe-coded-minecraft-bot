@@ -1,4 +1,4 @@
-import { Vec3, BlockState } from './common';
+import { Vec3, BlockState } from "./common";
 
 export interface WorldMap {
   chunks: Map<string, ChunkData>;
@@ -38,8 +38,8 @@ export interface BiomeData {
 
 export interface WorldState {
   time: number;
-  weather: 'clear' | 'rain' | 'thunder';
-  difficulty: 'peaceful' | 'easy' | 'normal' | 'hard';
-  gameMode: 'survival' | 'creative' | 'adventure' | 'spectator';
-  dimension: 'overworld' | 'nether' | 'end';
-} 
+  weather: "clear" | "rain" | "thunder";
+  difficulty: "peaceful" | "easy" | "normal" | "hard";
+  gameMode: "survival" | "creative" | "adventure" | "spectator";
+  dimension: "overworld" | "nether" | "end";
+}

@@ -1,12 +1,11 @@
-import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
 import { GameState } from '../../llm/context/manager';
 import { ContextManager } from '../../llm/context/manager';
 import { mlMetrics } from '../../utils/observability/metrics';
 import { ResourceNeedPredictor, PlayerRequestPredictor, TaskDurationPredictor } from './models';
 import { EnhancedGameState } from './types';
-import { saveModel, loadModel, deserializeModel } from './serialization';
-import { Biome } from 'prismarine-biome';
+import { MinecraftBot } from '../../bot/bot';
+import { Bot as MineflayerBot } from 'mineflayer';
 
 interface MLStatePrediction {
   resourceNeeds: {
@@ -34,31 +33,57 @@ interface ContextWeight {
 
 // State space definition
 export interface MinecraftState {
+  timestamp?: number;
+  players?: Record<string, { username: string; position: Vec3 }>;
+  position: Vec3;
+  inventory: {
+    items: Array<{
+      type: string;
+      quantity: number;
+    }>;
+    totalSlots: number;
+    usedSlots: number;
+  };
+  health: number;
+  food: number;
+  nearbyBlocks: Array<{
+    type: string;
     position: Vec3;
-    inventory: {
-        items: Array<{
-            type: string;
-            quantity: number;
-        }>;
-        totalSlots: number;
-        usedSlots: number;
+  }>;
+  nearbyEntities: Array<{
+    type: string;
+    position: Vec3;
+    distance: number;
+  }>;
+  biome: {
+    name: string;
+    temperature: number;
+    rainfall: number;
+  };
+  timeOfDay: number;
+  isRaining?: boolean;
+  movement?: {
+    velocity: Vec3;
+    yaw: number;
+    pitch: number;
+    control: {
+      sprint: boolean;
+      sneak: boolean;
     };
-    health: number;
-    food: number;
-    nearbyBlocks: Array<{
-        type: string;
-        position: Vec3;
-    }>;
-    nearbyEntities: Array<{
-        type: string;
-        position: Vec3;
-    }>;
-    biome: {
-        name: string;
-        temperature: number;
-        rainfall: number;
-    };
-    timeOfDay: number;
+  };
+  environment?: {
+    blockAtFeet: string;
+    blockAtHead: string;
+    lightLevel: number;
+    isInWater: boolean;
+    onGround: boolean;
+  };
+  recentTasks?: Array<{
+    type: string;
+    parameters: Record<string, any>;
+    status: 'success' | 'failure' | 'in_progress';
+    timestamp: number;
+  }>;
 }
 
 export class MLStateManager {
@@ -71,13 +96,15 @@ export class MLStateManager {
   private resourceNeedPredictor: ResourceNeedPredictor;
   private playerRequestPredictor: PlayerRequestPredictor;
   private taskDurationPredictor: TaskDurationPredictor;
-  private bot: Bot;
+  private bot: MinecraftBot;
+  private mineflayerBot: MineflayerBot;
   private gameState: MinecraftState;
 
-  constructor(bot: Bot) {
+  constructor(bot: MinecraftBot) {
     this.bot = bot;
+    this.mineflayerBot = bot.getMineflayerBot();
     this.gameState = this.initializeGameState();
-    this.contextManager = new ContextManager(bot);
+    this.contextManager = new ContextManager(this.mineflayerBot);
     this.predictionInterval = 5000; // 5 seconds
     this.decayRate = 0.1; // 10% decay per interval
     this.lastUpdateTime = Date.now();
@@ -87,7 +114,7 @@ export class MLStateManager {
       taskDurations: []
     };
     this.contextWeights = new Map();
-    
+
     // Initialize predictors
     this.resourceNeedPredictor = new ResourceNeedPredictor();
     this.playerRequestPredictor = new PlayerRequestPredictor();
@@ -95,23 +122,38 @@ export class MLStateManager {
   }
 
   public async getState(): Promise<EnhancedGameState> {
-    this.gameState.timestamp = Date.now();
+    const timestamp = Date.now();
+    this.gameState.timestamp = timestamp;
     this.gameState.players = {};
-    for (const player of Object.values(this.bot.players)) {
+    for (const player of Object.values(this.mineflayerBot.players)) {
       this.gameState.players[player.username] = {
         username: player.username,
-        position: player.entity.position, 
+        position: player.entity.position,
       };
     }
-    return this.gameState;
+    return {
+      ...this.gameState,
+      timestamp,
+      bot: this.mineflayerBot,
+      tasks: [],
+      inventory: {
+        items: () => this.mineflayerBot.inventory.items().map(item => ({
+          name: item.name,
+          count: item.count
+        })),
+        emptySlots: () => this.mineflayerBot.inventory.slots.filter(slot => slot === null).length,
+        slots: this.mineflayerBot.inventory.slots
+      }
+    } as EnhancedGameState;
   }
 
   public convertToGameState(enhancedState: EnhancedGameState): GameState {
-    const biome = this.bot.world.getBiome(enhancedState.position);
+    const biome = this.bot.getBiomeAt(enhancedState.position);
+
     return {
       position: enhancedState.position,
-      health: this.bot.health,
-      food: this.bot.food,
+      health: this.mineflayerBot.health,
+      food: this.mineflayerBot.food,
       inventory: {
         items: enhancedState.inventory.items().map(item => ({
           type: item.name,
@@ -120,40 +162,37 @@ export class MLStateManager {
         totalSlots: 36,
         usedSlots: 36 - enhancedState.inventory.emptySlots()
       },
-      biome: {
-        name: biome.name,
-        temperature: biome.temperature,
-        rainfall: biome.rainfall
-      },
-      timeOfDay: this.bot.time.timeOfDay,
-      isRaining: this.bot.isRaining,
-      nearbyBlocks: this.bot.findBlocks({
+      biome: biome || 'unknown',
+      timeOfDay: this.mineflayerBot.time.timeOfDay,
+      isRaining: this.mineflayerBot.isRaining,
+      nearbyBlocks: this.mineflayerBot.findBlocks({
         maxDistance: 16,
-        count: 10
+        count: 10,
+        matching: () => true
       }).map(block => ({
-        type: block.name,
-        position: block.position
+        type: this.mineflayerBot.blockAt(block)?.name || 'unknown',
+        position: block
       })),
-      nearbyEntities: Object.values(enhancedState.players).map(player => ({
+      nearbyEntities: Object.values(enhancedState.players || {}).map(player => ({
         type: 'player',
         position: player.position,
         distance: player.position.distanceTo(enhancedState.position)
       })),
       movement: {
-        velocity: this.bot.entity.velocity,
-        yaw: this.bot.entity.yaw,
-        pitch: this.bot.entity.pitch,
+        velocity: this.mineflayerBot.entity.velocity,
+        yaw: this.mineflayerBot.entity.yaw,
+        pitch: this.mineflayerBot.entity.pitch,
         control: {
-          sprint: this.bot.controlState.sprint,
-          sneak: this.bot.controlState.sneak
+          sprint: this.mineflayerBot.controlState.sprint,
+          sneak: this.mineflayerBot.controlState.sneak
         }
       },
       environment: {
-        blockAtFeet: this.bot.blockAt(this.bot.entity.position.offset(0, -1, 0)).name,
-        blockAtHead: this.bot.blockAt(this.bot.entity.position.offset(0, 1, 0)).name,
-        lightLevel: this.bot.blockAt(this.bot.entity.position).light,
-        isInWater: this.bot.isInWater,
-        onGround: this.bot.entity.onGround
+        blockAtFeet: this.mineflayerBot.blockAt(this.mineflayerBot.entity.position.offset(0, -1, 0))?.name || 'unknown',
+        blockAtHead: this.mineflayerBot.blockAt(this.mineflayerBot.entity.position.offset(0, 1, 0))?.name || 'unknown',
+        lightLevel: this.mineflayerBot.blockAt(this.mineflayerBot.entity.position)?.light || 0,
+        isInWater: this.mineflayerBot.entity.isInWater,
+        onGround: this.mineflayerBot.entity.onGround
       },
       recentTasks: enhancedState.tasks.map(task => ({
         type: task.type,
@@ -168,10 +207,10 @@ export class MLStateManager {
     this.gameState = {
       ...this.gameState,
       ...state
-    };
+    } as MinecraftState;
   }
 
-  public async updateState(): Promise<void> {
+  public async updateStateAsync(): Promise<void> {
     const currentTime = Date.now();
     if (currentTime - this.lastUpdateTime < this.predictionInterval) {
       return;
@@ -179,12 +218,12 @@ export class MLStateManager {
 
     const startTime = Date.now();
     const gameState = await this.contextManager.getGameState();
-    
+
     await this.updatePredictions(gameState);
     await this.updateContextWeights(gameState);
-    
+
     this.lastUpdateTime = currentTime;
-    
+
     // Update metrics
     mlMetrics.stateUpdates.inc({ type: 'full_update' });
     mlMetrics.predictionLatency.observe(
@@ -195,21 +234,21 @@ export class MLStateManager {
 
   private async updatePredictions(gameState: GameState): Promise<void> {
     const startTime = Date.now();
-    
+
     // Predict resource needs based on current state and recent tasks
     this.predictions.resourceNeeds = await this.resourceNeedPredictor.predict(gameState);
     mlMetrics.predictionLatency.observe(
       { type: 'resource_needs' },
       (Date.now() - startTime) / 1000
     );
-    
+
     // Predict likely player requests based on context
     this.predictions.playerRequests = await this.playerRequestPredictor.predict(gameState);
     mlMetrics.predictionLatency.observe(
       { type: 'player_requests' },
       (Date.now() - startTime) / 1000
     );
-    
+
     // Predict task durations based on historical data
     this.predictions.taskDurations = await this.taskDurationPredictor.predict(gameState);
     mlMetrics.predictionLatency.observe(
@@ -250,7 +289,7 @@ export class MLStateManager {
   private async updateContextWeights(gameState: GameState): Promise<void> {
     // Update weights for different context aspects
     const aspects = ['inventory', 'position', 'health', 'nearbyEntities', 'timeOfDay'];
-    
+
     for (const aspect of aspects) {
       const weight = await this.calculateContextWeight(aspect, gameState);
       this.contextWeights.set(aspect, weight);
@@ -280,7 +319,7 @@ export class MLStateManager {
       case 'nearbyEntities':
         // Higher weight if there are nearby entities
         relevance = Math.min(1.0, gameState.nearbyEntities.length / 10);
-        priority = gameState.nearbyEntities.some(e => e.isHostile) ? 1.5 : 1.0;
+        priority = gameState.nearbyEntities.some(e => e.type === 'hostile') ? 1.5 : 1.0;
         break;
       case 'timeOfDay':
         // Higher weight during dangerous times (night)

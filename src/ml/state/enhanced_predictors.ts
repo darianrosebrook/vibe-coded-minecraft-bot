@@ -4,6 +4,7 @@ import { mlMetrics } from '../../utils/observability/metrics';
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
 import { TrainingDataCollector } from './training_data_collector';
+import { RecipeItem } from 'prismarine-recipe';
 import {
   EnhancedGameState,
   ResourceDependency,
@@ -33,10 +34,59 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     this.dataCollector = dataCollector;
   }
 
-  public async predict(gameState: EnhancedGameState): Promise<{ type: string; quantity: number; confidence: number; }[]> {
+  public async enhancedPredict(gameState: EnhancedGameState): Promise<{ type: string; quantity: number; confidence: number; }[]> {
     const startTime = Date.now();
     
     try {
+      // Convert EnhancedGameState to GameState for base class
+      const baseGameState: GameState = {
+        position: gameState.position,
+        health: gameState.bot.health,
+        food: gameState.bot.food,
+        inventory: {
+          items: gameState.inventory.items().map(item => ({
+            type: item.name,
+            quantity: item.count
+          })),
+          totalSlots: 36,
+          usedSlots: 36 - gameState.inventory.emptySlots()
+        },
+        biome: 'unknown', // Will be updated by MLStateManager
+        timeOfDay: gameState.bot.time.timeOfDay,
+        isRaining: gameState.bot.isRaining,
+        nearbyBlocks: [],
+        nearbyEntities: Object.values(gameState.players).map(player => ({
+          type: 'player',
+          position: player.position,
+          distance: player.position.distanceTo(gameState.position)
+        })),
+        movement: {
+          velocity: gameState.bot.entity.velocity,
+          yaw: gameState.bot.entity.yaw,
+          pitch: gameState.bot.entity.pitch,
+          control: {
+            sprint: gameState.bot.controlState.sprint,
+            sneak: gameState.bot.controlState.sneak
+          }
+        },
+        environment: {
+          blockAtFeet: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, -1, 0))?.name || 'unknown',
+          blockAtHead: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, 1, 0))?.name || 'unknown',
+          lightLevel: gameState.bot.blockAt(gameState.bot.entity.position)?.light || 0,
+          isInWater: gameState.bot.entity.isInWater,
+          onGround: gameState.bot.entity.onGround
+        },
+        recentTasks: gameState.tasks.map(task => ({
+          type: task.type,
+          parameters: {},
+          status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
+          timestamp: task.startTime
+        }))
+      };
+
+      // Get base predictions
+      const basePredictions = await super.predict(baseGameState);
+      
       // Analyze resource dependencies
       const dependencies = await this.analyzeResourceDependencies(gameState);
       
@@ -150,20 +200,22 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
 
   private async getAllCraftingRecipes(): Promise<CraftingRecipe[]> {
     try {
-      // Get recipes from the bot's recipe book
+      // Get all known recipes from the bot
+      const firstItem = this.bot.inventory.items()[0];
+      const recipeList = this.bot.recipesFor(firstItem?.type || 3, null, null, true); // 3 is dirt block ID
+      
       const recipes: CraftingRecipe[] = [];
       
-      // Iterate through all known recipes
-      for (const recipe of this.bot.recipeBook) {
+      for (const recipe of recipeList) {
         if (recipe.result) {
           recipes.push({
-            result: recipe.result.name,
-            ingredients: recipe.ingredients.map((ing: { name: string; count?: number }) => ({
-              name: ing.name,
-              count: ing.count || 1
+            result: this.bot.registry.items[recipe.result.id].name,
+            ingredients: recipe.delta.map((ing: RecipeItem) => ({
+              name: this.bot.registry.items[ing.id].name,
+              count: Math.abs(ing.count || 1)
             })),
-            craftingTime: 0, // Default crafting time
-            difficulty: 1    // Default difficulty
+            craftingTime: 0,
+            difficulty: 1
           });
         }
       }
@@ -352,10 +404,59 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
     this.dataCollector = dataCollector;
   }
 
-  public async predict(gameState: EnhancedGameState): Promise<{ type: string; confidence: number; expectedTime: number; }[]> {
+  public async enhancedPredict(gameState: EnhancedGameState): Promise<{ type: string; confidence: number; expectedTime: number; }[]> {
     const startTime = Date.now();
     
     try {
+      // Convert EnhancedGameState to GameState for base class
+      const baseGameState: GameState = {
+        position: gameState.position,
+        health: gameState.bot.health,
+        food: gameState.bot.food,
+        inventory: {
+          items: gameState.inventory.items().map(item => ({
+            type: item.name,
+            quantity: item.count
+          })),
+          totalSlots: 36,
+          usedSlots: 36 - gameState.inventory.emptySlots()
+        },
+        biome: 'unknown', // Will be updated by MLStateManager
+        timeOfDay: gameState.bot.time.timeOfDay,
+        isRaining: gameState.bot.isRaining,
+        nearbyBlocks: [],
+        nearbyEntities: Object.values(gameState.players).map(player => ({
+          type: 'player',
+          position: player.position,
+          distance: player.position.distanceTo(gameState.position)
+        })),
+        movement: {
+          velocity: gameState.bot.entity.velocity,
+          yaw: gameState.bot.entity.yaw,
+          pitch: gameState.bot.entity.pitch,
+          control: {
+            sprint: gameState.bot.controlState.sprint,
+            sneak: gameState.bot.controlState.sneak
+          }
+        },
+        environment: {
+          blockAtFeet: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, -1, 0))?.name || 'unknown',
+          blockAtHead: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, 1, 0))?.name || 'unknown',
+          lightLevel: gameState.bot.blockAt(gameState.bot.entity.position)?.light || 0,
+          isInWater: gameState.bot.entity.isInWater,
+          onGround: gameState.bot.entity.onGround
+        },
+        recentTasks: gameState.tasks.map(task => ({
+          type: task.type,
+          parameters: {},
+          status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
+          timestamp: task.startTime
+        }))
+      };
+
+      // Get base predictions
+      const basePredictions = await super.predict(baseGameState);
+      
       const behaviors = await this.analyzePlayerBehavior(gameState);
       const patterns = await this.recognizeRequestPatterns(gameState);
       const predictions = await this.applyContextAwarePrediction(behaviors, patterns, gameState);
@@ -570,10 +671,59 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
     this.dataCollector = dataCollector;
   }
 
-  public async predict(gameState: EnhancedGameState): Promise<{ taskType: string; expectedDuration: number; confidence: number; }[]> {
+  public async enhancedPredict(gameState: EnhancedGameState): Promise<{ taskType: string; expectedDuration: number; confidence: number; }[]> {
     const startTime = Date.now();
     
     try {
+      // Convert EnhancedGameState to GameState for base class
+      const baseGameState: GameState = {
+        position: gameState.position,
+        health: gameState.bot.health,
+        food: gameState.bot.food,
+        inventory: {
+          items: gameState.inventory.items().map(item => ({
+            type: item.name,
+            quantity: item.count
+          })),
+          totalSlots: 36,
+          usedSlots: 36 - gameState.inventory.emptySlots()
+        },
+        biome: 'unknown', // Will be updated by MLStateManager
+        timeOfDay: gameState.bot.time.timeOfDay,
+        isRaining: gameState.bot.isRaining,
+        nearbyBlocks: [],
+        nearbyEntities: Object.values(gameState.players).map(player => ({
+          type: 'player',
+          position: player.position,
+          distance: player.position.distanceTo(gameState.position)
+        })),
+        movement: {
+          velocity: gameState.bot.entity.velocity,
+          yaw: gameState.bot.entity.yaw,
+          pitch: gameState.bot.entity.pitch,
+          control: {
+            sprint: gameState.bot.controlState.sprint,
+            sneak: gameState.bot.controlState.sneak
+          }
+        },
+        environment: {
+          blockAtFeet: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, -1, 0))?.name || 'unknown',
+          blockAtHead: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, 1, 0))?.name || 'unknown',
+          lightLevel: gameState.bot.blockAt(gameState.bot.entity.position)?.light || 0,
+          isInWater: gameState.bot.entity.isInWater,
+          onGround: gameState.bot.entity.onGround
+        },
+        recentTasks: gameState.tasks.map(task => ({
+          type: task.type,
+          parameters: {},
+          status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
+          timestamp: task.startTime
+        }))
+      };
+
+      // Get base predictions
+      const basePredictions = await super.predict(baseGameState);
+      
       const factors = await this.analyzeEnvironmentalFactors(gameState);
       const scaling = await this.applyDifficultyScaling(gameState);
       const availability = await this.analyzeResourceAvailability(gameState);

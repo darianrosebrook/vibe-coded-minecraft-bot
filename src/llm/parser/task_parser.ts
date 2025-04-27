@@ -221,7 +221,7 @@ export class TaskParser {
           const itemType = this.extractItemType(command);
           if (itemType) {
             queryParams.filters = {
-              type: itemType
+              blockType: itemType
             };
           }
         }

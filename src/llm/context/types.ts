@@ -20,4 +20,4 @@ export interface StateValidation {
   errors: string[];
   warnings: string[];
   timestamp: number;
-} 
+}

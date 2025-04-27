@@ -1,5 +1,4 @@
 import { GameState } from '../../llm/context/manager';
-import { metrics } from '../../utils/observability/metrics'; 
 import { ModelStorage, StoredModel } from './model_storage';
 import { ProcessedData } from './data_preprocessor';
 
@@ -73,9 +72,9 @@ export abstract class BaseModel implements Model {
         for (let j = 0; j < batchFeatures.length; j++) {
           const prediction = await this.predict([batchFeatures[j]]);
           const error = batchLabels[j] - prediction;
-          
+
           // Update weights
-          this.weights = this.weights.map((weight, k) => 
+          this.weights = this.weights.map((weight, k) =>
             weight + this.learningRate * error * batchFeatures[j]);
           this.bias += this.learningRate * error;
 
@@ -140,7 +139,7 @@ export abstract class BaseModel implements Model {
   }
 
   protected initializeWeights(featureCount: number): void {
-    this.weights = Array(featureCount).fill(0).map(() => 
+    this.weights = Array(featureCount).fill(0).map(() =>
       (Math.random() * 2 - 1) * 0.01);
   }
 
@@ -163,7 +162,7 @@ export class ResourceNeedModel extends BaseModel {
       this.initializeWeights(features.length);
     }
 
-    const prediction = this.weights.reduce((sum, weight, i) => 
+    const prediction = this.weights.reduce((sum, weight, i) =>
       sum + weight * features[i], this.bias);
     return this.sigmoid(prediction);
   }
@@ -175,7 +174,7 @@ export class PlayerRequestModel extends BaseModel {
       this.initializeWeights(features.length);
     }
 
-    const prediction = this.weights.reduce((sum, weight, i) => 
+    const prediction = this.weights.reduce((sum, weight, i) =>
       sum + weight * features[i], this.bias);
     return this.sigmoid(prediction);
   }
@@ -187,7 +186,7 @@ export class TaskDurationModel extends BaseModel {
       this.initializeWeights(features.length);
     }
 
-    const prediction = this.weights.reduce((sum, weight, i) => 
+    const prediction = this.weights.reduce((sum, weight, i) =>
       sum + weight * features[i], this.bias);
     return this.sigmoid(prediction);
   }
@@ -227,7 +226,7 @@ export class ResourceNeedPredictor {
     // Analyze recent tasks for resource patterns
     const recentTasks = gameState.recentTasks || [];
     const taskResourcePatterns = this.analyzeTaskPatterns(recentTasks);
-    
+
     // Add predictions based on task patterns
     for (const [resource, { quantity, confidence }] of Object.entries(taskResourcePatterns)) {
       predictions.push({
@@ -245,7 +244,7 @@ export class ResourceNeedPredictor {
 
   private analyzeTaskPatterns(tasks: any[]): Record<string, { quantity: number; confidence: number }> {
     const patterns: Record<string, { quantity: number; confidence: number }> = {};
-    
+
     // Group tasks by type and analyze resource usage
     const taskGroups = tasks.reduce((acc, task) => {
       if (!acc[task.type]) {
@@ -274,7 +273,7 @@ export class ResourceNeedPredictor {
     // TODO: Implement more sophisticated resource usage analysis
     // For now, return simple patterns based on task type
     const patterns: Record<string, { quantity: number; confidence: number }> = {};
-    
+
     switch (taskType) {
       case 'mining':
         patterns['diamond_pickaxe'] = { quantity: 1, confidence: 0.9 };
@@ -502,7 +501,7 @@ export class TaskDurationPredictor {
     const durations = tasks
       .filter(task => task.duration)
       .map(task => task.duration);
-    
+
     if (durations.length === 0) {
       return null;
     }

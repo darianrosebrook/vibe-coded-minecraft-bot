@@ -12,23 +12,29 @@ describe('ContextDisambiguator', () => {
     detector = new AmbiguityDetector();
     disambiguator = new ContextDisambiguator(detector);
     mockContext = {
-      inventory: {
-        hasTool: jest.fn().mockReturnValue(true),
-        hasMaterials: jest.fn().mockReturnValue(true),
-        hasSpace: jest.fn().mockReturnValue(true)
-      },
+      bot: {} as any,
+      conversationHistory: [],
       worldState: {
-        nearbyBlocks: [],
+        inventory: {
+          hasTool: jest.fn().mockReturnValue(true),
+          hasMaterials: jest.fn().mockReturnValue(true),
+          hasSpace: jest.fn().mockReturnValue(true),
+          items: []
+        },
+        position: { x: 0, y: 0, z: 0 },
+        surroundings: [],
+        time: 0,
         isPathClear: true,
         isRouteSafe: true,
-        knownLandmarks: [],
-        time: 0
+        knownLandmarks: []
       },
       botState: {
         health: 20,
-        hunger: 20
+        hunger: 20,
+        position: { x: 0, y: 0, z: 0 }
       },
-      recentTasks: []
+      recentTasks: [],
+      pluginContext: {}
     } as any;
   });
 
@@ -43,13 +49,13 @@ describe('ContextDisambiguator', () => {
           historicalSuccess: 0.9,
           totalScore: 0.9
         }],
-        suggestedTypes: ['mining'],
+        suggestedTypes: [TaskType.MINING],
         contextFactors: {}
       };
 
       const result = await disambiguator.disambiguate('mine diamond ore', mockContext, ambiguityResult);
       
-      expect(result.resolvedType).toBe('mining');
+      expect(result.resolvedType).toBe(TaskType.MINING);
       expect(result.confidence).toBe(0.9);
       expect(result.historicalPatterns).toHaveLength(0);
     });
@@ -73,17 +79,17 @@ describe('ContextDisambiguator', () => {
             totalScore: 0.7
           }
         ],
-        suggestedTypes: ['mining', 'crafting'],
+        suggestedTypes: [TaskType.MINING, TaskType.CRAFTING],
         contextFactors: {}
       };
 
       // Set up context to favor mining
-      (mockContext.inventory.hasTool as jest.Mock).mockReturnValue(true);
-      (mockContext.worldState.nearbyBlocks as any) = [{ type: 'diamond_ore' }];
+      (mockContext.worldState.inventory.hasTool as jest.Mock).mockReturnValue(true);
+      mockContext.worldState.surroundings = [{ type: 'diamond_ore' }];
 
       const result = await disambiguator.disambiguate('mine or craft', mockContext, ambiguityResult);
       
-      expect(result.resolvedType).toBe('mining');
+      expect(result.resolvedType).toBe(TaskType.MINING);
       expect(result.confidence).toBeGreaterThan(0.7);
     });
 
@@ -106,14 +112,14 @@ describe('ContextDisambiguator', () => {
             totalScore: 0.7
           }
         ],
-        suggestedTypes: ['mining', 'crafting'],
+        suggestedTypes: [TaskType.MINING, TaskType.CRAFTING],
         contextFactors: {}
       };
 
       // Add successful historical pattern for crafting
       disambiguator['addHistoricalPattern']({
         command: 'craft pickaxe',
-        resolvedType: 'crafting',
+        resolvedType: TaskType.CRAFTING,
         success: true,
         timestamp: Date.now(),
         contextFactors: {}
@@ -121,7 +127,7 @@ describe('ContextDisambiguator', () => {
 
       const result = await disambiguator.disambiguate('mine or craft', mockContext, ambiguityResult);
       
-      expect(result.resolvedType).toBe('crafting');
+      expect(result.resolvedType).toBe(TaskType.CRAFTING);
       expect(result.historicalPatterns).toHaveLength(1);
     });
 
@@ -144,12 +150,14 @@ describe('ContextDisambiguator', () => {
             totalScore: 0.7
           }
         ],
-        suggestedTypes: ['mining', 'crafting'],
+        suggestedTypes: [TaskType.MINING, TaskType.CRAFTING],
         contextFactors: {}
       };
 
       // Set up dangerous state
-      mockContext.botState.health = 5;
+      if (mockContext.botState) {
+        mockContext.botState.health = 5;
+      }
       mockContext.worldState.time = 14000; // Night time
 
       const result = await disambiguator.disambiguate('mine or craft', mockContext, ambiguityResult);
@@ -166,7 +174,7 @@ describe('ContextDisambiguator', () => {
       for (let i = 0; i < 1100; i++) {
         disambiguator['addHistoricalPattern']({
           command: `pattern${i}`,
-          resolvedType: 'mining',
+          resolvedType: TaskType.MINING,
           success: true,
           timestamp: now - i * 1000,
           contextFactors: {}
@@ -182,7 +190,7 @@ describe('ContextDisambiguator', () => {
       // Add old pattern
       disambiguator['addHistoricalPattern']({
         command: 'old pattern',
-        resolvedType: 'mining',
+        resolvedType: TaskType.MINING,
         success: true,
         timestamp: now - 24 * 60 * 60 * 1000, // 24 hours old
         contextFactors: {}
@@ -197,7 +205,7 @@ describe('ContextDisambiguator', () => {
           historicalSuccess: 0.8,
           totalScore: 0.8
         }],
-        suggestedTypes: ['mining'],
+        suggestedTypes: [TaskType.MINING],
         contextFactors: {}
       };
 

@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import { configManager } from './configManager';
 import { ConfigVersion } from '../types/config';
 import logger from '../utils/observability/logger';
@@ -9,7 +8,7 @@ export async function migrateConfigFile(configPath: string): Promise<void> {
     // Read existing config file
     const configContent = fs.readFileSync(configPath, 'utf-8');
     const lines = configContent.split('\n');
-    
+
     // Parse existing config
     const existingConfig: Record<string, string> = {};
     lines.forEach(line => {
@@ -58,7 +57,7 @@ export async function migrateConfigFile(configPath: string): Promise<void> {
 
     // Write new config file
     fs.writeFileSync(configPath, newLines.join('\n'));
-    
+
     logger.info('Successfully migrated config file', {
       fromVersion: currentVersion,
       toVersion: ConfigVersion.CURRENT,
@@ -74,7 +73,7 @@ export async function migrateConfigFile(configPath: string): Promise<void> {
 // Command line interface
 if (require.main === module) {
   const configPath = process.argv[2] || '.env';
-  
+
   if (!fs.existsSync(configPath)) {
     logger.error('Config file not found', { path: configPath });
     process.exit(1);

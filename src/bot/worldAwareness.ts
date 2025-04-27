@@ -58,7 +58,7 @@ export class WorldAwareness {
     for (const block of chunk.blocks) {
       const key = this.getBlockKey(block.position);
       this.worldMap.blocks.set(key, block);
-      
+
       // Track resources
       if (this.isResource(block)) {
         this.trackResource(block);
@@ -175,18 +175,18 @@ export class WorldAwareness {
 
   private async updateWorldMap() {
     const botPosition = this.bot.getMineflayerBot().entity.position;
-    
+
     // Scan surrounding area
     for (let x = -this.scanRadius; x <= this.scanRadius; x++) {
       for (let y = -this.scanRadius; y <= this.scanRadius; y++) {
         for (let z = -this.scanRadius; z <= this.scanRadius; z++) {
           const position = botPosition.offset(x, y, z);
           const block = this.mineflayerBot.blockAt(position);
-          
+
           if (block) {
             const key = this.getBlockKey(position);
             this.worldMap.blocks.set(key, block);
-            
+
             if (this.isResource(block)) {
               this.trackResource(block);
             }

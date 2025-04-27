@@ -7,31 +7,37 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
 ### 🚨 Bugs and Critical Issues requiring immediate attention
 
 #### Task Architecture & Dependencies
+
 1. **Task Dependency System**
+
    - Implement task dependency graph for complex operations
    - Add pre-task validation for required items and conditions
    - Create task queue with dependency resolution
    - Add task conflict detection and resolution
 
 2. **Resource Management**
+
    - Implement inventory state tracking
    - Add crafting table detection and management
    - Create resource requirement validation
    - Add automatic resource gathering for missing items
 
 3. **Task Planning & Validation**
+
    - Add pre-execution checks for all tasks
    - Implement task feasibility validation
    - Create task planning phase with resource verification
    - Add automatic task decomposition for complex operations
 
 4. **Task Queue Improvements**
+
    - Implement priority-based task queue
    - Add task dependency tracking
    - Create task conflict resolution system
    - Add task state persistence
 
 5. **Crafting System**
+
    - Implement crafting recipe validation
    - Add crafting table requirement checking
    - Create material requirement verification
@@ -64,11 +70,12 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
      - Implement recovery strategies for parsing errors
      - Create user-friendly error messages
    - Example Issues:
+
      ```
      Input: ".bot do you need a pickaxe?"
      Expected: query task with inventory check
      Actual: mining task returned
-     
+
      Input: ".bot you should craft a pickaxe"
      Expected: crafting task
      Actual: query task returned
@@ -77,6 +84,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
 ### ✅ Completed Features
 
 #### Core Infrastructure
+
 - Basic bot framework using Mineflayer
 - Pathfinding with mineflayer-pathfinder
 - Auto-collection of items
@@ -118,6 +126,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Chunk-based scanning
 
 #### Task Modules
+
 - Basic mining operations
   - Resource discovery and tracking
   - Smart tool selection
@@ -147,6 +156,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Basic farm management
 
 #### Error Handling System
+
 - Basic error categorization
   - Network errors
   - Pathfinding errors
@@ -163,6 +173,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Inventory management
 
 #### Web Dashboard
+
 - Basic web server setup with Express
 - Socket.IO integration for real-time updates
 - Static file serving
@@ -172,6 +183,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
 ### 🔄 In Progress
 
 #### Core Infrastructure & DevOps
+
 - Enhanced Configuration
   - Config versioning with semantic versioning
   - Environment-specific validation rules
@@ -182,6 +194,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Type-safe configuration access
 
 #### LLM & Command Pipeline
+
 - Advanced LLM Integration
   - Multi-model support with automatic model switching
   - Prompt versioning with semantic versioning
@@ -196,6 +209,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Complex command chaining
 
 #### World Awareness & Mapping
+
 - Advanced World Tracking
   - Chunk caching
   - Resource hotspot tracking
@@ -207,6 +221,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Event persistence
 
 #### Testing & Quality
+
 - Test Infrastructure
   - Unit test framework
   - Integration test setup
@@ -219,6 +234,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Security testing
 
 #### Web Dashboard & UX
+
 - Enhanced Web Interface
   - Authentication system
   - Role-based access
@@ -234,6 +250,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
 ### ❌ Planned Features
 
 #### Infrastructure & DevOps
+
 - Advanced Containerization
   - Kubernetes manifests
   - Helm charts
@@ -249,12 +266,14 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
   - Structured logging with rotation
 
 #### Enhanced Task Modules
+
 - Tool management
 - Equipment optimization
 - Task prioritization
 - Multi-bot coordination
 
 ## Quick Wins
+
 - Implement basic metrics endpoint
 - Add Docker support
 - Implement `gatherBlock` task
@@ -267,6 +286,7 @@ A Minecraft bot that uses local LLM (Ollama) to interpret natural language comma
 The project is organized into several key directories, each serving a specific purpose:
 
 ### Core Directories
+
 - `src/` - Main source code directory
   - `bot/` - Core bot functionality and initialization
   - `commands/` - Command handling and processing
@@ -284,6 +304,7 @@ The project is organized into several key directories, each serving a specific p
   - `web/` - Web dashboard and API endpoints
 
 ### Supporting Directories
+
 - `docs/` - Project documentation and implementation plans
   - `implementation_plans/` - Detailed plans for feature implementation
 - `docker/` - Docker-related configuration files
@@ -293,6 +314,7 @@ The project is organized into several key directories, each serving a specific p
 - `data/` - Application data storage
 
 ### Configuration Files
+
 - `package.json` - Node.js project configuration and dependencies
 - `tsconfig.json` - TypeScript configuration
 - `jest.config.js` - Jest testing configuration
@@ -305,34 +327,35 @@ The project is organized into several key directories, each serving a specific p
 
 The project uses the following key dependencies:
 
-| Component | Package | Purpose |
-|-----------|---------|---------|
-| Bot framework | mineflayer | Connect & control Minecraft bot |
-| Navigation | mineflayer-pathfinder | World pathfinding & movement |
-| Block collection | mineflayer-collectblock | Auto-collect dropped items |
-| Auto-eat | mineflayer-auto-eat | Keep bot fed |
-| PvP | mineflayer-pvp | Player vs player combat |
-| Tool management | mineflayer-tool | Smart tool selection |
-| HTTP client | axios | Query Ollama's local LLM API |
-| JSON validation | ajv | Ensure LLM outputs match task schema |
-| Web server | express | HTTP server for dashboard |
-| Real-time comms | socket.io | Live updates for dashboard |
-| Logging | winston | Structured logging |
-| Log rotation | winston-daily-rotate-file | Log file management |
-| HTTP logging | morgan | Request logging |
-| Metrics | prom-client | Prometheus metrics |
-| Validation | zod | Runtime type checking |
-| Testing | jest | Test framework |
-| Type checking | typescript | Static type checking |
-| Development | nodemon | Development server |
-| Containerization | docker | Container runtime |
-| Orchestration | docker-compose | Multi-container apps |
+| Component        | Package                   | Purpose                              |
+| ---------------- | ------------------------- | ------------------------------------ |
+| Bot framework    | mineflayer                | Connect & control Minecraft bot      |
+| Navigation       | mineflayer-pathfinder     | World pathfinding & movement         |
+| Block collection | mineflayer-collectblock   | Auto-collect dropped items           |
+| Auto-eat         | mineflayer-auto-eat       | Keep bot fed                         |
+| PvP              | mineflayer-pvp            | Player vs player combat              |
+| Tool management  | mineflayer-tool           | Smart tool selection                 |
+| HTTP client      | axios                     | Query Ollama's local LLM API         |
+| JSON validation  | ajv                       | Ensure LLM outputs match task schema |
+| Web server       | express                   | HTTP server for dashboard            |
+| Real-time comms  | socket.io                 | Live updates for dashboard           |
+| Logging          | winston                   | Structured logging                   |
+| Log rotation     | winston-daily-rotate-file | Log file management                  |
+| HTTP logging     | morgan                    | Request logging                      |
+| Metrics          | prom-client               | Prometheus metrics                   |
+| Validation       | zod                       | Runtime type checking                |
+| Testing          | jest                      | Test framework                       |
+| Type checking    | typescript                | Static type checking                 |
+| Development      | nodemon                   | Development server                   |
+| Containerization | docker                    | Container runtime                    |
+| Orchestration    | docker-compose            | Multi-container apps                 |
 
 ## Starting Tasks
 
 The bot accepts natural language commands through the Minecraft chat. All commands must be prefixed with `.bot` to be recognized.
 
 ### Basic Command Format
+
 ```
 .bot <natural language command>
 ```
@@ -340,6 +363,7 @@ The bot accepts natural language commands through the Minecraft chat. All comman
 ### Examples
 
 #### Resource Collection
+
 ```
 .bot gather 64 cobblestone
 .bot mine 32 iron ore
@@ -347,6 +371,7 @@ The bot accepts natural language commands through the Minecraft chat. All comman
 ```
 
 #### Processing & Crafting
+
 ```
 .bot craft 32 sticks
 .bot smelt 16 iron ore
@@ -354,6 +379,7 @@ The bot accepts natural language commands through the Minecraft chat. All comman
 ```
 
 #### Farming
+
 ```
 .bot tend the wheat farm
 .bot plant carrots in a 5x5 area
@@ -361,12 +387,14 @@ The bot accepts natural language commands through the Minecraft chat. All comman
 ```
 
 #### Construction
+
 ```
 .bot build a 10x5x10 platform of stone
 .bot flatten the area from 100,64,-200 to 200,64,-100
 ```
 
 #### Redstone & Automation
+
 ```
 .bot toggle the lever at 100 64 -200
 .bot monitor the redstone circuit in my farm
@@ -376,6 +404,7 @@ The bot accepts natural language commands through the Minecraft chat. All comman
 ### Task Status
 
 You can check the status of your tasks using these commands:
+
 ```
 .bot status - Shows current task progress
 .bot list - Lists all active tasks
@@ -395,6 +424,7 @@ The bot will automatically determine the best parameters for your task based on 
 ### Error Handling
 
 If a task encounters an error, the bot will:
+
 1. Attempt to recover automatically
 2. Notify you in chat about the issue
 3. Suggest possible solutions
@@ -403,6 +433,7 @@ If a task encounters an error, the bot will:
 ### Task Persistence
 
 Tasks are automatically saved and can be resumed if:
+
 - The bot disconnects
 - The server restarts
 - The bot is restarted
@@ -414,6 +445,7 @@ To resume a task after a restart, simply use the same command again.
 The bot features a sophisticated error handling system that automatically categorizes and responds to different types of errors:
 
 ### Error Categories
+
 - **Network Errors**: Connection issues, server disconnects
 - **Pathfinding Errors**: Navigation failures, blocked paths
 - **Inventory Errors**: Full inventory, item management issues
@@ -423,19 +455,23 @@ The bot features a sophisticated error handling system that automatically catego
 - **Redstone Errors**: Circuit failures, device interaction issues
 
 ### Retry Strategies
+
 Each error category has its own retry strategy:
+
 ```typescript
 {
-  maxRetries: number;      // Maximum number of retry attempts
-  baseDelay: number;       // Initial delay between retries (ms)
-  maxDelay: number;        // Maximum delay between retries (ms)
-  backoffFactor: number;   // Exponential backoff multiplier
+  maxRetries: number; // Maximum number of retry attempts
+  baseDelay: number; // Initial delay between retries (ms)
+  maxDelay: number; // Maximum delay between retries (ms)
+  backoffFactor: number; // Exponential backoff multiplier
   shouldRetry: (context) => boolean; // Custom retry condition
 }
 ```
 
 ### Fallback Behaviors
+
 When retries fail, the system attempts fallback strategies:
+
 - **Network Errors**: Automatic server reconnection
 - **Pathfinding Errors**: Alternative pathfinding strategies
 - **Inventory Errors**: Store items in chests or drop non-essentials
@@ -445,7 +481,9 @@ When retries fail, the system attempts fallback strategies:
 - **Redstone Errors**: Circuit isolation, manual override options
 
 ### Error Context
+
 Each error is handled with rich context:
+
 ```typescript
 {
   category: ErrorCategory;
@@ -562,6 +600,7 @@ The bot supports the following task types:
 ### Resource Requirements
 
 Tasks can specify requirements for:
+
 - **Items**: Required items and quantities
 - **Tools**: Required tools and materials
 - **Blocks**: Required blocks and quantities
@@ -570,6 +609,7 @@ Tasks can specify requirements for:
 ### Task Dependencies
 
 Tasks can depend on other tasks:
+
 - **Type**: The type of task required
 - **Parameters**: Specific parameters for the dependency
 - **Required**: Whether the dependency is mandatory
@@ -577,6 +617,7 @@ Tasks can depend on other tasks:
 ### Validation Rules
 
 Tasks can include validation checks:
+
 - **Pre-checks**: Conditions to verify before execution
 - **Post-checks**: Conditions to verify after execution
 - **Error messages**: Custom error messages for failed checks
@@ -584,6 +625,7 @@ Tasks can include validation checks:
 ### Task Configuration
 
 Tasks can be configured with:
+
 - **Priority**: Task importance (0-100)
 - **Timeout**: Maximum execution time
 - **Retry settings**: Retry attempts and backoff strategy
@@ -591,6 +633,7 @@ Tasks can be configured with:
 ### Example Tasks
 
 #### Mining with Requirements
+
 ```json
 {
   "type": "mining",
@@ -620,6 +663,7 @@ Tasks can be configured with:
 ```
 
 #### Crafting with Dependencies
+
 ```json
 {
   "type": "crafting",
@@ -653,6 +697,7 @@ Tasks can be configured with:
 The bot features a sophisticated progress tracking and persistence system:
 
 ### Progress Tracking
+
 - Real-time progress updates
 - Location tracking during tasks
 - Estimated time remaining calculations
@@ -661,6 +706,7 @@ The bot features a sophisticated progress tracking and persistence system:
 - Task-specific metrics (e.g., blocks mined per second)
 
 ### Progress Persistence
+
 - Automatic saving of progress to disk
 - Resume tasks after bot restarts
 - Configurable retention policies:
@@ -670,16 +716,18 @@ The bot features a sophisticated progress tracking and persistence system:
   - `maxProgressHistory`: Maximum number of progress history entries (default: 1000)
 
 ### Storage Configuration
+
 ```typescript
-const storage = new TaskStorage('./data', {
+const storage = new TaskStorage("./data", {
   maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
   maxCompletedAge: 14 * 24 * 60 * 60 * 1000, // 14 days
   cleanupInterval: 12 * 60 * 60 * 1000, // 12 hours
-  maxProgressHistory: 500
+  maxProgressHistory: 500,
 });
 ```
 
 ### Cleanup Rules
+
 - Completed tasks: Kept for `maxCompletedAge`
 - Failed tasks: Kept for `maxAge`
 - In-progress tasks: Kept until completed or failed
@@ -690,9 +738,11 @@ const storage = new TaskStorage('./data', {
 ### 💎 Resource Collection
 
 #### gatherBlock
+
 Collects specified blocks from the environment.
 
 Example:
+
 ```
 User: "gather 64 cobblestone"
 LLM Output: {
@@ -705,9 +755,11 @@ LLM Output: {
 ```
 
 #### smeltItem
+
 Smelts items in a furnace.
 
 Example:
+
 ```
 User: "smelt 32 iron ore"
 LLM Output: {
@@ -720,9 +772,11 @@ LLM Output: {
 ```
 
 #### fish
+
 Fishes for items using a fishing rod.
 
 Example:
+
 ```
 User: "fish for 10 minutes"
 LLM Output: {
@@ -736,9 +790,11 @@ LLM Output: {
 ### ⚒️ Processing & Crafting
 
 #### craftItem
+
 Crafts items using available recipes.
 
 Example:
+
 ```
 User: "craft 32 sticks"
 LLM Output: {
@@ -751,9 +807,11 @@ LLM Output: {
 ```
 
 #### brewPotion
+
 Brews potions in a brewing stand.
 
 Example:
+
 ```
 User: "brew 3 strength potions"
 LLM Output: {
@@ -768,9 +826,11 @@ LLM Output: {
 ### 🌱 Farming & Animal Care
 
 #### tendFarm
+
 Manages farm operations with advanced features.
 
 Example:
+
 ```
 User: "tend the wheat farm"
 LLM Output: {
@@ -786,6 +846,7 @@ LLM Output: {
 ```
 
 Features:
+
 - Automatic detection of mature crops
 - Smart harvesting and replanting
 - Configurable farming radius
@@ -795,9 +856,11 @@ Features:
 - Error handling with automatic retries
 
 #### breedAnimals
+
 Breeds animals of specified type.
 
 Example:
+
 ```
 User: "breed 2 pairs of cows"
 LLM Output: {

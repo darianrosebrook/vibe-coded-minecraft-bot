@@ -12,7 +12,7 @@ describe('TypeFallbackSystem', () => {
   describe('resolveType', () => {
     it('should return high confidence for valid mining task with proper context', async () => {
       const detectionResult: ContextAwareTypeDetectionResult = {
-        type: 'mining',
+        type: TaskType.MINING,
         confidence: 0.8,
         contextReasons: ['Has pickaxe', 'Near ore'],
         warnings: [],
@@ -33,7 +33,7 @@ describe('TypeFallbackSystem', () => {
 
     it('should suggest crafting as fallback when missing pickaxe', async () => {
       const detectionResult: ContextAwareTypeDetectionResult = {
-        type: 'mining',
+        type: TaskType.MINING,
         confidence: 0.3,
         contextReasons: [],
         warnings: ['No pickaxe available'],
@@ -58,7 +58,7 @@ describe('TypeFallbackSystem', () => {
 
     it('should suggest gathering as fallback when no ore nearby', async () => {
       const detectionResult: ContextAwareTypeDetectionResult = {
-        type: 'mining',
+        type: TaskType.MINING,
         confidence: 0.3,
         contextReasons: [],
         warnings: ['No ore nearby'],
@@ -82,7 +82,7 @@ describe('TypeFallbackSystem', () => {
 
     it('should track resolution path through multiple fallbacks', async () => {
       const detectionResult: ContextAwareTypeDetectionResult = {
-        type: 'mining',
+        type: TaskType.MINING,
         confidence: 0.3,
         contextReasons: [],
         warnings: ['No pickaxe available', 'No ore nearby'],
@@ -104,12 +104,12 @@ describe('TypeFallbackSystem', () => {
 
   describe('historicalSuccessRate', () => {
     it('should update success rate based on task outcomes', () => {
-      system.updateHistoricalSuccessRate('mining', true);
-      system.updateHistoricalSuccessRate('mining', true);
-      system.updateHistoricalSuccessRate('mining', false);
+      system.updateHistoricalSuccessRate(TaskType.MINING, true);
+      system.updateHistoricalSuccessRate(TaskType.MINING, true);
+      system.updateHistoricalSuccessRate(TaskType.MINING, false);
 
       const detectionResult: ContextAwareTypeDetectionResult = {
-        type: 'mining',
+        type: TaskType.MINING,
         confidence: 0.5,
         contextReasons: [],
         warnings: [],

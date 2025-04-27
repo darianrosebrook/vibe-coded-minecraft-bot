@@ -11,8 +11,7 @@ import { TaskParser } from '../llm/parse';
 import { OllamaClient } from '../utils/llmClient';
 import { TaskParsingLogger } from '../llm/logging/logger';
 import { ZodSchemaValidator } from '../utils/taskValidator';
-import { ErrorHandler } from '../error/errorHandler';
-import { Biome } from 'prismarine-biome';
+import { ErrorHandler } from '../error/errorHandler'; 
 
 export class MinecraftBot {
   private bot: MineflayerBot;

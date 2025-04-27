@@ -1,5 +1,6 @@
 import { PromptOptimizer } from '../prompt_optimizer';
 import { TaskContext } from '../../types';
+import { TaskType } from '../../../types/task';
 
 describe('PromptOptimizer', () => {
   let optimizer: PromptOptimizer;
@@ -15,10 +16,9 @@ describe('PromptOptimizer', () => {
       worldState: {
         inventory: {
           items: [
-            { id: 'diamond_pickaxe', count: 1 },
-            { id: 'torch', count: 64 }
+            { name: 'diamond_pickaxe', count: 1 },
+            { name: 'torch', count: 64 }
           ],
-          selectedSlot: 0
         },
         position: { x: 100, y: 64, z: -200 },
         surroundings: [
@@ -29,11 +29,11 @@ describe('PromptOptimizer', () => {
       },
       recentTasks: [
         {
-          type: 'mining',
-          parameters: { target: 'diamond_ore', count: 1 },
-          status: 'success',
-          timestamp: Date.now() - 1000
-        }
+          type: TaskType.MINING,
+          parameters: { block: "diamond_ore" },
+          status: "success",
+          timestamp: Date.now() - 1000,
+        },
       ],
       pluginContext: {
         pathfinder: {
@@ -51,8 +51,8 @@ describe('PromptOptimizer', () => {
     };
   });
 
-  describe('Template Registration', () => {
-    it('should register a new template', async () => {
+  describe("Template Registration", () => {
+    it("should register a new template", async () => {
       const template = {
         id: 'mining',
         version: 1,

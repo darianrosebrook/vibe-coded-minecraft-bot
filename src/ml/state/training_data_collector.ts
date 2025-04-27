@@ -1,5 +1,4 @@
 import { mlMetrics } from '../../utils/observability/metrics';
-import { EnhancedGameState } from './types';
 import { Bot } from 'mineflayer';
 import { DataPreprocessor, ProcessedData } from './data_preprocessor';
 

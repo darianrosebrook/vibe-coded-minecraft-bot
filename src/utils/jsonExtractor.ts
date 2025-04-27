@@ -1,4 +1,4 @@
-import { LLMError } from './llmClient';
+import { LLMError } from "./llmClient";
 
 /**
  * Extracts a JSON object from a string using multiple methods.
@@ -54,7 +54,7 @@ function extractJsonWithBracketCounting(str: string): string {
     }
 
     // Handle escape sequences
-    if (char === '\\' && !escapeNext) {
+    if (char === "\\" && !escapeNext) {
       escapeNext = true;
       continue;
     }
@@ -62,12 +62,12 @@ function extractJsonWithBracketCounting(str: string): string {
 
     // Count braces when not in a string
     if (!inString) {
-      if (char === '{') {
+      if (char === "{") {
         if (braceCount === 0) {
           start = i;
         }
         braceCount++;
-      } else if (char === '}') {
+      } else if (char === "}") {
         braceCount--;
         if (braceCount === 0) {
           end = i;
@@ -78,15 +78,21 @@ function extractJsonWithBracketCounting(str: string): string {
   }
 
   if (start === -1) {
-    throw new LLMError(`No JSON object start found in response: ${str}`, 'INVALID_JSON');
+    throw new LLMError(
+      `No JSON object start found in response: ${str}`,
+      "INVALID_JSON"
+    );
   }
 
   if (end === -1) {
-    throw new LLMError(`No matching closing brace found in response: ${str}`, 'INVALID_JSON');
+    throw new LLMError(
+      `No matching closing brace found in response: ${str}`,
+      "INVALID_JSON"
+    );
   }
 
   const extracted = str.slice(start, end + 1);
-  
+
   // Validate the extracted JSON
   try {
     JSON.parse(extracted);
@@ -94,7 +100,7 @@ function extractJsonWithBracketCounting(str: string): string {
   } catch (error) {
     throw new LLMError(
       `Extracted text is not valid JSON: ${extracted}`,
-      'INVALID_JSON'
+      "INVALID_JSON"
     );
   }
-} 
+}

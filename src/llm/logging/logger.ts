@@ -1,14 +1,13 @@
-import { Task } from '../../tasks/types/task';
-import { Logger } from '../../utils/observability/logger';
-import { TaskContext, TaskParseResult } from '../types';
-
+import { Task } from "../../tasks/types/task";
+import { Logger } from "../../utils/observability/logger";
+import { TaskContext, TaskParseResult } from "../types";
 
 export class TaskParsingLogger {
   private readonly logger: Logger;
   private sequenceId: number = 0;
 
   constructor(logger?: Logger) {
-    this.logger = logger || console;
+    this.logger = logger || new Logger();
   }
 
   public debug(message: string, meta?: any): void {
@@ -28,132 +27,147 @@ export class TaskParsingLogger {
   }
 
   public logInput(command: string, context: TaskContext): void {
-    this.logger.info('Input', {
+    this.logger.info("Input", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'input',
+      type: "input",
       command,
       context: {
         conversationHistory: context.conversationHistory,
         worldState: context.worldState,
         recentTasks: context.recentTasks,
-        pluginContext: context.pluginContext
-      }
+        pluginContext: context.pluginContext,
+      },
     });
   }
 
   public logLLMResponse(response: string): void {
-    this.logger.info('LLM Response', {
+    this.logger.info("LLM Response", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'llm_response',
-      response
+      type: "llm_response",
+      response,
     });
   }
 
   public logTaskResolution(task: Task | TaskParseResult): void {
-    this.logger.info('Task Resolution', {
+    this.logger.info("Task Resolution", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'task_resolution',
+      type: "task_resolution",
       task: {
         type: task.type,
-        parameters: task.parameters
-      }
+        parameters: task.parameters,
+      },
     });
   }
 
   public logTypeOverride(originalType: string, newType: string): void {
-    this.logger.info('Type Override', {
+    this.logger.info("Type Override", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'type_override',
+      type: "type_override",
       originalType,
-      newType
+      newType,
     });
   }
 
   public logTypeFallback(originalType: string, fallbackType: string): void {
-    this.logger.info('Type Fallback', {
+    this.logger.info("Type Fallback", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'type_fallback',
+      type: "type_fallback",
       originalType,
-      fallbackType
+      fallbackType,
     });
   }
 
-  public logParameterValidation(task: Task, isValid: boolean, errors?: string[]): void {
-    this.logger.info('Parameter Validation', {
+  public logParameterValidation(
+    task: Task,
+    isValid: boolean,
+    errors?: string[]
+  ): void {
+    this.logger.info("Parameter Validation", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'parameter_validation',
+      type: "parameter_validation",
       task: {
         type: task.type,
-        parameters: task.parameters
+        parameters: task.parameters,
       },
       isValid,
-      errors
+      errors,
     });
   }
 
-  public logSubTypeValidationFailure(type: string, subType: string, errors?: string[]): void {
-    this.logger.info('Sub-Type Validation Failure', {
+  public logSubTypeValidationFailure(
+    type: string,
+    subType: string,
+    errors?: string[]
+  ): void {
+    this.logger.info("Sub-Type Validation Failure", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'sub_type_validation_failure',
+      type: "sub_type_validation_failure",
       taskType: type,
       subType,
-      errors
+      errors,
     });
   }
 
-  public logTaskQueueUpdate(task: Task, action: 'add' | 'remove' | 'update'): void {
-    this.logger.info('Task Queue Update', {
+  public logTaskQueueUpdate(
+    task: Task,
+    action: "add" | "remove" | "update"
+  ): void {
+    this.logger.info("Task Queue Update", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'task_queue_update',
+      type: "task_queue_update",
       action,
       task: {
         type: task.type,
-        parameters: task.parameters
-      }
+        parameters: task.parameters,
+      },
     });
   }
 
   public logOutput(response: string): void {
-    this.logger.info('Output', {
+    this.logger.info("Output", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'output',
-      response
+      type: "output",
+      response,
     });
   }
 
   public logError(error: Error, context?: any): void {
-    this.logger.error('Error', {
+    this.logger.error("Error", {
       sequenceId: this.sequenceId,
       timestamp: new Date().toISOString(),
-      type: 'error',
+      type: "error",
       error: {
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
       },
-      context
+      context,
     });
   }
 
   public logPerformance(data: {
     command: string;
     responseTime: number;
-    tokenUsage?: { promptTokens: number; completionTokens: number; totalTokens: number };
+    tokenUsage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
     cacheHit: boolean;
     timestamp: number;
   }): void {
-    this.logger.info('Performance', {
+    this.logger.info("Performance", {
       sequenceId: this.sequenceId,
-      type: 'performance',
-      ...data
+      type: "performance",
+      ...data,
     });
   }
 
@@ -164,4 +178,4 @@ export class TaskParsingLogger {
   public getCurrentSequenceId(): number {
     return this.sequenceId;
   }
-} 
+}

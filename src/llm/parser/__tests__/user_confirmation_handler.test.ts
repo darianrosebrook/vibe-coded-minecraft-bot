@@ -2,6 +2,7 @@ import { UserConfirmationHandler } from '../user_confirmation_handler';
 import { ContextDisambiguator } from '../context_disambiguator';
 import { TaskType } from '../../../types/task';
 import { TaskContext } from '../../types';
+import { AmbiguityDetector } from '../ambiguity_detector';
 
 describe('UserConfirmationHandler', () => {
   let handler: UserConfirmationHandler;
@@ -52,13 +53,7 @@ describe('UserConfirmationHandler', () => {
         resolvedType: 'mining' as TaskType,
         confidence: 0.7,
         contextFactors: { hasPickaxe: 0.8 },
-        historicalPatterns: [{
-          command: 'mine',
-          resolvedType: 'crafting' as TaskType,
-          success: true,
-          timestamp: Date.now(),
-          contextFactors: {}
-        }],
+        historicalPatterns: ['craft pickaxe'],
         currentStateRelevance: 0.8
       };
 
@@ -89,7 +84,7 @@ describe('UserConfirmationHandler', () => {
   describe('processConfirmation', () => {
     it('should process valid confirmations', async () => {
       const disambiguationResult = {
-        resolvedType: 'mining' as TaskType,
+        resolvedType: TaskType.MINING,
         confidence: 0.7,
         contextFactors: {},
         historicalPatterns: [],
@@ -97,7 +92,7 @@ describe('UserConfirmationHandler', () => {
       };
 
       await handler.handleAmbiguousCommand('mine diamond', mockContext, disambiguationResult);
-      const success = await handler.processConfirmation('mine diamond', 'mining', mockContext);
+      const success = await handler.processConfirmation('mine diamond', TaskType.MINING, mockContext);
       
       expect(success).toBe(true);
       expect(handler.getPendingConfirmation('mine diamond')).toBeUndefined();
@@ -105,7 +100,7 @@ describe('UserConfirmationHandler', () => {
 
     it('should reject invalid confirmations', async () => {
       const disambiguationResult = {
-        resolvedType: 'mining' as TaskType,
+        resolvedType: TaskType.MINING,
         confidence: 0.7,
         contextFactors: {},
         historicalPatterns: [],
@@ -113,7 +108,7 @@ describe('UserConfirmationHandler', () => {
       };
 
       await handler.handleAmbiguousCommand('mine diamond', mockContext, disambiguationResult);
-      const success = await handler.processConfirmation('mine diamond', 'crafting' as TaskType, mockContext);
+      const success = await handler.processConfirmation('mine diamond', TaskType.CRAFTING, mockContext);
       
       expect(success).toBe(false);
       expect(handler.getPendingConfirmation('mine diamond')).toBeDefined();
@@ -121,7 +116,7 @@ describe('UserConfirmationHandler', () => {
 
     it('should record successful confirmations in historical patterns', async () => {
       const disambiguationResult = {
-        resolvedType: 'mining' as TaskType,
+        resolvedType: TaskType.MINING,
         confidence: 0.7,
         contextFactors: {},
         historicalPatterns: [],
@@ -129,7 +124,7 @@ describe('UserConfirmationHandler', () => {
       };
 
       await handler.handleAmbiguousCommand('mine diamond', mockContext, disambiguationResult);
-      await handler.processConfirmation('mine diamond', 'mining', mockContext);
+      await handler.processConfirmation('mine diamond', TaskType.MINING, mockContext);
 
       // Verify the pattern was added to the disambiguator
       const patterns = disambiguator['historicalPatterns'];
@@ -142,7 +137,7 @@ describe('UserConfirmationHandler', () => {
   describe('confirmation management', () => {
     it('should clean up expired confirmations', async () => {
       const disambiguationResult = {
-        resolvedType: 'mining' as TaskType,
+        resolvedType: TaskType.MINING,
         confidence: 0.7,
         contextFactors: {},
         historicalPatterns: [],
@@ -160,7 +155,7 @@ describe('UserConfirmationHandler', () => {
 
     it('should maintain maximum number of pending confirmations', async () => {
       const disambiguationResult = {
-        resolvedType: 'mining' as TaskType,
+        resolvedType: TaskType.MINING,
         confidence: 0.7,
         contextFactors: {},
         historicalPatterns: [],

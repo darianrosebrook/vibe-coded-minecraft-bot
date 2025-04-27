@@ -1,4 +1,4 @@
-import { TaskParsingLogger } from '../logging/logger';
+import { TaskParsingLogger } from "../logging/logger";
 
 interface PerformanceMetrics {
   totalRequests: number;
@@ -29,7 +29,7 @@ export class PerformanceMonitor {
       errorCount: 0,
       cacheHitRate: 0,
       tokenUsageByCommand: new Map(),
-      responseTimes: []
+      responseTimes: [],
     };
     this.logger = new TaskParsingLogger();
     this.startTime = Date.now();
@@ -51,14 +51,18 @@ export class PerformanceMonitor {
     // Update metrics
     this.metrics.totalRequests++;
     this.metrics.responseTimes.push(responseTime);
-    this.metrics.averageResponseTime = 
-      (this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + responseTime) / 
+    this.metrics.averageResponseTime =
+      (this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) +
+        responseTime) /
       this.metrics.totalRequests;
 
     if (tokenUsage) {
       this.metrics.totalTokens += tokenUsage.totalTokens;
       const currentUsage = this.metrics.tokenUsageByCommand.get(command) || 0;
-      this.metrics.tokenUsageByCommand.set(command, currentUsage + tokenUsage.totalTokens);
+      this.metrics.tokenUsageByCommand.set(
+        command,
+        currentUsage + tokenUsage.totalTokens
+      );
     }
 
     // Log performance data
@@ -67,7 +71,7 @@ export class PerformanceMonitor {
       responseTime,
       tokenUsage,
       cacheHit,
-      timestamp: endTime
+      timestamp: endTime,
     });
   }
 
@@ -82,7 +86,7 @@ export class PerformanceMonitor {
   public getMetrics(): PerformanceMetrics {
     return {
       ...this.metrics,
-      tokenUsageByCommand: new Map(this.metrics.tokenUsageByCommand)
+      tokenUsageByCommand: new Map(this.metrics.tokenUsageByCommand),
     };
   }
 
@@ -110,8 +114,8 @@ export class PerformanceMonitor {
       errorCount: 0,
       cacheHitRate: 0,
       tokenUsageByCommand: new Map(),
-      responseTimes: []
+      responseTimes: [],
     };
     this.startTime = Date.now();
   }
-} 
+}

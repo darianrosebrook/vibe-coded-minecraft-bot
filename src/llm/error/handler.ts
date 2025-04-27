@@ -1,11 +1,9 @@
-
-import { MLErrorHandlerImpl } from '../../ml/command/error_handler';
-import { LLMClient } from '../../utils/llmClient';
-import { TaskContext } from '../types';
-
+import { MLErrorHandlerImpl } from "../../ml/command/error_handler";
+import { LLMClient } from "../../utils/llmClient";
+import { TaskContext } from "../types";
 
 export interface ParsingError {
-  type: 'type_mismatch' | 'parameter_invalid' | 'context_missing' | 'ambiguous';
+  type: "type_mismatch" | "parameter_invalid" | "context_missing" | "ambiguous";
   message: string;
   context: TaskContext;
   recoveryStrategy?: string;
@@ -36,52 +34,56 @@ export class ParsingErrorHandler {
 
   private initializeRecoveryStrategies() {
     // Load predefined recovery strategies
-    this.recoveryStrategies.set('type_mismatch', {
-      name: 'Type Mismatch Recovery',
-      description: 'Attempt to resolve type mismatches by converting or validating types',
+    this.recoveryStrategies.set("type_mismatch", {
+      name: "Type Mismatch Recovery",
+      description:
+        "Attempt to resolve type mismatches by converting or validating types",
       steps: [
-        'Identify the expected type',
-        'Check if conversion is possible',
-        'Validate the converted value',
-        'Update the context if successful'
+        "Identify the expected type",
+        "Check if conversion is possible",
+        "Validate the converted value",
+        "Update the context if successful",
       ],
-      confidence: 0.8
+      confidence: 0.8,
     });
 
-    this.recoveryStrategies.set('parameter_invalid', {
-      name: 'Parameter Validation Recovery',
-      description: 'Attempt to fix invalid parameters by suggesting alternatives',
+    this.recoveryStrategies.set("parameter_invalid", {
+      name: "Parameter Validation Recovery",
+      description:
+        "Attempt to fix invalid parameters by suggesting alternatives",
       steps: [
-        'Identify invalid parameters',
-        'Find similar valid parameters',
-        'Suggest corrections',
-        'Apply the most likely correction'
+        "Identify invalid parameters",
+        "Find similar valid parameters",
+        "Suggest corrections",
+        "Apply the most likely correction",
       ],
-      confidence: 0.7
+      confidence: 0.7,
     });
 
-    this.recoveryStrategies.set('context_missing', {
-      name: 'Context Recovery',
-      description: 'Attempt to recover missing context by gathering required information',
+    this.recoveryStrategies.set("context_missing", {
+      name: "Context Recovery",
+      description:
+        "Attempt to recover missing context by gathering required information",
       steps: [
-        'Identify missing context elements',
-        'Gather required information',
-        'Update context with gathered data',
-        'Retry the operation'
+        "Identify missing context elements",
+        "Gather required information",
+        "Update context with gathered data",
+        "Retry the operation",
       ],
-      confidence: 0.9
+      confidence: 0.9,
     });
 
-    this.recoveryStrategies.set('ambiguous', {
-      name: 'Ambiguity Resolution',
-      description: 'Attempt to resolve ambiguous commands by requesting clarification',
+    this.recoveryStrategies.set("ambiguous", {
+      name: "Ambiguity Resolution",
+      description:
+        "Attempt to resolve ambiguous commands by requesting clarification",
       steps: [
-        'Identify ambiguous elements',
-        'Generate clarification questions',
-        'Request user input',
-        'Process the clarification'
+        "Identify ambiguous elements",
+        "Generate clarification questions",
+        "Request user input",
+        "Process the clarification",
       ],
-      confidence: 0.6
+      confidence: 0.6,
     });
   }
 
@@ -122,15 +124,17 @@ export class ParsingErrorHandler {
     );
 
     return {
-      name: 'ML-Generated Recovery',
+      name: "ML-Generated Recovery",
       description: mlStrategy,
-      steps: await this.mlErrorHandler.suggestCorrections(new Error(error.message)),
-      confidence: 0.8
+      steps: await this.mlErrorHandler.suggestCorrections(
+        new Error(error.message)
+      ),
+      confidence: 0.8,
     };
   }
 
   private async handlePluginError(
-    pluginError: ParsingError['pluginError'],
+    pluginError: ParsingError["pluginError"],
     baseStrategy: ErrorRecoveryStrategy
   ): Promise<ErrorRecoveryStrategy> {
     if (!pluginError) return baseStrategy;
@@ -143,7 +147,7 @@ export class ParsingErrorHandler {
     return {
       ...baseStrategy,
       steps: [...baseStrategy.steps, ...suggestions],
-      confidence: Math.min(baseStrategy.confidence, 0.8)
+      confidence: Math.min(baseStrategy.confidence, 0.8),
     };
   }
 
@@ -159,4 +163,4 @@ export class ParsingErrorHandler {
   getRecoveryStrategy(name: string): ErrorRecoveryStrategy | undefined {
     return this.recoveryStrategies.get(name);
   }
-} 
+}

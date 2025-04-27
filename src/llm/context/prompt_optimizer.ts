@@ -1,5 +1,5 @@
-import { TaskContext } from '../types';
-import { MetricsStorage } from './metrics_storage';
+import { TaskContext } from "../types";
+import { MetricsStorage } from "./metrics_storage";
 
 /**
  * Interface for prompt template configuration
@@ -62,7 +62,7 @@ export interface TemplateVersion {
 }
 
 interface PerformanceSuggestion {
-  type: 'context' | 'template' | 'compression';
+  type: "context" | "template" | "compression";
   description: string;
   impact: number;
   implementation: string;
@@ -87,7 +87,7 @@ export class PromptOptimizer {
       qualityThreshold: 0.8,
       versioningEnabled: true,
       performanceTracking: true,
-      ...config
+      ...config,
     };
     this.storage = new MetricsStorage();
     this.loadStoredMetrics();
@@ -99,8 +99,8 @@ export class PromptOptimizer {
   private async loadStoredMetrics(): Promise<void> {
     try {
       this.metrics = await this.storage.getAllMetrics();
-      const templateIds = new Set(this.metrics.map(m => m.promptId));
-      
+      const templateIds = new Set(this.metrics.map((m) => m.promptId));
+
       for (const templateId of templateIds) {
         const versions = await this.storage.getTemplateVersions(templateId);
         if (versions.length > 0) {
@@ -108,7 +108,7 @@ export class PromptOptimizer {
         }
       }
     } catch (error) {
-      console.error('Error loading stored metrics:', error);
+      console.error("Error loading stored metrics:", error);
     }
   }
 
@@ -121,8 +121,10 @@ export class PromptOptimizer {
     }
 
     const versions = this.templates.get(template.id)!;
-    const existingVersion = versions.find(v => v.version === template.version);
-    
+    const existingVersion = versions.find(
+      (v) => v.version === template.version
+    );
+
     if (existingVersion) {
       throw new Error(`Template version ${template.version} already exists`);
     }
@@ -131,7 +133,7 @@ export class PromptOptimizer {
       version: template.version,
       template,
       timestamp: Date.now(),
-      metrics: []
+      metrics: [],
     });
 
     // Sort versions by version number
@@ -144,15 +146,20 @@ export class PromptOptimizer {
   /**
    * Rolls back to a previous template version
    */
-  async rollbackTemplate(templateId: string, targetVersion: number): Promise<void> {
+  async rollbackTemplate(
+    templateId: string,
+    targetVersion: number
+  ): Promise<void> {
     const versions = this.templates.get(templateId);
     if (!versions) {
       throw new Error(`Template ${templateId} not found`);
     }
 
-    const targetIndex = versions.findIndex(v => v.version === targetVersion);
+    const targetIndex = versions.findIndex((v) => v.version === targetVersion);
     if (targetIndex === -1) {
-      throw new Error(`Version ${targetVersion} not found for template ${templateId}`);
+      throw new Error(
+        `Version ${targetVersion} not found for template ${templateId}`
+      );
     }
 
     // Remove all versions after the target version
@@ -173,9 +180,15 @@ export class PromptOptimizer {
     }
 
     const startTime = Date.now();
-    const selectedContext = this.selectRelevantContext(context, template[0].template.contextRequirements);
-    const prompt = this.formatPrompt(template[0].template.template, selectedContext);
-    
+    const selectedContext = this.selectRelevantContext(
+      context,
+      template[0].template.contextRequirements
+    );
+    const prompt = this.formatPrompt(
+      template[0].template.template,
+      selectedContext
+    );
+
     if (this.config.performanceTracking) {
       this.recordMetrics({
         promptId: templateId,
@@ -183,7 +196,7 @@ export class PromptOptimizer {
         responseQuality: this.estimateQuality(prompt),
         contextRelevance: selectedContext.relevance,
         generationTime: Date.now() - startTime,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
 
@@ -193,7 +206,10 @@ export class PromptOptimizer {
   /**
    * Selects and compresses relevant context based on requirements
    */
-  private selectRelevantContext(context: TaskContext, requirements: string[]): ContextSelection {
+  private selectRelevantContext(
+    context: TaskContext,
+    requirements: string[]
+  ): ContextSelection {
     const selectedContext: Record<string, any> = {};
     let totalTokens = 0;
     let relevantTokens = 0;
@@ -209,14 +225,15 @@ export class PromptOptimizer {
       totalTokens += this.estimateTokens(JSON.stringify(contextValue));
     }
 
-    const compressionRatio = totalTokens > 0 ? relevantTokens / totalTokens : 1.0;
+    const compressionRatio =
+      totalTokens > 0 ? relevantTokens / totalTokens : 1.0;
     const relevance = this.calculateRelevance(selectedContext, requirements);
 
     return {
       context: selectedContext,
       relevance,
       compressionRatio,
-      tokenCount: relevantTokens
+      tokenCount: relevantTokens,
     };
   }
 
@@ -224,17 +241,17 @@ export class PromptOptimizer {
    * Extracts a specific value from the context based on a requirement path
    */
   private extractContextValue(context: TaskContext, path: string): any {
-    const parts = path.split('.');
+    const parts = path.split(".");
     let value: any = context;
-    
+
     for (const part of parts) {
-      if (value && typeof value === 'object') {
+      if (value && typeof value === "object") {
         value = value[part];
       } else {
         return null;
       }
     }
-    
+
     return value;
   }
 
@@ -246,7 +263,7 @@ export class PromptOptimizer {
       // For arrays, keep only the most recent items
       const maxItems = 5;
       return value.slice(-maxItems);
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (typeof value === "object" && value !== null) {
       // For objects, keep only essential fields
       const compressed: Record<string, any> = {};
       for (const [key, val] of Object.entries(value)) {
@@ -264,8 +281,15 @@ export class PromptOptimizer {
    */
   private isEssentialField(key: string): boolean {
     const essentialFields = [
-      'id', 'type', 'name', 'status', 'timestamp',
-      'position', 'health', 'inventory', 'state'
+      "id",
+      "type",
+      "name",
+      "status",
+      "timestamp",
+      "position",
+      "health",
+      "inventory",
+      "state",
     ];
     return essentialFields.includes(key);
   }
@@ -273,16 +297,19 @@ export class PromptOptimizer {
   /**
    * Calculates the relevance of selected context to requirements
    */
-  private calculateRelevance(context: Record<string, any>, requirements: string[]): number {
+  private calculateRelevance(
+    context: Record<string, any>,
+    requirements: string[]
+  ): number {
     if (requirements.length === 0) return 1.0;
-    
+
     let fulfilledRequirements = 0;
     for (const requirement of requirements) {
       if (context[requirement] !== undefined && context[requirement] !== null) {
         fulfilledRequirements++;
       }
     }
-    
+
     return fulfilledRequirements / requirements.length;
   }
 
@@ -291,7 +318,7 @@ export class PromptOptimizer {
    */
   private formatPrompt(template: string, context: ContextSelection): string {
     let formattedPrompt = template;
-    
+
     // Replace context placeholders
     for (const [key, value] of Object.entries(context.context)) {
       const placeholder = `{${key}}`;
@@ -302,13 +329,17 @@ export class PromptOptimizer {
         );
       }
     }
-    
+
     // Add context metadata if needed
     if (this.config.qualityThreshold > 0) {
-      formattedPrompt += `\n\nContext Relevance: ${context.relevance.toFixed(2)}`;
-      formattedPrompt += `\nContext Compression: ${context.compressionRatio.toFixed(2)}`;
+      formattedPrompt += `\n\nContext Relevance: ${context.relevance.toFixed(
+        2
+      )}`;
+      formattedPrompt += `\nContext Compression: ${context.compressionRatio.toFixed(
+        2
+      )}`;
     }
-    
+
     return formattedPrompt;
   }
 
@@ -317,8 +348,8 @@ export class PromptOptimizer {
    */
   private formatContextValue(value: any): string {
     if (Array.isArray(value)) {
-      return value.map(item => this.formatContextValue(item)).join(', ');
-    } else if (typeof value === 'object' && value !== null) {
+      return value.map((item) => this.formatContextValue(item)).join(", ");
+    } else if (typeof value === "object" && value !== null) {
       return JSON.stringify(value, null, 2);
     }
     return String(value);
@@ -340,10 +371,10 @@ export class PromptOptimizer {
     // 1. Presence of required context
     // 2. Prompt length (not too short, not too long)
     // 3. Formatting quality
-    
+
     const lengthScore = this.calculateLengthScore(prompt);
     const formattingScore = this.calculateFormattingScore(prompt);
-    
+
     return (lengthScore + formattingScore) / 2;
   }
 
@@ -353,13 +384,13 @@ export class PromptOptimizer {
   private calculateLengthScore(prompt: string): number {
     const tokenCount = this.estimateTokens(prompt);
     const idealLength = this.config.maxTokens * 0.7; // 70% of max tokens
-    
+
     if (tokenCount < idealLength * 0.3) return 0.3; // Too short
     if (tokenCount > this.config.maxTokens) return 0.3; // Too long
-    
+
     // Score decreases as we get further from ideal length
     const distance = Math.abs(tokenCount - idealLength);
-    return Math.max(0.3, 1 - (distance / idealLength));
+    return Math.max(0.3, 1 - distance / idealLength);
   }
 
   /**
@@ -367,20 +398,21 @@ export class PromptOptimizer {
    */
   private calculateFormattingScore(prompt: string): number {
     let score = 1.0;
-    
+
     // Check for proper line breaks
-    const lineCount = prompt.split('\n').length;
+    const lineCount = prompt.split("\n").length;
     if (lineCount < 3) score *= 0.8;
-    
+
     // Check for proper spacing
     const doubleSpaces = (prompt.match(/  /g) || []).length;
     if (doubleSpaces > 5) score *= 0.9;
-    
+
     // Check for proper punctuation
     const sentences = prompt.split(/[.!?]/);
-    const avgLength = sentences.reduce((sum, s) => sum + s.length, 0) / sentences.length;
+    const avgLength =
+      sentences.reduce((sum, s) => sum + s.length, 0) / sentences.length;
     if (avgLength > 100) score *= 0.8;
-    
+
     return score;
   }
 
@@ -389,7 +421,7 @@ export class PromptOptimizer {
    */
   private async recordMetrics(metrics: PromptMetrics): Promise<void> {
     this.metrics.push(metrics);
-    
+
     // Update template version metrics
     const versions = this.templates.get(metrics.promptId);
     if (versions && versions.length > 0) {
@@ -404,7 +436,9 @@ export class PromptOptimizer {
   /**
    * Gets performance suggestions for a template
    */
-  async getPerformanceSuggestions(templateId: string): Promise<PerformanceSuggestion[]> {
+  async getPerformanceSuggestions(
+    templateId: string
+  ): Promise<PerformanceSuggestion[]> {
     const versions = this.templates.get(templateId);
     if (!versions || versions.length === 0) {
       return [];
@@ -414,35 +448,51 @@ export class PromptOptimizer {
     const suggestions: PerformanceSuggestion[] = [];
 
     // Analyze context relevance
-    const avgRelevance = this.calculateAverageMetric(latestVersion.metrics, 'contextRelevance');
+    const avgRelevance = this.calculateAverageMetric(
+      latestVersion.metrics,
+      "contextRelevance"
+    );
     if (avgRelevance < this.config.minRelevance) {
       suggestions.push({
-        type: 'context',
-        description: 'Context relevance is below threshold. Consider adding more relevant context or improving context selection.',
+        type: "context",
+        description:
+          "Context relevance is below threshold. Consider adding more relevant context or improving context selection.",
         impact: this.config.minRelevance - avgRelevance,
-        implementation: 'Review and update context requirements in the template.'
+        implementation:
+          "Review and update context requirements in the template.",
       });
     }
 
     // Analyze token usage
-    const avgTokens = this.calculateAverageMetric(latestVersion.metrics, 'tokenUsage');
+    const avgTokens = this.calculateAverageMetric(
+      latestVersion.metrics,
+      "tokenUsage"
+    );
     if (avgTokens > this.config.maxTokens * 0.8) {
       suggestions.push({
-        type: 'compression',
-        description: 'Token usage is approaching limit. Consider implementing more aggressive context compression.',
-        impact: (avgTokens - this.config.maxTokens * 0.8) / this.config.maxTokens,
-        implementation: 'Adjust compression threshold or implement more sophisticated compression algorithms.'
+        type: "compression",
+        description:
+          "Token usage is approaching limit. Consider implementing more aggressive context compression.",
+        impact:
+          (avgTokens - this.config.maxTokens * 0.8) / this.config.maxTokens,
+        implementation:
+          "Adjust compression threshold or implement more sophisticated compression algorithms.",
       });
     }
 
     // Analyze response quality
-    const avgQuality = this.calculateAverageMetric(latestVersion.metrics, 'responseQuality');
+    const avgQuality = this.calculateAverageMetric(
+      latestVersion.metrics,
+      "responseQuality"
+    );
     if (avgQuality < this.config.qualityThreshold) {
       suggestions.push({
-        type: 'template',
-        description: 'Response quality is below threshold. Consider improving prompt template structure.',
+        type: "template",
+        description:
+          "Response quality is below threshold. Consider improving prompt template structure.",
         impact: this.config.qualityThreshold - avgQuality,
-        implementation: 'Review and update prompt template structure and formatting.'
+        implementation:
+          "Review and update prompt template structure and formatting.",
       });
     }
 
@@ -452,7 +502,10 @@ export class PromptOptimizer {
   /**
    * Calculates average of a specific metric
    */
-  private calculateAverageMetric(metrics: PromptMetrics[], metric: keyof PromptMetrics): number {
+  private calculateAverageMetric(
+    metrics: PromptMetrics[],
+    metric: keyof PromptMetrics
+  ): number {
     if (metrics.length === 0) return 0;
     const sum = metrics.reduce((acc, m) => acc + (m[metric] as number), 0);
     return sum / metrics.length;
@@ -468,8 +521,10 @@ export class PromptOptimizer {
   /**
    * Cleans up old metrics
    */
-  async cleanupMetrics(maxAge: number = 30 * 24 * 60 * 60 * 1000): Promise<void> {
+  async cleanupMetrics(
+    maxAge: number = 30 * 24 * 60 * 60 * 1000
+  ): Promise<void> {
     await this.storage.cleanupMetrics(maxAge);
     await this.loadStoredMetrics(); // Reload after cleanup
   }
-} 
+}

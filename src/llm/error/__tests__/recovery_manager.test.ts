@@ -1,8 +1,8 @@
-import { ErrorRecoveryManager } from '../recovery_manager';
-import { TaskParsingLogger } from '../../logging/logger';
-import { ParsingErrorType, ParsingErrorContext } from '../parsingErrorHandler';
+import { ErrorRecoveryManager } from "../recovery_manager";
+import { TaskParsingLogger } from "../../logging/logger";
+import { ParsingErrorType, ParsingErrorContext } from "../parsingErrorHandler";
 
-describe('ErrorRecoveryManager', () => {
+describe("ErrorRecoveryManager", () => {
   let recoveryManager: ErrorRecoveryManager;
   let logger: TaskParsingLogger;
 
@@ -11,35 +11,35 @@ describe('ErrorRecoveryManager', () => {
     recoveryManager = new ErrorRecoveryManager(logger);
   });
 
-  describe('attemptRecovery', () => {
-    it('should attempt recovery with correct strategy for LLM service error', async () => {
-      const error = new Error('LLM service unavailable');
+  describe("attemptRecovery", () => {
+    it("should attempt recovery with correct strategy for LLM service error", async () => {
+      const error = new Error("LLM service unavailable");
       const context: ParsingErrorContext = {
-        parsingErrorType: 'LLM_SERVICE_ERROR',
-        category: 'LLM',
-        severity: 'CRITICAL',
-        taskId: 'test-task',
-        taskType: 'system',
+        parsingErrorType: "LLM_SERVICE_ERROR",
+        category: "LLM",
+        severity: "CRITICAL",
+        taskId: "test-task",
+        taskType: "system",
         timestamp: Date.now(),
         retryCount: 0,
-        error
+        error,
       };
 
       const result = await recoveryManager.attemptRecovery(error, context);
       expect(result).toBe(false); // Since we haven't implemented the actual recovery logic yet
     });
 
-    it('should respect max retries', async () => {
-      const error = new Error('Invalid command');
+    it("should respect max retries", async () => {
+      const error = new Error("Invalid command");
       const context: ParsingErrorContext = {
-        parsingErrorType: 'INVALID_COMMAND',
-        category: 'LLM',
-        severity: 'MEDIUM',
-        taskId: 'test-task',
-        taskType: 'system',
+        parsingErrorType: "INVALID_COMMAND",
+        category: "LLM",
+        severity: "MEDIUM",
+        taskId: "test-task",
+        taskType: "system",
         timestamp: Date.now(),
         retryCount: 0,
-        error
+        error,
       };
 
       // First attempt
@@ -52,17 +52,17 @@ describe('ErrorRecoveryManager', () => {
       expect(result).toBe(false);
     });
 
-    it('should apply backoff strategy', async () => {
-      const error = new Error('LLM service unavailable');
+    it("should apply backoff strategy", async () => {
+      const error = new Error("LLM service unavailable");
       const context: ParsingErrorContext = {
-        parsingErrorType: 'LLM_SERVICE_ERROR',
-        category: 'LLM',
-        severity: 'CRITICAL',
-        taskId: 'test-task',
-        taskType: 'system',
+        parsingErrorType: "LLM_SERVICE_ERROR",
+        category: "LLM",
+        severity: "CRITICAL",
+        taskId: "test-task",
+        taskType: "system",
         timestamp: Date.now(),
         retryCount: 0,
-        error
+        error,
       };
 
       const startTime = Date.now();
@@ -74,18 +74,18 @@ describe('ErrorRecoveryManager', () => {
     });
   });
 
-  describe('resetRetryCount', () => {
-    it('should reset retry count for specific error type and task', () => {
-      const error = new Error('Invalid command');
+  describe("resetRetryCount", () => {
+    it("should reset retry count for specific error type and task", () => {
+      const error = new Error("Invalid command");
       const context: ParsingErrorContext = {
-        parsingErrorType: 'INVALID_COMMAND',
-        category: 'LLM',
-        severity: 'MEDIUM',
-        taskId: 'test-task',
-        taskType: 'system',
+        parsingErrorType: "INVALID_COMMAND",
+        category: "LLM",
+        severity: "MEDIUM",
+        taskId: "test-task",
+        taskType: "system",
         timestamp: Date.now(),
         retryCount: 0,
-        error
+        error,
       };
 
       // Make two attempts
@@ -93,11 +93,11 @@ describe('ErrorRecoveryManager', () => {
       recoveryManager.attemptRecovery(error, context);
 
       // Reset retry count
-      recoveryManager.resetRetryCount('INVALID_COMMAND', 'test-task');
+      recoveryManager.resetRetryCount("INVALID_COMMAND", "test-task");
 
       // Should be able to make two more attempts
       const result = recoveryManager.attemptRecovery(error, context);
       expect(result).toBe(false);
     });
   });
-}); 
+});

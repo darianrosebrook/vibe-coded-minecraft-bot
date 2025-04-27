@@ -5,11 +5,29 @@
 // Shears - used to harvest wool from sheep (other uses – collect leaves, tall grass and dead bushes).
 // Flint and Steel - used to set things on fire. Can be used to make a fireplace, or the Nether Portal.
 
-type toolNames = 'pickaxe' | 'axe' | 'shovel' | 'hoe' | 'shears' | 'flint_and_steel';
-type toolMaterials = 'wooden' | 'stone' | 'iron' | 'golden' | 'diamond' | 'netherite';
+type toolNames =
+  | "pickaxe"
+  | "axe"
+  | "shovel"
+  | "hoe"
+  | "shears"
+  | "flint_and_steel";
+type toolMaterials =
+  | "wooden"
+  | "stone"
+  | "iron"
+  | "golden"
+  | "diamond"
+  | "netherite";
 type toolDurability = 64 | 132 | 251 | 1562 | 1561 | 2031;
 type currentDurability = number;
-type toolEnchantments = 'efficiency' | 'unbreaking' | 'mending' | 'fortune' | 'silk_touch' | 'vanishing_curse';
+type toolEnchantments =
+  | "efficiency"
+  | "unbreaking"
+  | "mending"
+  | "fortune"
+  | "silk_touch"
+  | "vanishing_curse";
 
 export interface Tool {
   name: toolNames;
@@ -60,4 +78,4 @@ export interface ToolManagerState {
   tools: Tool[];
   repairMaterials: { [key: string]: number }; // Material name -> count
   currentAnvilWindow: any | null; // Store the current anvil window for repairs
-} 
+}

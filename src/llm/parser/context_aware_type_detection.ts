@@ -335,6 +335,7 @@ export class ContextAwareTypeDetector {
       [TaskType.QUERY]: 0,
       [TaskType.INVENTORY]: 0,
       [TaskType.INTERACTION]: 32,
+      [TaskType.CHAT]: 0,
       [TaskType.UNKNOWN]: 0
     };
 

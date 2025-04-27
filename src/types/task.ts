@@ -115,6 +115,7 @@ export interface MiningTaskParameters extends BaseTaskOptions {
   maxDistance?: number;
   yLevel?: number;
   usePathfinding?: boolean;
+  tool?: string;
 }
 
 export interface FarmingTaskParameters extends BaseTaskOptions {

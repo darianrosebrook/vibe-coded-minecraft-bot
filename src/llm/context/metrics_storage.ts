@@ -1,6 +1,6 @@
-import { PromptMetrics, PromptTemplate, TemplateVersion } from './prompt_optimizer';
-import fs from 'fs';
-import path from 'path';
+import { PromptMetrics, TemplateVersion } from "./prompt_optimizer";
+import fs from "fs";
+import path from "path";
 
 interface StoredMetrics {
   metrics: PromptMetrics[];

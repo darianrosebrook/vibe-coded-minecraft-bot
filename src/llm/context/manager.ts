@@ -1,10 +1,9 @@
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
-import { Task } from '../../types/task';
 import { PluginState, StateChange, StateValidation } from '../../types/context';
 import { MinecraftBot } from '../../bot/bot';
 import { MLStateManager } from '../../ml/state/manager';
-import { metrics, mlMetrics } from '../../utils/observability/metrics';
+import { mlMetrics } from '../../utils/observability/metrics';
 
 export { StateChange };
 
@@ -163,7 +162,7 @@ export class ContextManager {
     this.initializeContextWeights();
 
     // Initialize ML State Manager
-    this.mlStateManager = new MLStateManager(this.bot);
+    this.mlStateManager = new MLStateManager(this.minecraftBot);
   }
 
   public async getGameState(): Promise<GameState> {

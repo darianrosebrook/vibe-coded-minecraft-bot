@@ -186,6 +186,8 @@ export class ModelTrainer {
   }
 
   public async listModels(predictionType?: string): Promise<string[]> {
-    return this.storage.listModels(predictionType);
+    const models = await this.storage.listModels();
+    if (!predictionType) return models;
+    return models.filter(modelId => modelId.startsWith(predictionType));
   }
 } 

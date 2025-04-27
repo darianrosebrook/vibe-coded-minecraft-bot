@@ -1,6 +1,6 @@
-import winston from 'winston';
-import 'winston-daily-rotate-file';
-import path from 'path';
+import winston from "winston";
+import "winston-daily-rotate-file";
+import path from "path";
 
 const { combine, timestamp, json, errors } = winston.format;
 
@@ -14,8 +14,8 @@ const levels = {
 };
 
 // Create the logs directory if it doesn't exist
-const logDir = process.env.LOG_DIR || 'logs';
-const logFile = path.join(logDir, 'bot.log');
+const logDir = process.env.LOG_DIR || "logs";
+const logFile = path.join(logDir, "bot.log");
 
 export interface Logger {
   debug(message: string, meta?: any): void;
@@ -26,14 +26,10 @@ export interface Logger {
 
 // Create a Winston logger instance
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   levels,
-  format: combine(
-    timestamp(),
-    errors({ stack: true }),
-    json()
-  ),
-  defaultMeta: { service: 'minecraft-bot' },
+  format: combine(timestamp(), errors({ stack: true }), json()),
+  defaultMeta: { service: "minecraft-bot" },
   transports: [
     // Console transport for development
     new winston.transports.Console({
@@ -45,10 +41,10 @@ const logger = winston.createLogger({
     // File transport with rotation
     new winston.transports.DailyRotateFile({
       filename: logFile,
-      datePattern: 'YYYY-MM-DD',
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
+      maxSize: "20m",
+      maxFiles: "14d",
     }),
   ],
 });
@@ -67,17 +63,17 @@ export class Logger implements Logger {
 
   constructor() {
     this.logger = winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
+      level: process.env.LOG_LEVEL || "info",
       format: combine(timestamp(), json(), errors()),
       transports: [
         new winston.transports.Console(),
         new winston.transports.DailyRotateFile({
           filename: logFile,
-          datePattern: 'YYYY-MM-DD',
-          maxSize: '20m',
-          maxFiles: '14d'
-        })
-      ]
+          datePattern: "YYYY-MM-DD",
+          maxSize: "20m",
+          maxFiles: "14d",
+        }),
+      ],
     });
   }
 
@@ -92,4 +88,4 @@ export class Logger implements Logger {
   error(message: string, meta?: any): void {
     this.logger.error(message, meta);
   }
-} 
+}
