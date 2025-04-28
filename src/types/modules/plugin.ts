@@ -1,5 +1,5 @@
 import { Bot } from 'mineflayer';
-import { Task } from '../task';
+import { Task } from '../task/task';
 
 /**
  * Represents a task module that can be executed by the bot
