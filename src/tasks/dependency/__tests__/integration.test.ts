@@ -1,6 +1,6 @@
 import { DependencyGraph } from '../graph';
-import { Task } from '../../types';
-import { ValidationStatus, ExecutionState } from '../types';
+import { Task } from '@/types';
+import { ValidationStatus, ExecutionState } from '@/types';
 
 describe('Task Dependency Integration', () => {
   let graph: DependencyGraph;

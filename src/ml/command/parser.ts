@@ -1,7 +1,13 @@
-import { MLCommandParser, IntentClassification, SimilarCommand, ErrorPrediction } from './types';
-import { TaskContext } from '../../llm/types';
+import { 
+  MLCommandParser, 
+  IntentClassification, 
+  SimilarCommand, 
+  ErrorPrediction,
+  CommandPattern,
+  CommandContext
+} from '@/types';
+import { TaskContext } from '@/types';
 import { LLMClient } from '../../utils/llmClient';
-import { CommandPattern } from './types';
 import { PatternRecognitionSystem } from './pattern_recognition';
 
 export class MLCommandParserImpl implements MLCommandParser {

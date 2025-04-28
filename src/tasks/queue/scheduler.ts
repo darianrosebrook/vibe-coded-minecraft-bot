@@ -1,5 +1,5 @@
 import { TaskQueue, TaskState, TaskNode } from './queue';
-import { Task } from '../types/task';
+import { Task } from '@/types/task';
 import { TaskValidator } from '../../utils/taskValidator';
 
 export interface SchedulerConfig {

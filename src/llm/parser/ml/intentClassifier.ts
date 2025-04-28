@@ -1,4 +1,4 @@
-import { TaskContext } from '../../types';
+import { TaskContext } from '@/types';
 
 export class MLIntentClassifier {
   private readonly intents = [

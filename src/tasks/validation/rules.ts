@@ -1,6 +1,6 @@
 import { ValidationRule, ValidationContext, ValidationResult } from './validator';
-import { Task } from '../../types/task';
-import { Item } from '../../inventory/types';
+import { Task } from '@/types/task';
+import { Item } from '@/types';
 
 export class InventoryRequirementRule implements ValidationRule {
   constructor(private requiredItems: Item[]) {}

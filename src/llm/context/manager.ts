@@ -1,6 +1,6 @@
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
-import { PluginState, StateChange, StateValidation } from '../../types/context';
+import { PluginState, StateChange, StateValidation } from '@/types/context';
 import { MinecraftBot } from '../../bot/bot';
 import { MLStateManager } from '../../ml/state/manager';
 import { mlMetrics } from '../../utils/observability/metrics';

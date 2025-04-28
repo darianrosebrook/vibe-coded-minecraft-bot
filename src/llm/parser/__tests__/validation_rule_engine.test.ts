@@ -1,5 +1,5 @@
 import { ValidationRuleEngine, TaskContext } from '../validation_rule_engine';
-import { Task, TaskType, TaskStatus, TaskParameters, TaskPriority, MiningTaskParameters, CraftingTaskParameters, NavigationTaskParameters } from '../../../types/task';
+import { Task, TaskType, TaskStatus, TaskParameters, TaskPriority, MiningTaskParameters, CraftingTaskParameters, NavigationTaskParameters } from '@/types/task';
 
 describe('ValidationRuleEngine', () => {
   let engine: ValidationRuleEngine;

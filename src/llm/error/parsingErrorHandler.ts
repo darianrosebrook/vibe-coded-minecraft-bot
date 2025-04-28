@@ -5,7 +5,7 @@ import {
 } from "../../error/errorHandler";
 import { TaskParsingLogger } from "../logging/logger";
 import { LLMError } from "../../utils/llmClient";
-import { Task } from "../../types/task";
+import { Task } from "@/types/task";
 import { ErrorRecoveryManager } from "./recovery_manager";
 import { ErrorMessageFormatter } from "./message_templates";
 

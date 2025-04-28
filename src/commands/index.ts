@@ -1,16 +1,22 @@
-import { MinecraftBot } from '../bot/bot';
-import { parseTask } from '../llm/parse';
-import { QueryTaskParameters, Task, MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters, TaskType } from '../types/task';
-import { BaseTask } from '../tasks/base';
-import { NavTask } from '../tasks/nav';
-import { ChatTask } from '../tasks/chat';
-import logger from '../utils/observability/logger';
-import { MiningTask } from '../tasks/mining';
+import { MinecraftBot } from "../bot/bot";
+import { parseTask } from "../llm/parse";
+import {
+  QueryTaskParameters,
+  Task,
+  MiningTaskParameters,
+  FarmingTaskParameters,
+  NavigationTaskParameters,
+  InventoryTaskParameters,
+  TaskType,
+} from "@/types";
+import { BaseTask } from "../tasks/base";
+import { NavTask } from "../tasks/nav";
+import { ChatTask } from "../tasks/chat";
 import { FarmingTask } from '../tasks/farming';
 import { InventoryTask } from '../tasks/inventory';
 import { QueryTask } from '../tasks/query';
 import { GatheringTask } from '../tasks/gathering';
-import { GatheringTaskParameters } from '../types/task';
+import { GatheringTaskParameters } from '@/types/task';
 
 interface BotState {
   position: { x: number; y: number; z: number };

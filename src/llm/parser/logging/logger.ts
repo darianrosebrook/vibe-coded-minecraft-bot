@@ -1,6 +1,6 @@
-import { Task } from "../../../types/task";
+import { Task } from "@/types/task";
 import { Logger } from "../../../utils/observability/logger";
-import { TaskContext } from "../types";
+import { TaskContext } from "@/types";
 
 export class TaskParsingLogger {
   private chains: Map<string, LogChain> = new Map();

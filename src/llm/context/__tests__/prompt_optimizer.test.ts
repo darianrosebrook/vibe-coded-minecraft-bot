@@ -1,6 +1,6 @@
 import { PromptOptimizer } from '../prompt_optimizer';
-import { TaskContext } from '../../types';
-import { TaskType } from '../../../types/task';
+import { TaskContext } from '@/types';
+import { TaskType } from '@/types/task';
 
 describe('PromptOptimizer', () => {
   let optimizer: PromptOptimizer;

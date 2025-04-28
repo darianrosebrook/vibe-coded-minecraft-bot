@@ -1,4 +1,4 @@
-import { TaskContext } from '../../types';
+import { TaskContext } from '@/types';
 
 export class SemanticMatcher {
   private readonly similarityThreshold = 0.7;

@@ -1,6 +1,6 @@
 import { ParsingError, ErrorRecoveryStrategy } from '../error/handler';
 import { MLCommandParserImpl } from '../../ml/command/parser';
-import { TaskContext } from '../types';
+import { TaskContext } from '@/types';
 import { LLMClient } from '../../utils/llmClient';
 
 

@@ -1,6 +1,6 @@
-import { CommandPattern } from './types';
+import { CommandPattern } from '@/types';
 import { LLMClient } from '../../utils/llmClient';
-import { TaskContext } from '../../llm/types';
+import { TaskContext } from '@/types';
 
 interface CommandGroup {
   commands: string[];

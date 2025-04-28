@@ -1,6 +1,6 @@
 import { MLDataCollector } from '../data/MLDataCollector';
 import { MLDataManager } from '../storage/MLDataManager';
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
 

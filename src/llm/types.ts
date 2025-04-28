@@ -1,5 +1,5 @@
 import { MinecraftBot } from '../bot/bot';
-import { Task, TaskParameters, TaskType } from '../types/task';
+import { Task, TaskParameters, TaskType } from '@/types/task';
 import { ParsingError as ParsingErrorType, ErrorRecoveryStrategy } from './error/handler';
 import { TaskResolution } from './resolution/system';
 

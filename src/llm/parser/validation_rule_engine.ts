@@ -1,4 +1,4 @@
-import { Task, TaskType, TaskParameters, MiningTaskParameters, NavigationTaskParameters, CraftingTaskParameters } from '../../types/task';
+import { Task, TaskType, TaskParameters, MiningTaskParameters, NavigationTaskParameters, CraftingTaskParameters } from '@/types/task';
 import { MinecraftBot } from '../../bot/bot';
 
 export interface TaskContext {

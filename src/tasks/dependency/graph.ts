@@ -1,5 +1,5 @@
-import { Task } from '../types';
-import { TaskNode, DependencyGraph as DependencyGraphInterface } from './types';
+import { Task } from '@/types';
+import { TaskNode, DependencyGraph as DependencyGraphInterface } from '@/types';
 import { TaskNode as TaskNodeClass } from './node';
 
 export class DependencyGraph implements DependencyGraphInterface {

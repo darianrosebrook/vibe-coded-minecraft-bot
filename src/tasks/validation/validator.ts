@@ -1,6 +1,6 @@
-  import { Task } from '../../types/task';
-import { Position } from '../../types/common';
-import { Inventory } from '../../inventory/types';
+  import { Task } from '@/types/task';
+import { Position } from '@/types/common';
+import { Inventory } from '@/types';
 
 export interface ValidationRule {
   validate(task: Task, context: ValidationContext): Promise<ValidationResult>;

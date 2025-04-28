@@ -1,5 +1,5 @@
 import { LLMClient, LLMError } from '../utils/llmClient';
-import { Task } from '../types/task';
+import { Task } from '@/types/task';
 import { SchemaValidator } from '../utils/taskValidator';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';

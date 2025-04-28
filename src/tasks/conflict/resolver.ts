@@ -1,8 +1,8 @@
-import { Task } from '../types/task';
+import { Task } from '@/types/task';
 import { TaskQueue, TaskNode } from '../queue/queue';
-import { Conflict, ConflictResolution, ConflictType, ResourceConflict, LocationConflict, ToolConflict, TimeConflict } from './types';
+import { Conflict, ConflictResolution, ConflictType, ResourceConflict, LocationConflict, ToolConflict, TimeConflict } from '@/types';
 import { ConflictDetector } from './detector';
-import { TaskPriority } from '../../types/task';
+import { TaskPriority } from '@/types/task';
 
 export class ConflictResolver {
   private queue: TaskQueue;

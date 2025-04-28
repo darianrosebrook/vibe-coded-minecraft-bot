@@ -1,7 +1,7 @@
 import { ContextAwareTypeDetector } from "../context_aware_type_detection";
-import { Task, TaskType, TaskStatus, TaskPriority, CraftingTaskParameters, TaskParameters } from "../../../types/task";
-import { WorldState } from "../../../types/world";
-import { Hotspot } from "../../../types/hotspot";
+import { Task, TaskType, TaskStatus, TaskPriority, CraftingTaskParameters, TaskParameters } from "@/types/task";
+import { WorldState } from "@/types/world";
+import { Hotspot } from "@/types/hotspot";
 
 describe("ContextAwareTypeDetector", () => {
   let detector: ContextAwareTypeDetector;

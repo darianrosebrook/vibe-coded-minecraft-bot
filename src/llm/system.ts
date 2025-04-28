@@ -1,4 +1,4 @@
-import { TaskContext, TaskParseResult, SystemMetrics, DebugInfo, TaskParserConfig } from './types';
+import { TaskContext, TaskParseResult, SystemMetrics, DebugInfo, TaskParserConfig } from '@/types';
 import { ParsingErrorHandler } from './error/handler';
 import { TaskResolutionSystem } from './resolution/system';
 

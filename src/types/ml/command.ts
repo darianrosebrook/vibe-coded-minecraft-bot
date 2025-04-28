@@ -366,23 +366,21 @@ export interface ChatCommand extends BaseCommand {
 export interface IntentClassification {
   intent: string;
   confidence: number;
-  entities: Array<{
-    type: string;
-    value: string;
-    confidence: number;
-  }>;
+  parameters: Record<string, any>;
+  context: CommandContext;
 }
 
 export interface SimilarCommand {
   command: string;
   similarity: number;
-  context: Record<string, any>;
+  context: CommandContext;
 }
 
 export interface ErrorPrediction {
   type: string;
   probability: number;
-  suggestedActions: string[];
+  context: CommandContext;
+  suggestedFix?: string;
 }
 
 export interface ResponseQuality {
@@ -394,28 +392,46 @@ export interface ResponseQuality {
 
 export interface CommandPattern {
   pattern: string;
-  frequency: number;
-  successRate: number;
-  context: Record<string, any>;
+  intent: string;
+  parameters: Record<string, any>;
+  examples: string[];
+  context: CommandContext;
 }
 
 export interface MLCommandParser {
-  parse(command: string): Promise<IntentClassification>;
-  findSimilar(command: string): Promise<SimilarCommand[]>;
-  predictErrors(command: string): Promise<ErrorPrediction[]>;
+  parse: (input: string, context: CommandContext) => Promise<IntentClassification>;
+  validate: (intent: IntentClassification) => Promise<boolean>;
+  suggest: (input: string, context: CommandContext) => Promise<SimilarCommand[]>;
 }
 
 export interface MLResponseGenerator {
-  generate(command: string, context: Record<string, any>): Promise<string>;
-  evaluateQuality(response: string): Promise<ResponseQuality>;
+  generate: (intent: IntentClassification, context: CommandContext) => Promise<string>;
+  evaluate: (response: string, context: CommandContext) => Promise<ResponseQuality>;
 }
 
 export interface MLErrorHandler {
-  handle(error: Error, context: Record<string, any>): Promise<string>;
-  predictRecovery(error: Error): Promise<string[]>;
+  predict: (input: string, context: CommandContext) => Promise<ErrorPrediction[]>;
+  suggest: (error: ErrorPrediction) => Promise<string[]>;
 }
 
 export interface PatternRecognitionSystem {
-  identify(command: string): Promise<CommandPattern[]>;
-  updatePatterns(pattern: CommandPattern): Promise<void>;
+  recognize: (input: string, context: CommandContext) => Promise<CommandPattern[]>;
+  learn: (pattern: CommandPattern) => Promise<void>;
+}
+
+export interface CommandContext {
+  gameState: EnhancedGameState;
+  playerState: {
+    position: Vec3;
+    inventory: Inventory;
+    health: number;
+    food: number;
+  };
+  recentCommands: string[];
+  environment: {
+    time: number;
+    weather: string;
+    difficulty: string;
+  };
+  taskHistory: TaskHistory[];
 } 

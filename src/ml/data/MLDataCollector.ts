@@ -1,4 +1,4 @@
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 import { MLError } from '../error/MLErrorSystem';
 import { FeedbackData } from '../feedback/MLFeedbackSystem';
 import { MLDataManager } from '../storage/MLDataManager';

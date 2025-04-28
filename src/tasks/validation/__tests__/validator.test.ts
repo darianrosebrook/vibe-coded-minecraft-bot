@@ -6,7 +6,7 @@ import {
   BiomeRequirementRule,
   TimeRequirementRule
 } from '../rules';
-import { Task } from '../../types';
+import { Task } from '@/types';
 
 describe('TaskValidator', () => {
   let validator: TaskValidator;

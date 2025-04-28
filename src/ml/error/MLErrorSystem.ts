@@ -1,4 +1,4 @@
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 import { Vec3 } from 'vec3';
 
 export enum ErrorSeverity {

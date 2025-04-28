@@ -1,5 +1,5 @@
-import { Task, TaskParameters, TaskType } from '../../types/task';
-import { TaskContext } from '../types';
+import { Task, TaskParameters, TaskType } from '@/types/task';
+import { TaskContext } from '@/types';
 import { Logger } from '../../utils/observability/logger';
 import { TaskParsingLogger } from '../logging/logger';
 import { 

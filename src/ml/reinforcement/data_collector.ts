@@ -1,7 +1,8 @@
 import { Bot } from 'mineflayer';
-import { CommandExecutionResult, ResourceUsage, WorldState } from './types';
+import { CommandExecutionResult, ResourceUsage, WorldState } from '@/types';
 import { performance } from 'perf_hooks';
 import { Biome } from 'prismarine-biome';
+import { EnhancedGameState } from '@/types';
 
 export class MLDataCollector {
     private bot: Bot;

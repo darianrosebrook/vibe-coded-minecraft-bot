@@ -36,7 +36,13 @@
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     "typeRoots": [
       "./node_modules/@types",
-      "./src/types"
+      "./src/types",
+      "./src/types/bot",
+      "./src/types/core",
+      "./src/types/declarations",
+      "./src/types/inventory",
+      "./src/types/ml",
+      "./src/types/modules"
     ],
     // "types": [],                                      /* Specify type package names to be included without being referenced in a source file. */
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */

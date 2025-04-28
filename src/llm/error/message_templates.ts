@@ -1,5 +1,5 @@
 import { ParsingErrorType } from "./parsingErrorHandler";
-import { Task } from "../../types/task";
+import { Task } from "@/types/task";
 
 interface ErrorMessageTemplate {
   title: string;

@@ -1,7 +1,7 @@
 import { UserConfirmationHandler } from '../user_confirmation_handler';
 import { ContextDisambiguator } from '../context_disambiguator';
-import { TaskType } from '../../../types/task';
-import { TaskContext } from '../../types';
+import { TaskType } from '@/types/task';
+import { TaskContext } from '@/types';
 import { AmbiguityDetector } from '../ambiguity_detector';
 
 describe('UserConfirmationHandler', () => {

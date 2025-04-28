@@ -1,3 +1,5 @@
+import { ModelMetrics, ModelVersion, } from './common';
+
 /**
  * Machine Learning Model Types
  * 
@@ -97,33 +99,6 @@ export interface NeuralNetworkConfig extends BaseModelConfig {
 export interface TrainingData {
   inputs: Array<Record<string, any>>;
   outputs: Array<Record<string, any>>;
-}
-
-/**
- * Model performance metrics.
- * Tracks various aspects of model performance during training and inference.
- * 
- * @example
- * ```typescript
- * const metrics: ModelMetrics = {
- *   accuracy: 0.95,
- *   loss: 0.12,
- *   precision: 0.94,
- *   recall: 0.96,
- *   f1Score: 0.95,
- *   inferenceTime: 0.05,
- *   trainingTime: 3600
- * };
- * ```
- */
-export interface ModelMetrics {
-  accuracy: number;
-  loss: number;
-  precision: number;
-  recall: number;
-  f1Score: number;
-  inferenceTime: number;
-  trainingTime: number;
 }
 
 /**
@@ -275,27 +250,6 @@ export interface LossConfig {
 }
 
 /**
- * Model training configuration
- */
-export interface TrainingConfig {
-  epochs: number;
-  batchSize: number;
-  validationSplit: number;
-  shuffle: boolean;
-  callbacks: CallbackConfig[];
-  earlyStopping?: {
-    patience: number;
-    minDelta: number;
-    monitor: string;
-  };
-  checkpoint?: {
-    path: string;
-    saveBestOnly: boolean;
-    monitor: string;
-  };
-}
-
-/**
  * Training callback configuration
  */
 export interface CallbackConfig {
@@ -335,26 +289,6 @@ export interface AlertConfig {
   operator: '>' | '<' | '>=' | '<=' | '==';
   severity: 'low' | 'medium' | 'high' | 'critical';
   action: string;
-}
-
-/**
- * Model version information
- */
-export interface ModelVersion {
-  version: string;
-  timestamp: number;
-  changes: string[];
-  performance: {
-    accuracy: number;
-    loss: number;
-    inferenceTime: number;
-  };
-  artifacts: {
-    model: string;
-    weights: string;
-    config: string;
-    metadata: string;
-  };
 }
 
 /**
@@ -399,28 +333,62 @@ export interface Model {
   id: string;
   name: string;
   version: string;
+  type: string;
   architecture: ModelArchitecture;
+  parameters: Record<string, any>;
   metrics: ModelMetrics;
+  status: 'idle' | 'training' | 'inference' | 'error';
   lastUpdated: number;
+  metadata?: Record<string, any>;
+}
+
+export interface StoredModel {
+  id: string;
+  version: string;
+  path: string;
+  format: string;
+  size: number;
+  checksum: string;
+  metadata?: Record<string, any>;
 }
 
 export interface ModelArchitecture {
+  type: string;
   layers: Layer[];
   inputShape: number[];
   outputShape: number[];
+  parameters: Record<string, any>;
 }
 
 export interface Layer {
   type: string;
   units: number;
-  activation: string;
-  config?: Record<string, any>;
+  activation?: string;
+  parameters?: Record<string, any>;
 }
 
-export interface ABTestConfig {
-  controlModel: string;
-  testModel: string;
-  metrics: string[];
-  duration: number;
-  sampleSize: number;
+export interface ValidationMetrics {
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  confusionMatrix: number[][];
+  rocCurve?: {
+    fpr: number[];
+    tpr: number[];
+    thresholds: number[];
+  };
+  prCurve?: {
+    precision: number[];
+    recall: number[];
+    thresholds: number[];
+  };
+}
+
+export interface ModelUpdates {
+  type: string;
+  changes: Record<string, any>;
+  timestamp: number;
+  metrics: ValidationMetrics;
+  metadata?: Record<string, any>;
 } 

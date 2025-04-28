@@ -1,7 +1,7 @@
-import { Task, TaskType } from '../../types/task';
-import { WorldState, ResourceTracker } from '../../types/world';
-import { Hotspot } from '../../types/hotspot';
-import { ErrorCategory, ErrorSeverity } from '../../types/common';
+import { Task, TaskType } from '@/types/task';
+import { WorldState, ResourceTracker } from '@/types/world';
+import { Hotspot } from '@/types/hotspot';
+import { ErrorCategory, ErrorSeverity } from '@/types/common';
 
 export interface BotState {
   health: number;

@@ -1,9 +1,9 @@
 import { MLTaskExecutor } from '../executor';
 import { MLTaskOptimizer } from '../optimizer';
 import { MLStateManager } from '../../state/manager';
-import { Task, TaskPriority, TaskStatus, TaskType, TaskParameters, MiningTaskParameters, GatheringTaskParameters, NavigationTaskParameters, InventoryTaskParameters } from '../../../types/task';
+import { Task, TaskPriority, TaskStatus, TaskType, TaskParameters, MiningTaskParameters, GatheringTaskParameters, NavigationTaskParameters, InventoryTaskParameters } from '@/types/task';
 import { GameState } from '../../../llm/context/manager';
-import { TaskHistory } from '../../state/types';
+import { TaskHistory } from '@/types';
 import { Vec3 } from 'vec3';
 
 describe('MLTaskExecutor', () => {

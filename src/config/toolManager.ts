@@ -1,4 +1,4 @@
-import { ToolManagerConfig } from '../types/tool';
+import { ToolManagerConfig } from "@/types";
 
 export const defaultToolManagerConfig: ToolManagerConfig = {
   repairThreshold: 20, // Repair when durability is at 20%

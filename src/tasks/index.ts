@@ -1,5 +1,5 @@
 import { BaseTask } from './base';
-import { Task, TaskParameters, MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters, ChatTaskParameters, QueryTaskParameters } from '../types/task';
+import { Task, TaskParameters, MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters, ChatTaskParameters, QueryTaskParameters } from '@/types/task';
 import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
 

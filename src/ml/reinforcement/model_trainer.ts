@@ -1,4 +1,4 @@
-import { CommandExecutionResult, ModelUpdates, ModelArchitecture, ValidationMetrics } from './types';
+import { CommandExecutionResult, ModelUpdates, ModelArchitecture, ValidationMetrics } from '@/types';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-wasm';
 import { join } from 'path';

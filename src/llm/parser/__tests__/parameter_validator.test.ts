@@ -1,5 +1,5 @@
 import { ParameterValidator } from "../parameter_validator";
-import { TaskContext } from "../../types";
+import { TaskContext } from "@/types";
 
 describe("ParameterValidator", () => {
   let validator: ParameterValidator;

@@ -1,4 +1,4 @@
-import { PerformanceMetrics } from './types';
+import { PerformanceMetrics } from '@/types';
 import * as os from 'os';
 import * as process from 'process';
 

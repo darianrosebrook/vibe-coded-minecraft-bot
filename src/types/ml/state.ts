@@ -415,89 +415,80 @@ export interface StateRecovery {
 }
 
 export interface EnhancedGameState {
-  player: {
+  botState: {
     position: Vec3;
+    inventory: Inventory;
     health: number;
     food: number;
-    inventory: Array<{ name: string; count: number }>;
+    experience: number;
+    selectedItem: string;
   };
-  world: {
+  worldState: {
     time: number;
     weather: string;
-    biome: string;
-    nearbyEntities: Array<{
-      type: string;
-      position: Vec3;
-      distance: number;
-    }>;
+    difficulty: string;
+    dimension: string;
   };
-  resources: {
-    discovered: Array<{
-      type: string;
-      position: Vec3;
-      quantity: number;
-    }>;
-    required: Array<{
-      type: string;
-      quantity: number;
-    }>;
+  nearbyEntities: EntityInfo[];
+  nearbyBlocks: BlockInfo[];
+  resourceState: {
+    available: Record<string, number>;
+    required: Record<string, number>;
+    dependencies: ResourceDependency[];
   };
+  craftingState: {
+    recipes: CraftingRecipe[];
+    available: Record<string, number>;
+  };
+  playerBehavior: PlayerBehavior;
+  environmentalFactors: EnvironmentalFactor[];
+  taskHistory: TaskHistory[];
+  resourceImpact: ResourceImpact[];
+  nearbyResources: NearbyResource[];
+  terrainAnalysis: TerrainAnalysis;
+  mobPresence: MobPresence;
 }
 
 export interface ResourceDependency {
-  type: string;
-  quantity: number;
-  sources: Array<{
-    type: string;
-    probability: number;
-    location: Vec3;
-  }>;
+  resource: string;
+  required: number;
+  available: number;
+  sources: string[];
 }
 
 export interface CraftingRecipe {
   output: string;
-  ingredients: Array<{
-    type: string;
-    quantity: number;
-  }>;
-  tools?: string[];
+  inputs: Record<string, number>;
+  tools: string[];
+  time: number;
 }
 
 export interface PlayerBehavior {
-  actions: Array<{
-    type: string;
-    timestamp: number;
-    success: boolean;
-  }>;
-  patterns: Array<{
-    type: string;
-    frequency: number;
-    successRate: number;
-  }>;
+  lastAction: string;
+  actionHistory: string[];
+  preferences: Record<string, any>;
+  skillLevel: number;
 }
 
 export interface EnvironmentalFactor {
   type: string;
   intensity: number;
-  impact: number;
+  impact: string;
 }
 
 export interface TaskHistory {
-  tasks: Array<{
-    type: string;
-    startTime: number;
-    endTime: number;
-    success: boolean;
-    resources: Array<{
-      type: string;
-      quantity: number;
-    }>;
-  }>;
+  taskId: string;
+  type: string;
+  status: string;
+  startTime: number;
+  endTime?: number;
+  resourcesUsed: Record<string, number>;
+  success: boolean;
 }
 
 export interface ResourceImpact {
-  type: string;
-  quantity: number;
+  resource: string;
+  change: number;
   source: string;
   timestamp: number;
 }
@@ -510,18 +501,45 @@ export interface NearbyResource {
 }
 
 export interface TerrainAnalysis {
-  type: string;
+  elevation: number;
+  biome: string;
   difficulty: number;
   safety: number;
-  resources: Array<{
-    type: string;
-    probability: number;
-  }>;
 }
 
 export interface MobPresence {
   type: string;
-  position: Vec3;
+  count: number;
   distance: number;
   threatLevel: number;
+}
+
+export interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface EntityInfo {
+  type: string;
+  position: Vec3;
+  health?: number;
+  metadata?: Record<string, any>;
+}
+
+export interface BlockInfo {
+  type: string;
+  position: Vec3;
+  metadata?: Record<string, any>;
+}
+
+export interface Inventory {
+  items: Item[];
+  size: number;
+}
+
+export interface Item {
+  type: string;
+  quantity: number;
+  metadata?: Record<string, any>;
 } 

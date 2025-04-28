@@ -1,6 +1,6 @@
 import { ErrorMessageFormatter } from "../message_templates";
 import { ParsingErrorType } from "../parsingErrorHandler";
-import { Task, TaskType } from "../../../types/task";
+import { Task, TaskType } from "@/types/task";
 
 describe("ErrorMessageFormatter", () => {
   describe("formatMessage", () => {

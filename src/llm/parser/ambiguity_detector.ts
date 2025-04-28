@@ -1,5 +1,5 @@
-import { Task, TaskType } from '../../types/task';
-import { TaskContext } from '../types';
+import { Task, TaskType } from '@/types/task';
+import { TaskContext } from '@/types';
 
 
 export interface AmbiguityPattern {

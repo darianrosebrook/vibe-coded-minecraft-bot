@@ -1,5 +1,6 @@
-import { TaskParameters } from "../../types/task";
-import { TaskPriority } from "../../types/task";
+import { TaskParameters } from "@/types/task";
+import { TaskPriority } from "@/types/task";
+
 export interface Task {
   id: string;
   type: string;

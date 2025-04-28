@@ -1,4 +1,4 @@
-import { TaskContext } from '../../llm/types';
+import { TaskContext } from '@/types';
 
 export interface IntentClassification {
   intent: string;

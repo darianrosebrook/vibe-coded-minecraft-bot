@@ -1,12 +1,12 @@
-import { Task as LLMTask, TaskType, TaskPriority, TaskStatus, TaskParameters, QueryTaskParameters } from '../../types/task';
-import { Task } from '../../tasks/types/task';
+import { Task as LLMTask, TaskType, TaskPriority, TaskStatus, TaskParameters, QueryTaskParameters } from '@/types/task';
+import { Task } from '@/types/task';
 import { LLMClient, LLMError } from '../../utils/llmClient';
 import { SchemaValidator } from '../../utils/taskValidator';
 import { Logger } from '../../utils/observability/logger'; 
 import { ContextManager } from '../context/manager'; 
 import { TaskParsingLogger } from '../logging/logger';
 import { ParameterValidator } from './parameter_validator';
-import { TaskParseResult, ParsingMetrics, ParsingError, ParsingResult, TaskParserConfig, TaskContext } from '../types'; 
+import { TaskParseResult, ParsingMetrics, ParsingError, ParsingResult, TaskParserConfig, TaskContext } from '@/types'; 
 import { ErrorHandler } from '../../error/errorHandler';
 import { SemanticMatcher } from './ml/semanticMatcher';
 import { CommandCache } from '../cache/commandCache';

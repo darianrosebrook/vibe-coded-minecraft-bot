@@ -1,6 +1,6 @@
 import { TaskNode } from '../node';
-import { Task } from '../../types';
-import { ValidationStatus, ExecutionState } from '../types';
+import { Task } from '@/types';
+import { ValidationStatus, ExecutionState } from '@/types';
 
 describe('TaskNode', () => {
   let task: Task;

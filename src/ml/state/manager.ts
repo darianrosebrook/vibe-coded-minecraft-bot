@@ -3,7 +3,7 @@ import { GameState } from '../../llm/context/manager';
 import { ContextManager } from '../../llm/context/manager';
 import { mlMetrics } from '../../utils/observability/metrics';
 import { ResourceNeedPredictor, PlayerRequestPredictor, TaskDurationPredictor } from './models';
-import { EnhancedGameState } from './types';
+import { EnhancedGameState, TaskHistory, ResourceDependency, CraftingRecipe, PlayerBehavior, EnvironmentalFactor, ResourceImpact, NearbyResource, TerrainAnalysis, MobPresence } from '@/types';
 import { MinecraftBot } from '../../bot/bot';
 import { Bot as MineflayerBot } from 'mineflayer';
 

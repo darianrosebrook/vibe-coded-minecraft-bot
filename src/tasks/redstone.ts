@@ -1,7 +1,7 @@
 import { BaseTask, TaskOptions } from './base';
 import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
-import { Task, TaskParameters } from '../types/task';
+import { Task, TaskParameters } from '@/types/task';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';
 import { Bot as MineflayerBot } from 'mineflayer';

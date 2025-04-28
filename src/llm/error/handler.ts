@@ -1,6 +1,6 @@
 import { MLErrorHandlerImpl } from "../../ml/command/error_handler";
 import { LLMClient } from "../../utils/llmClient";
-import { TaskContext } from "../types";
+import { TaskContext } from "@/types";
 
 export interface ParsingError {
   type: "type_mismatch" | "parameter_invalid" | "context_missing" | "ambiguous";

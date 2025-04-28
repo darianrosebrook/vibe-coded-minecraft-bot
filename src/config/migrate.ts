@@ -1,7 +1,7 @@
-import fs from 'fs';
-import { configManager } from './configManager';
-import { ConfigVersion } from '../types/config';
-import logger from '../utils/observability/logger';
+import fs from "fs";
+import { configManager } from "./configManager";
+import { ConfigVersion } from "@/types";
+import logger from "../utils/observability/logger";
 
 export async function migrateConfigFile(configPath: string): Promise<void> {
   try {

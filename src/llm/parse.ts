@@ -1,4 +1,4 @@
-import { Task, TaskParameters, MiningTaskParameters, QueryTaskParameters, TaskType, TaskPriority, TaskStatus } from '../types/task';
+import { Task, TaskParameters, MiningTaskParameters, QueryTaskParameters, TaskType, TaskPriority, TaskStatus } from '@/types/task';
 import { LLMClient, LLMError } from '../utils/llmClient';
 import { SchemaValidator } from '../utils/taskValidator';
 import { readFileSync } from 'fs';

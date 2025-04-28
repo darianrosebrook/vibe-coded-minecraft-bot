@@ -1,7 +1,7 @@
 import { MLFeedbackSystem } from '../feedback/MLFeedbackSystem';
 import { MLErrorSystem } from '../error/MLErrorSystem';
 import { MLDataManager } from '../storage/MLDataManager';
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
 

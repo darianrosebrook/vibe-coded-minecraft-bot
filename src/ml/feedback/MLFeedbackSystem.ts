@@ -1,7 +1,7 @@
-import { EnhancedGameState } from '../state/types';
-import { TaskHistory } from '../state/types';
-import { CommandPattern } from '../command/types';
-import { PerformanceMetrics } from '../performance/types';
+import { EnhancedGameState } from '@/types';
+import { TaskHistory } from '@/types';
+import { CommandPattern } from '@/types';
+import { PerformanceMetrics } from '@/types';
 
 export interface FeedbackData {
   taskId: string;

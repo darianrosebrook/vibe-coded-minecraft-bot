@@ -6,7 +6,7 @@ import {
   ConfigVersion,
   ConfigChangeCallback,
   baseConfigSchema,
-} from "../types/config";
+} from "@/types";
 import logger from "../utils/observability/logger";
 
 export class ConfigManager {

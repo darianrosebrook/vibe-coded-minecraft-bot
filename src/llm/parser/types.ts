@@ -1,6 +1,6 @@
 import { Bot } from 'mineflayer';
 import { Player } from 'mineflayer';
-import { Task, TaskParameters } from '../../types/task';
+import { Task, TaskParameters } from '@/types/task';
 
 export interface TaskContext {
   player: Player;

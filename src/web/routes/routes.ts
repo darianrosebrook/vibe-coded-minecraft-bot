@@ -7,7 +7,7 @@ import { InventoryTask } from '../../tasks/inventory';
 import { CommandHandler } from '../../commands';
 import { NavTask } from '../../tasks/nav';
 import { Vec3 } from 'vec3';
-import { MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters } from '../../types/task';
+import { MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters } from '@/types/task';
 
 const botInstance = new MinecraftBot({
   host: process.env.MINECRAFT_HOST || 'localhost',

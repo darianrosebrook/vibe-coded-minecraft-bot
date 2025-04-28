@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Task } from "../types/task";
+import { Task } from "@/types/task";
 import { LLMError } from "./llmClient";
 
 export interface SchemaValidator {

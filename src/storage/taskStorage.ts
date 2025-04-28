@@ -1,4 +1,4 @@
-import { TaskProgress, TaskResult as TaskResultType } from '../types/task';
+import { TaskProgress, TaskResult as TaskResultType } from '@/types/task';
 import fs from 'fs';
 import path from 'path';
 

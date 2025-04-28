@@ -5,7 +5,7 @@ import { LRUCache } from 'lru-cache';
 import { metrics } from '../utils/observability/metrics';
 import { OllamaClient } from '../utils/llmClient';
 import { PerformanceTracker, PerformanceEvent } from '../ml/performance/tracker';
-import { Task } from '../types/task';
+import { Task } from '@/types/task';
 import { TaskParser } from '../llm/parse';
 import { TaskParsingLogger } from '../llm/logging/logger';
 import { ToolManager } from '../bot/toolManager';

@@ -7,26 +7,26 @@ This directory contains all type definitions for the Minecraft bot project. The 
 ```
 src/types/
 ├── README.md                 # This documentation file
-├── index.ts                  # Main type exports
+├── index.ts                  # Main type exports (barrel file)
 ├── common.ts                 # Common types used across the project
-├── task.ts                   # Task-related types
 ├── bot/                      # Bot-specific types
+│   └── index.ts              # Bot types barrel export
 ├── core/                     # Core system types
+│   └── index.ts              # Core types barrel export
 ├── inventory/                # Inventory management types
+│   └── index.ts              # Inventory types barrel export
 ├── ml/                       # Machine Learning types
+│   └── index.ts              # ML types barrel export
 ├── declarations/             # Type declaration files (.d.ts)
 │   ├── mineflayer.d.ts       # Mineflayer type declarations
 │   ├── mineflayer-pvp.d.ts   # PvP plugin type declarations
 │   ├── mineflayer-auto-eat.d.ts # Auto-eat plugin type declarations
 │   ├── node-gzip.d.ts        # Gzip compression type declarations
 │   └── ml-packages.d.ts      # ML package type declarations
-└── modules/                  # Module-specific types
-    ├── tool.ts               # Tool-related types
-    ├── world.ts              # World interaction types
-    ├── context.ts            # Context management types
-    ├── hotspot.ts            # Hotspot detection types
-    ├── config.ts             # Configuration types
-    └── plugin.ts             # Plugin system types
+├── modules/                  # Module-specific types
+│   └── index.ts              # Module types barrel export
+└── task/                     # Task-related types
+    └── index.ts              # Task types barrel export
 ```
 
 ## Type Categories
@@ -75,6 +75,13 @@ Types specific to individual modules:
 - Configuration
 - Plugin system
 
+### Task Types (`task/`)
+Types related to task management and execution:
+- Task definitions
+- Task parameters
+- Task status and priority
+- Task validation
+
 ### Declaration Files (`declarations/`)
 Type declaration files for external dependencies:
 - Mineflayer and its plugins (pvp, auto-eat)
@@ -83,44 +90,32 @@ Type declaration files for external dependencies:
 
 ## Type Exports
 
-The main `index.ts` file exports all types in an organized manner:
+The main `index.ts` file uses barrel exports to organize and expose all types:
 
 ```typescript
 // Core types
-export * from './core/position';
-export * from './core/error';
+export * from './core';
 
 // Bot types
-export * from './bot/config';
+export * from './bot';
 
 // Inventory types
-export { InventoryCategory, InventorySlot } from './inventory/inventory';
-export * from './inventory/inventory';
+export * from './inventory';
 
 // ML types
-export * from './ml/performance';
-export * from './ml/model';
-export { MiningMLState, RedstoneMLState, ChatMLState, StateValidation } from './ml/state';
-export * from './ml/command';
-export * from './ml/mining';
-export * from './ml/redstone';
-export * from './ml/chat';
+export * from './ml';
 
 // Task types
 export * from './task';
 
 // Module types
-export * from './modules/config';
-export * from './modules/tool';
-export * from './modules/plugin';
-export * from './modules/world';
-export * from './modules/hotspot';
-export * from './modules/context';
+export * from './modules';
 
 // Common types
-export { ErrorCategory, ErrorContext, ErrorSeverity, FallbackStrategy, RetryStrategy, Position } from './common';
 export * from './common';
 ```
+
+Each subdirectory contains its own `index.ts` barrel file that exports all types within that category, making imports cleaner and more maintainable.
 
 ## Usage Guidelines
 

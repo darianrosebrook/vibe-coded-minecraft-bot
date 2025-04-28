@@ -1,5 +1,5 @@
 import { MinecraftBot } from '../bot/bot';
-import { Task, TaskParameters } from '../types/task';
+import { Task, TaskParameters } from '@/types/task';
 import { Bot as MineflayerBot } from 'mineflayer';
 import pathfinder from 'mineflayer-pathfinder';
 import { BaseTask, TaskOptions } from './base';

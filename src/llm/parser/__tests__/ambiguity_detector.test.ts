@@ -1,5 +1,5 @@
 import { AmbiguityDetector } from "../ambiguity_detector";
-import { TaskContext } from "../../types";
+import { TaskContext } from "@/types";
 
 describe("AmbiguityDetector", () => {
   let detector: AmbiguityDetector;

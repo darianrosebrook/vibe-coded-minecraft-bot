@@ -1,5 +1,5 @@
 import { Bot as MineflayerBot } from 'mineflayer';
-import { Tool, ToolManagerConfig, ToolManagerState, Enchantment } from '../types/tool';
+import { Tool, ToolManagerConfig, ToolManagerState, Enchantment } from '@/types';
 import { toolRecipes, ToolRecipe } from '../config/crafting';
 import { MinecraftBot, BotConfig } from './bot';
 import { Window as PrismarineWindow } from 'prismarine-windows';

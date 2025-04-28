@@ -1,5 +1,5 @@
-import { MLResponseGenerator, ResponseQuality } from './types';
-import { TaskContext } from '../../llm/types';
+import { MLResponseGenerator, ResponseQuality } from '@/types';
+import { TaskContext } from '@/types';
 import { LLMClient } from '../../utils/llmClient';
 
 export class MLResponseGeneratorImpl implements MLResponseGenerator {

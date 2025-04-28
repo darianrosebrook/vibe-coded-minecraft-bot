@@ -1,5 +1,5 @@
 import { MLDataManager } from '../storage/MLDataManager';
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 import { InteractionLog, StateChangeLog, ResourceChangeLog } from '../data/MLDataCollector';
 import * as tf from '@tensorflow/tfjs-node';
 import '@tensorflow/tfjs-backend-wasm';

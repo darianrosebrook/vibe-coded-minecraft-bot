@@ -1,5 +1,5 @@
-import { Bot as MineflayerBot } from "mineflayer";
-import { MinecraftBot } from "../bot/bot";
+
+import { MinecraftBot } from "@/bot";
 
 export type ErrorCategory =
   | "NETWORK"

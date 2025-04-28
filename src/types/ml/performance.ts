@@ -1,3 +1,5 @@
+import { BaseMetrics, ModelMetrics, ModelVersion, TrainingConfig, ABTestConfig } from './common';
+
 /**
  * Machine Learning Performance Types
  * 
@@ -11,20 +13,6 @@
  * Machine Learning performance metrics and monitoring types.
  * These types are used to track, analyze, and optimize the bot's ML models and predictions.
  */
-
-/**
- * Base performance metrics interface
- */
-export interface BaseMetrics {
-  timestamp: number;
-  modelName: string;
-  version: string;
-  environment: {
-    cpuUsage: number;
-    memoryUsage: number;
-    gpuUsage?: number;
-  };
-}
 
 /**
  * Training performance metrics
@@ -195,51 +183,10 @@ export type PerformanceEvent = {
   type: string;
   timestamp: number;
   duration: number;
+  success: boolean;
+  error?: string;
   metadata?: Record<string, any>;
 };
-
-/**
- * Training performance metrics.
- * Tracks training speed, resource usage, and convergence.
- * 
- * @example
- * ```typescript
- * const training: TrainingMetrics = {
- *   speed: {
- *     samplesPerSecond: 1000,
- *     epochsPerHour: 10
- *   },
- *   convergence: {
- *     currentEpoch: 45,
- *     targetEpoch: 100,
- *     loss: 0.15,
- *     accuracy: 0.92
- *   },
- *   resources: {
- *     cpu: 0.8,
- *     memory: 4096,
- *     gpu: 0.9
- *   }
- * };
- * ```
- */
-export interface TrainingMetrics {
-  speed: {
-    samplesPerSecond: number;
-    epochsPerHour: number;
-  };
-  convergence: {
-    currentEpoch: number;
-    targetEpoch: number;
-    loss: number;
-    accuracy: number;
-  };
-  resources: {
-    cpu: number;
-    memory: number;
-    gpu: number;
-  };
-}
 
 /**
  * System health metrics.
@@ -317,4 +264,21 @@ export interface BenchmarkResults {
     memory: string;
     os: string;
   };
+}
+
+/**
+ * Performance metrics interface
+ */
+export interface PerformanceMetrics {
+  latency: number;
+  accuracy: number;
+  throughput: number;
+  resourceUsage: {
+    cpu: number;
+    memory: number;
+    gpu?: number;
+  };
+  errorRate: number;
+  successRate: number;
+  confidence: number;
 } 

@@ -1,7 +1,7 @@
 import { ContextDisambiguator } from '../context_disambiguator';
 import { AmbiguityDetector } from '../ambiguity_detector';
-import { TaskContext } from '../../types';
-import { TaskType } from '../../../types/task';
+import { TaskContext } from '@/types';
+import { TaskType } from '@/types/task';
 
 describe('ContextDisambiguator', () => {
   let disambiguator: ContextDisambiguator;

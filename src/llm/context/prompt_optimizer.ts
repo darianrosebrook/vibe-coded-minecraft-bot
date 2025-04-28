@@ -1,4 +1,4 @@
-import { TaskContext } from "../types";
+import { TaskContext } from "@/types";
 import { MetricsStorage } from "./metrics_storage";
 
 /**

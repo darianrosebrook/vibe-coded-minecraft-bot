@@ -1,6 +1,6 @@
 import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
-import { Task, TaskParameters, MiningTaskParameters, TaskResult, TaskType, TaskStatus } from '../types/task';
+import { Task, TaskParameters, MiningTaskParameters, TaskResult, TaskType, TaskStatus } from '@/types/task';
 import { BaseTask, TaskOptions } from './base';
 import { Bot as MineflayerBot } from 'mineflayer';
 import { goals } from 'mineflayer-pathfinder';

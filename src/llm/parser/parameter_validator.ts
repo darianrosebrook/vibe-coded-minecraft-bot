@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { TaskParameters, TaskPriority, TaskStatus, TaskType } from '../../types/task';
+import { TaskParameters, TaskPriority, TaskStatus, TaskType } from '@/types/task';
 
 import { ValidationRuleEngine } from './validation_rule_engine';
-import { TaskContext } from '../types';
+import { TaskContext } from '@/types';
 
 // Base parameter types
 export const baseParameterTypes = {

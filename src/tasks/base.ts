@@ -1,12 +1,12 @@
 import { Bot as MineflayerBot } from 'mineflayer';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';
-import { Task, BaseTaskInterface, TaskProgress, TaskResult, TaskParameters, TaskStatus } from '../types/task';
+import { Task, BaseTaskInterface, TaskProgress, TaskResult, TaskParameters, TaskStatus } from '@/types/task';
 import { CommandHandler } from '../commands';
 import { TaskStorage, StorageConfig } from '../storage/taskStorage';
 import { ErrorHandler, ErrorContext } from '../error/errorHandler';
 import { MinecraftBot } from '../bot/bot';
-import { Position } from '../types/common';
+import { Position } from '@/types/common';
 import { MLStateManager } from '../ml/state/manager';
 import { WorldTracker } from '../bot/worldTracking';
 import { CentralizedDataCollector } from '../ml/state/centralized_data_collector';

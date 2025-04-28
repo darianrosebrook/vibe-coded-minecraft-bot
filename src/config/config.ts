@@ -1,5 +1,5 @@
-import { configManager } from './configManager';
-import { Config } from '../types/config';
+import { configManager } from "./configManager";
+import { Config } from "@/types";
 
 // Export the configuration type
 export type { Config };

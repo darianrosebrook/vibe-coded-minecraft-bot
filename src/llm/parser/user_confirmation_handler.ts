@@ -1,5 +1,5 @@
-import { TaskType } from '../../types/task';
-import { TaskContext } from '../types';
+import { TaskType } from '@/types/task';
+import { TaskContext } from '@/types';
 
 import { ContextDisambiguator, DisambiguationResult } from './context_disambiguator';
 

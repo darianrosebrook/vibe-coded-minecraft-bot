@@ -4,7 +4,7 @@ import { MiningTask } from '../../tasks/mining';
 import { FarmingTask } from '../../tasks/farming';
 import { InventoryTask } from '../../tasks/inventory';
 import { CommandHandler } from '../../commands';
-import { MiningTaskParameters, FarmingTaskParameters, InventoryTaskParameters } from '../../types/task';
+import { MiningTaskParameters, FarmingTaskParameters, InventoryTaskParameters } from '@/types/task';
 
 export function setupSocketHandlers(io: Server, bot: MinecraftBot, commandHandler: CommandHandler) {
   io.on('connection', (socket: Socket) => {

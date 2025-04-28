@@ -1,6 +1,6 @@
-import { Task } from '../types/task';
+import { Task } from '@/types/task';
 import { TaskQueue, TaskNode } from '../queue/queue';
-import { Conflict, ConflictType, ResourceConflict, LocationConflict, ToolConflict, TimeConflict } from './types';
+import { Conflict, ConflictType, ResourceConflict, LocationConflict, ToolConflict, TimeConflict } from '@/types';
 
 export class ConflictDetector {
   private queue: TaskQueue;

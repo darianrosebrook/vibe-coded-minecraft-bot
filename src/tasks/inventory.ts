@@ -1,5 +1,5 @@
 import { MinecraftBot } from '../bot/bot';
-import { Task, InventorySlot, InventoryCategory, InventoryTaskParameters, TaskResult, TaskType, TaskStatus } from '../types/task';
+import { Task, InventorySlot, InventoryCategory, InventoryTaskParameters, TaskResult, TaskType, TaskStatus } from '@/types/task';
 import { Bot as MineflayerBot } from 'mineflayer';
 import { BaseTask, TaskOptions } from './base';
 import { CommandHandler } from '../commands';

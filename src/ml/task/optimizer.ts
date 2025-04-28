@@ -1,10 +1,10 @@
-import { Task, TaskPriority, TaskStatus, TaskType, MiningTaskParameters, CraftingTaskParameters, NavigationTaskParameters } from '../../types/task';
+import { Task, TaskPriority, TaskStatus, TaskType, MiningTaskParameters, CraftingTaskParameters, NavigationTaskParameters } from '@/types/task';
 import { GameState } from '../../llm/context/manager';
 import { MLStateManager } from '../state/manager';
 import { EnhancedResourceNeedPredictor } from '../state/enhanced_predictors';
-import { TaskHistory } from '../state/types';
+import { TaskHistory } from '@/types';
 import { Logger } from '../../utils/observability/logger';
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 
 export interface TaskOptimizationResult {
   priority: TaskPriority;

@@ -1,10 +1,10 @@
-import { Task, TaskResult, TaskStatus, TaskType } from '../../types/task';
+import { Task, TaskResult, TaskStatus, TaskType } from '@/types/task';
 import { MLTaskOptimizer } from './optimizer';
 import { MLStateManager } from '../state/manager';
-import { TaskHistory } from '../state/types';
+import { TaskHistory } from '@/types';
 import { Logger } from '../../utils/observability/logger';
 import { metrics } from '../../utils/observability/metrics';
-import { EnhancedGameState } from '../state/types';
+import { EnhancedGameState } from '@/types';
 
 export class MLTaskExecutor {
   private optimizer: MLTaskOptimizer;

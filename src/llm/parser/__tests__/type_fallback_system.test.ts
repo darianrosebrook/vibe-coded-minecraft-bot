@@ -1,5 +1,5 @@
 import { TypeFallbackSystem } from '../type_fallback_system';
-import { TaskType } from '../../../types/task';
+import { TaskType } from '@/types/task';
 import { ContextAwareTypeDetectionResult } from '../context_aware_type_detection';
 
 describe('TypeFallbackSystem', () => {

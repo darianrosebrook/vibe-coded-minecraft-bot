@@ -1,6 +1,6 @@
-import { Task, TaskType } from '../../types/task';
+import { Task, TaskType } from '@/types/task';
 import { ContextAwareTypeDetectionResult } from './context_aware_type_detection';
-import { ErrorCategory, ErrorSeverity } from '../../types/common';
+import { ErrorCategory, ErrorSeverity } from '@/types/common';
 
 interface TypeFallbackResult {
   type: TaskType;

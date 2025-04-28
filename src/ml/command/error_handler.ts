@@ -1,5 +1,5 @@
-import { MLErrorHandler, ErrorPrediction } from './types';
-import { TaskContext } from '../../llm/types';
+import { MLErrorHandler, ErrorPrediction } from '@/types';
+import { TaskContext } from '@/types';
 import { LLMClient } from '../../utils/llmClient';
 
 export class MLErrorHandlerImpl implements MLErrorHandler {

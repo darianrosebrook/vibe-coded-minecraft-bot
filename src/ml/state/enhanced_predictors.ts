@@ -16,7 +16,7 @@ import {
   NearbyResource,
   TerrainAnalysis,
   MobPresence
-} from './types';
+} from '@/types';
 
 export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
   private resourceDependencies: Map<string, ResourceDependency>;
