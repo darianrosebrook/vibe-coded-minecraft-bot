@@ -1,102 +1,146 @@
 import { BaseTask, TaskOptions } from './base';
 import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
-import { Task, TaskParameters } from '../types/task';
+import { Task, TaskParameters, NavigationTaskParameters, TaskResult, TaskType, TaskStatus } from '../types/task';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';
 import { Bot as MineflayerBot } from 'mineflayer';
 import pathfinder from 'mineflayer-pathfinder';
 import { Vec3 } from 'vec3';
+import { Entity } from 'prismarine-entity';
+import { NavOptimizer } from '@/ml/reinforcement/navOptimizer';
+import { NavMLState } from '@/ml/state/navState';
 
-export type NavigationTaskParameters = TaskOptions & {
-  location: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  mode?: 'walk' | 'sprint' | 'jump';
-  avoidWater?: boolean;
-  maxDistance?: number;
-  usePathfinding?: boolean;
-};
-
-export class NavigationTask extends BaseTask {
-  private location: { x: number; y: number; z: number };
-  private mode: 'walk' | 'sprint' | 'jump';
-  private avoidWater: boolean;
-  private usePathfinding: boolean;
-  private maxDistance: number;
-  protected mineflayerBot: MineflayerBot;
+export class NavTask extends BaseTask {
+  protected destination: Vec3;
+  protected avoidWater: boolean;
+  protected usePathfinding: boolean;
+  protected maxDistance: number;
+  protected pathLength: number = 0;
+  protected obstaclesEncountered: number = 0;
+  protected optimizer: NavOptimizer;
+  protected navState: NavMLState | null = null;
 
   constructor(bot: MinecraftBot, commandHandler: CommandHandler, options: NavigationTaskParameters) {
-    super(bot, commandHandler, options);
-    this.location = options.location;
-    this.mode = options.mode ?? 'walk';
-    this.avoidWater = options.avoidWater ?? false;
-    this.usePathfinding = options.usePathfinding ?? true;
-    this.maxDistance = options.maxDistance ?? 32;
-    this.mineflayerBot = bot.getMineflayerBot();
+    super(bot, commandHandler, {
+      ...options,
+      useML: options.useML ?? true, // Enable ML by default for navigation
+      maxRetries: options.maxRetries ?? 3,
+      retryDelay: options.retryDelay ?? 5000,
+      timeout: options.timeout ?? 60000
+    });
+    
     this.mineflayerBot.loadPlugin(pathfinder.pathfinder);
+    
+    this.destination = new Vec3(
+      options.location.x,
+      options.location.y,
+      options.location.z
+    );
+    this.avoidWater = options.avoidWater ?? true;
+    this.usePathfinding = options.usePathfinding ?? true;
+    this.maxDistance = options.maxDistance ?? Infinity;
+    
+    this.optimizer = new NavOptimizer();
   }
 
-  public async performTask(): Promise<void> {
-    if (!this.location) {
-      throw new Error('Location is required for navigation task');
-    }
-    logger.info('Starting navigation task', {
-      location: this.location,
-      mode: this.mode
-    });
+  protected async getCurrentState(): Promise<NavMLState> {
+    const currentPos = this.mineflayerBot.entity.position;
+    const distance = currentPos.distanceTo(this.destination);
+    
+    return {
+      currentPosition: currentPos,
+      destination: this.destination,
+      distance,
+      pathLength: this.pathLength,
+      obstacles: this.obstaclesEncountered,
+      timeElapsed: Date.now() - this.startTime,
+      efficiency: this.calculatePathEfficiency(),
+      biome: this.mineflayerBot.world.getBiome(currentPos),
+      avoidWater: this.avoidWater,
+      timestamp: Date.now()
+    };
+  }
 
+  protected calculatePathEfficiency(): number {
+    const currentPos = this.mineflayerBot.entity.position;
+    const directDistance = currentPos.distanceTo(this.destination);
+    return (directDistance / this.pathLength) * 100;
+  }
+
+  protected async navigateToDestination(): Promise<boolean> {
     try {
-      const { x, y, z } = this.location;
-      const goal = new pathfinder.goals.GoalBlock(x, y, z);
-      
-      // Configure pathfinder
       if (this.usePathfinding) {
-        const movements = this.mineflayerBot.pathfinder.movements;
+        const goal = new pathfinder.goals.GoalBlock(
+          this.destination.x,
+          this.destination.y,
+          this.destination.z
+        );
         
-        // Configure movements based on mode
-        if (this.mode === 'jump') {
+        const movements = this.mineflayerBot.pathfinder.movements;
+        if (this.avoidWater) {
           movements.allowSprinting = true;
           movements.allowParkour = true;
-          movements.allow1by1towers = true;
-          movements.allowFreeMotion = true;
-          movements.canDig = true;
-          movements.allowEntityDetection = true;
         }
         
         await this.mineflayerBot.pathfinder.goto(goal);
+        this.pathLength = this.mineflayerBot.entity.position.distanceTo(this.destination);
+        return true;
       } else {
         // Simple movement without pathfinding
-        await this.mineflayerBot.lookAt(new Vec3(x, y, z));
+        await this.mineflayerBot.lookAt(this.destination);
         await this.mineflayerBot.setControlState('forward', true);
         
-        // Wait until we're close enough
-        while (this.mineflayerBot.entity.position.distanceTo(new Vec3(x, y, z)) > 1) {
+        while (this.mineflayerBot.entity.position.distanceTo(this.destination) > 1) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         await this.mineflayerBot.setControlState('forward', false);
+        return true;
       }
-
-      await this.updateProgress(100);
-      metrics.tasksCompleted.inc({ task_type: 'navigation' });
     } catch (error) {
-      await this.handleError(error as Error, {
-        category: 'PATHFINDING',
-        severity: 'HIGH',
-        taskId: this.taskId!,
-        taskType: 'navigation',
-        location: this.location,
-        metadata: { 
-          usePathfinding: this.usePathfinding 
-        },
-      });
-      if (!this.shouldRetry()) {
-        throw error;
-      }
-      await this.retry();
+      logger.error('Navigation failed', { error, destination: this.destination });
+      this.obstaclesEncountered++;
+      return false;
     }
+  }
+
+  async performTask(): Promise<void> {
+    this.startTime = Date.now();
+    await this.initializeMLState();
+    
+    while (!this.stopRequested) {
+      const success = await this.navigateToDestination();
+      if (!success) {
+        this.retryCount++;
+        if (this.retryCount > this.maxRetries) {
+          throw new Error('Failed to navigate after multiple attempts');
+        }
+        await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+        continue;
+      }
+      
+      const distance = this.mineflayerBot.entity.position.distanceTo(this.destination);
+      await this.updateProgress(1 - (distance / this.maxDistance));
+      
+      if (distance < 1) {
+        break;
+      }
+      
+      await this.updateMLState();
+    }
+  }
+
+  protected async handleError(error: Error, metadata: Record<string, any>): Promise<void> {
+    await super.handleError(error, {
+      ...metadata,
+      destination: this.destination,
+      pathLength: this.pathLength,
+      obstacles: this.obstaclesEncountered
+    });
+  }
+
+  stop(): void {
+    this.stopRequested = true;
   }
 } 

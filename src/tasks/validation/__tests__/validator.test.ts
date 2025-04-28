@@ -7,8 +7,6 @@ import {
   TimeRequirementRule
 } from '../rules';
 import { Task } from '../../types';
-import { Item } from '../../../inventory/types';
-import { Position } from '../../../types';
 
 describe('TaskValidator', () => {
   let validator: TaskValidator;
@@ -20,7 +18,12 @@ describe('TaskValidator', () => {
     testTask = {
       id: 'test-task',
       type: 'test',
-      data: {}
+      data: {},
+      parameters: {},
+      priority: 1,
+      status: TaskStatus.PENDING,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     testContext = {
       inventory: {

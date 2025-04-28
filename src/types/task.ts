@@ -1,7 +1,78 @@
+/**
+ * Type Organization
+ * 
+ * This project uses a modular type system organized as follows:
+ * 
+ *src/types/
+├── core/
+│   ├── position.ts
+│   └── error.ts
+├── bot/
+│   └── config.ts
+├── inventory/
+│   └── inventory.ts
+├── ml/
+│   ├── performance.ts
+│   ├── model.ts
+│   ├── state.ts
+│   ├── command.ts
+│   ├── mining.ts
+│   ├── redstone.ts
+│   └── chat.ts
+├── index.ts
+└── task.ts
+ * 
+ * When adding new types, please place them in the appropriate directory
+ * based on their domain and usage.
+ */
+
 import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
+import { Vec3 } from 'vec3';
 
-// Base task interface that all tasks must implement
+// Import ML state types
+import { MiningMLState } from './ml/mining';
+import { RedstoneMLState } from './ml/redstone';
+import { ChatMLState } from './ml/chat';
+
+/**
+ * Task System Documentation
+ * 
+ * This module defines the core task system types used throughout the Minecraft Bot.
+ * Tasks represent discrete units of work that the bot can perform, such as mining,
+ * farming, crafting, etc. Each task type has its own parameters and requirements.
+ * 
+ * Example Usage:
+ * ```typescript
+ * // Creating a mining task
+ * const miningTask: Task = {
+ *   id: 'mine-iron-1',
+ *   type: TaskType.MINING,
+ *   parameters: {
+ *     targetBlock: 'iron_ore',
+ *     quantity: 32,
+ *     maxDistance: 50,
+ *     usePathfinding: true
+ *   },
+ *   priority: 50,
+ *   status: TaskStatus.PENDING
+ * };
+ * ```
+ */
+
+/**
+ * Base task interface that all tasks must implement
+ * 
+ * @example
+ * ```typescript
+ * class MiningTask implements BaseTaskInterface {
+ *   async execute(task: Task, taskId: string): Promise<TaskResult> {
+ *     // Implementation
+ *   }
+ *   // ... other required methods
+ * }
+ * ```
+ */
 export interface BaseTaskInterface {
   execute(task: Task | null, taskId: string): Promise<TaskResult>;
   validateTask(): Promise<void>;
@@ -13,7 +84,9 @@ export interface BaseTaskInterface {
   stop(): void;
 }
 
-// Task type definitions
+/**
+ * Types of tasks the bot can perform
+ */
 export enum TaskType {
   MINING = 'mining',
   FARMING = 'farming',
@@ -29,6 +102,18 @@ export enum TaskType {
   UNKNOWN = 'unknown'
 }
 
+/**
+ * Priority levels for task execution.
+ * Lower numbers indicate higher priority.
+ * 
+ * @example
+ * ```typescript
+ * const highPriorityTask: Task = {
+ *   // ... other properties
+ *   priority: 20  // High priority
+ * };
+ * ```
+ */
 export type TaskPriority = 20 | 50 | 80;
 export const TaskPriority = {
   HIGH: 80,
@@ -36,6 +121,14 @@ export const TaskPriority = {
   LOW: 20
 } as const;
 
+/**
+ * Current state of a task in the execution lifecycle.
+ * 
+ * @example
+ * ```typescript
+ * const taskStatus: TaskStatus = TaskStatus.IN_PROGRESS;
+ * ```
+ */
 export enum TaskStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
@@ -44,7 +137,21 @@ export enum TaskStatus {
   CANCELLED = 'cancelled'
 }
 
-// Resource requirement types
+/**
+ * Requirements for task execution, including items, tools, blocks, and entities.
+ * 
+ * @example
+ * ```typescript
+ * const requirements: TaskRequirements = {
+ *   items: [
+ *     { type: 'diamond_pickaxe', quantity: 1, required: true }
+ *   ],
+ *   blocks: [
+ *     { type: 'iron_ore', quantity: 32, required: true }
+ *   ]
+ * };
+ * ```
+ */
 export interface ResourceRequirement {
   type: string;
   quantity: number;
@@ -76,7 +183,9 @@ export interface TaskRequirements {
   entities?: EntityRequirement[];
 }
 
-// Task validation types
+/**
+ * Task validation types
+ */
 export interface ValidationCheck {
   type: string;
   condition: string;
@@ -88,48 +197,84 @@ export interface TaskValidation {
   postChecks?: ValidationCheck[];
 }
 
-// Task dependency types
+/**
+ * Task dependency types
+ */
 export interface TaskDependency {
   type: string;
   parameters: Record<string, any>;
   required: boolean;
 }
 
-// Retry configuration
+/**
+ * Retry configuration for failed tasks
+ */
 export interface RetryConfig {
   maxAttempts: number;
   backoff: number;
   maxDelay: number;
 }
 
-// Task parameters based on type
-
+/**
+ * Task-specific parameter interfaces
+ */
 export interface CraftingTaskParameters extends BaseTaskOptions {
   recipe: string;
   materials?: string[];
 }
 
+/**
+ * Parameters specific to mining tasks.
+ * 
+ * @example
+ * ```typescript
+ * const miningParams: MiningTaskParameters = {
+ *   targetBlock: 'iron_ore',
+ *   quantity: 32,
+ *   maxDistance: 50,
+ *   usePathfinding: true,
+ *   tool: 'diamond_pickaxe',
+ *   avoidWater: true
+ * };
+ * ```
+ */
 export interface MiningTaskParameters extends BaseTaskOptions {
-  block: string;
+  targetBlock: string;
   quantity?: number;
   maxDistance?: number;
   yLevel?: number;
   usePathfinding?: boolean;
   tool?: string;
+  radius?: number;
+  depth?: number;
+  useML?: boolean;
+  avoidWater?: boolean;
+  maxRetries?: number;
+  retryDelay?: number;
+  timeout?: number;
 }
 
 export interface FarmingTaskParameters extends BaseTaskOptions {
   cropType: 'wheat' | 'carrots' | 'potatoes' | 'beetroot';
   action: 'harvest' | 'plant' | 'replant';
+  area: {
+    start: { x: number; y: number; z: number };
+    end: { x: number; y: number; z: number };
+  };
   quantity?: number;
   radius?: number;
   checkInterval?: number;
   requiresWater?: boolean;
   minWaterBlocks?: number;
   usePathfinding?: boolean;
+  waterSources?: Vec3[];
+  useML?: boolean;
+  maxRetries?: number;
+  retryDelay?: number;
+  timeout?: number;
 }
 
-export interface NavigationTaskParameters {
+export interface NavigationTaskParameters extends BaseTaskOptions {
   location: {
     x: number;
     y: number;
@@ -141,17 +286,19 @@ export interface NavigationTaskParameters {
   usePathfinding?: boolean;
 }
 
-export interface InventoryTaskParameters {
-  itemType: string;
-  quantity: number;
-  action: 'check' | 'count' | 'sort';
+export interface InventoryTaskParameters extends BaseTaskOptions {
+  operation: 'check' | 'count' | 'sort';
+  itemType?: string;
+  quantity?: number;
 }
 
 export interface GatheringTaskParameters extends BaseTaskOptions {
   itemType: string;
-  quantity: number;
-  maxDistance?: number;
+  quantity?: number;
+  radius?: number;
   usePathfinding?: boolean;
+  avoidWater?: boolean;
+  spacing?: number;
 }
 
 export interface ProcessingTaskParameters extends BaseTaskOptions {
@@ -193,7 +340,18 @@ export interface CombatTaskParameters {
 }
 
 export interface RedstoneTaskParameters extends BaseTaskOptions {
-  action: 'toggle' | 'monitor' | 'manage_farm';
+  circuitType: string;
+  radius: number;
+  area?: {
+    start: Vec3;
+    end: Vec3;
+  };
+  devices?: Array<{
+    type: string;
+    position: Vec3;
+    connections?: Vec3[];
+  }>;
+  action?: 'toggle' | 'monitor' | 'manage_farm';
   target?: {
     type: 'lever' | 'button' | 'pressure_plate' | 'redstone_torch' | 'redstone_block' | 'repeater' | 'comparator';
     position: { x: number; y: number; z: number };
@@ -216,8 +374,8 @@ export interface RedstoneTaskParameters extends BaseTaskOptions {
   };
 }
 
-export interface QueryTaskParameters {
-  queryType: 'inventory' | 'position' | 'nearby' | 'status' | 'help';
+export interface QueryTaskParameters extends BaseTaskOptions {
+  queryType: 'inventory' | 'block' | 'entity' | 'biome' | 'time';
   description?: string;
   filters?: {
     minCount?: number;
@@ -225,6 +383,7 @@ export interface QueryTaskParameters {
     radius?: number;
     blockType?: string;
   };
+  useML?: boolean;
 }
 
 export interface ChatTaskParameters extends BaseTaskOptions {
@@ -248,19 +407,31 @@ export interface ChatTaskParameters extends BaseTaskOptions {
       }>;
     };
   };
+  useML?: boolean;
+  maxRetries?: number;
+  retryDelay?: number;
+  timeout?: number;
 }
 
-// Base task options interface
+/**
+ * Base task options interface
+ */
 export interface BaseTaskOptions {
-  priority?: number;
+  maxRetries?: number;
+  retryDelay?: number;
   timeout?: number;
-  retry?: RetryConfig;
+  useML?: boolean;
+  avoidWater?: boolean;
+  usePathfinding?: boolean;
+  priority?: number;
   requirements?: TaskRequirements;
   validation?: TaskValidation;
   dependencies?: TaskDependency[];
 }
 
-// Union type for all possible task parameters
+/**
+ * Union type for all possible task parameters
+ */
 export type TaskParameters = 
   | MiningTaskParameters
   | FarmingTaskParameters
@@ -276,7 +447,9 @@ export type TaskParameters =
   | QueryTaskParameters
   | ChatTaskParameters;
 
-// Main task interface
+/**
+ * Main task interface
+ */
 export interface Task {
   id: string;
   type: TaskType;
@@ -293,22 +466,26 @@ export interface Task {
   metadata?: Record<string, any>;
 }
 
-// Task progress interface
+/**
+ * Task progress tracking interface
+ */
 export interface TaskProgress {
   taskId: string;
   currentProgress: number;
   totalProgress: number;
   status: TaskStatus;
-  estimatedTimeRemaining?: number; // in seconds
+  estimatedTimeRemaining?: number;
   currentLocation?: { x: number; y: number; z: number } | null;
   errorCount?: number;
   retryCount?: number;
   progressHistory?: Array<{ timestamp: number; progress: number }>;
-  lastUpdated: number; // timestamp in milliseconds
-  created: number; // timestamp in milliseconds
+  lastUpdated: number;
+  created: number;
 }
 
-// Task result interface
+/**
+ * Task result interface
+ */
 export interface TaskResult {
   success: boolean;
   task: Task;
@@ -317,7 +494,9 @@ export interface TaskResult {
   duration?: number;
 }
 
-// Inventory types
+/**
+ * Inventory management types
+ */
 export interface InventorySlot {
   slot: number;
   item: {
@@ -337,13 +516,18 @@ export interface InventoryCategory {
   };
 }
 
-// Task constructor type
+/**
+ * Task constructor type
+ */
 export type TaskConstructor = new (
   bot: MinecraftBot,
   commandHandler: CommandHandler,
   options: TaskParameters
 ) => BaseTaskInterface;
 
+/**
+ * Task queue management interface
+ */
 export interface TaskQueue {
   tasks: Task[];
   add(task: Task): void;
@@ -354,6 +538,9 @@ export interface TaskQueue {
   size(): number;
 }
 
+/**
+ * Task handler interface
+ */
 export interface TaskHandler {
   canHandle(task: Task): boolean;
   handle(task: Task): Promise<void>;

@@ -17,6 +17,9 @@ This directory contains detailed implementation plans for various components of 
 
 ### Project Management
 - [CHANGELOG.md](./CHANGELOG.md) - Project change history and version tracking
+- [README.md](./README.md) - Project overview and usage instructions
+- our types are located in the [src/types/](/src/types/) directory
+
 
 ## Usage
 

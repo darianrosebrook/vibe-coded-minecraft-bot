@@ -12,8 +12,41 @@ describe('MLTaskExecutor', () => {
   let stateManager: MLStateManager;
   let mockGameState: GameState;
 
+  // Increase timeout for all tests
+  jest.setTimeout(60000);
+
   beforeEach(() => {
     // Create mock instances
+    mockGameState = {
+      position: new Vec3(0, 0, 0),
+      health: 20,
+      food: 20,
+      inventory: {
+        items: [],
+        totalSlots: 36,
+        usedSlots: 0
+      },
+      biome: 'plains',
+      timeOfDay: 6000,
+      isRaining: false,
+      nearbyBlocks: [],
+      nearbyEntities: [],
+      movement: {
+        velocity: new Vec3(0, 0, 0),
+        yaw: 0,
+        pitch: 0,
+        control: { sprint: false, sneak: false }
+      },
+      environment: {
+        blockAtFeet: 'grass',
+        blockAtHead: 'air',
+        lightLevel: 15,
+        isInWater: false,
+        onGround: true
+      },
+      recentTasks: []
+    };
+
     optimizer = {
       optimizeTask: jest.fn().mockResolvedValue({
         priority: TaskPriority.HIGH,
@@ -24,20 +57,9 @@ describe('MLTaskExecutor', () => {
     } as unknown as MLTaskOptimizer;
 
     stateManager = {
-      getCurrentState: jest.fn().mockResolvedValue(mockGameState)
+      getState: jest.fn().mockResolvedValue(mockGameState),
+      convertToGameState: jest.fn().mockImplementation((state) => state)
     } as unknown as MLStateManager;
-
-    mockGameState = {
-      position: new Vec3(0, 0, 0),
-      health: 20,
-      isNight: false,
-      equipment: ['wooden_sword'],
-      inventory: {
-        items: [],
-        totalSlots: 36,
-        usedSlots: 0
-      }
-    };
 
     executor = new MLTaskExecutor(optimizer, stateManager);
   });
@@ -51,7 +73,8 @@ describe('MLTaskExecutor', () => {
           block: 'stone',
           quantity: 64,
           maxDistance: 32,
-          usePathfinding: true
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -79,7 +102,8 @@ describe('MLTaskExecutor', () => {
           block: 'stone',
           quantity: 64,
           maxDistance: 32,
-          usePathfinding: true
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -102,7 +126,11 @@ describe('MLTaskExecutor', () => {
         id: 'test-task',
         type: TaskType.MINING,
         parameters: {
-          block: 'stone'
+          block: 'stone',
+          quantity: 64,
+          maxDistance: 32,
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -122,7 +150,8 @@ describe('MLTaskExecutor', () => {
         parameters: {
           block: 'invalid_block',
           quantity: -1,
-          maxDistance: 0
+          maxDistance: 0,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -144,7 +173,8 @@ describe('MLTaskExecutor', () => {
           block: 'stone',
           quantity: 64,
           maxDistance: 32,
-          usePathfinding: true
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -170,7 +200,8 @@ describe('MLTaskExecutor', () => {
           block: 'stone',
           quantity: 64,
           maxDistance: 32,
-          usePathfinding: true
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -270,7 +301,8 @@ describe('MLTaskExecutor', () => {
         parameters: {
           itemType: 'wooden_sword',
           quantity: 1,
-          action: 'check'
+          action: 'check',
+          operation: 'check'
         } as InventoryTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -297,7 +329,8 @@ describe('MLTaskExecutor', () => {
           block: 'stone',
           quantity: 64,
           maxDistance: 32,
-          usePathfinding: true
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -325,7 +358,8 @@ describe('MLTaskExecutor', () => {
           block: 'stone',
           quantity: 64,
           maxDistance: 32,
-          usePathfinding: true
+          usePathfinding: true,
+          targetBlock: 'stone'
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,

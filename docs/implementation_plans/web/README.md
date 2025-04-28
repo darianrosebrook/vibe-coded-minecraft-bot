@@ -7,6 +7,9 @@ This directory contains detailed implementation plans for the web dashboard and 
 ### User Interface
 - [Dashboard UX](./dashboard_ux.md) - User experience design and implementation
 
+### API
+- [API Implementation](./api_implementation.md) - RESTful API and WebSocket implementation
+
 ## Usage
 
 Each document provides detailed specifications for implementing specific web-related features. These documents serve as living specifications that evolve with the project.

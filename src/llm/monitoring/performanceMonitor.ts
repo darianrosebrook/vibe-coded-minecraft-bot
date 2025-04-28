@@ -36,7 +36,14 @@ export class PerformanceMonitor {
   }
 
   public startRequest(command: string): number {
-    return Date.now();
+    const startTime = Date.now();
+    this.logger.logPerformance({
+      command,
+      responseTime: 0,
+      cacheHit: false,
+      timestamp: startTime,
+    });
+    return startTime;
   }
 
   public endRequest(
@@ -51,10 +58,10 @@ export class PerformanceMonitor {
     // Update metrics
     this.metrics.totalRequests++;
     this.metrics.responseTimes.push(responseTime);
-    this.metrics.averageResponseTime =
-      (this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) +
-        responseTime) /
-      this.metrics.totalRequests;
+    
+    // Calculate new average response time
+    const totalResponseTime = this.metrics.responseTimes.reduce((sum, time) => sum + time, 0);
+    this.metrics.averageResponseTime = totalResponseTime / this.metrics.responseTimes.length;
 
     if (tokenUsage) {
       this.metrics.totalTokens += tokenUsage.totalTokens;

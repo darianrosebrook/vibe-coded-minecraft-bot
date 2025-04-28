@@ -3,9 +3,7 @@ import { LLMClient, LLMError } from '../utils/llmClient';
 import { SchemaValidator } from '../utils/taskValidator';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { extractJsonObject } from '../utils/jsonExtractor';
-import { Logger } from '../utils/observability/logger';
-import defaultLogger from '../utils/observability/logger';
+ 
 import { TaskParsingLogger } from './logging/logger';
 import { ParsingErrorHandler, ParsingErrorContext } from './error/parsingErrorHandler';
 import { ErrorHandler } from '../error/errorHandler';
@@ -158,7 +156,26 @@ export class TaskParser {
         }
       }
       
-      // If no markdown code blocks, try to find JSON object directly
+      // If no markdown code blocks, try to find Python-formatted JSON
+      const pythonMatch = response.match(/```python\n?([\s\S]*?)\n?```/);
+      if (pythonMatch) {
+        const pythonContent = pythonMatch[1].trim();
+        // Convert Python dict to JSON
+        const jsonContent = pythonContent
+          .replace(/'/g, '"')  // Replace single quotes with double quotes
+          .replace(/True/g, 'true')  // Convert Python boolean to JSON
+          .replace(/False/g, 'false')
+          .replace(/None/g, 'null');  // Convert Python None to JSON null
+        try {
+          return JSON.parse(jsonContent);
+        } catch (e) {
+          // If parsing fails, try to clean the content
+          const cleanedContent = jsonContent.replace(/[\n\r]/g, '').trim();
+          return JSON.parse(cleanedContent);
+        }
+      }
+      
+      // If no code blocks, try to find JSON object directly
       const jsonObjectMatch = response.match(/\{[\s\S]*\}/);
       if (jsonObjectMatch) {
         const jsonContent = jsonObjectMatch[0].trim();
@@ -296,12 +313,22 @@ export class TaskParser {
         returnedType: task.type,
         expectedType: 'query'
       });
+
+      let queryType = 'status';
+      if (description.toLowerCase().includes('where are you')) {
+        queryType = 'position';
+      } else if (description.toLowerCase().includes('how many') || description.toLowerCase().includes('do you have')) {
+        queryType = 'inventory';
+      } else if (description.toLowerCase().includes('what is nearby')) {
+        queryType = 'nearby';
+      }
+
       return {
         id: `task-${Date.now()}`,
         type: TaskType.QUERY,
         parameters: {
-          queryType: 'position'
-        },
+          queryType: queryType
+        } as QueryTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
         createdAt: new Date(),

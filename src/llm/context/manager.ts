@@ -142,7 +142,47 @@ export class ContextManager {
       host: 'localhost',
       port: 25565,
       username: bot.username,
-      version: bot.version
+      version: bot.version,
+      preferredEnchantments: {},
+      repairMaterials: {},
+      checkTimeoutInterval: 60000,
+      hideErrors: false,
+      repairThreshold: 20,
+      repairQueue: {
+        maxQueueSize: 10,
+        processInterval: 1000,
+        priorityWeights: {
+          durability: 0.7,
+          material: 0.3
+        }
+      },
+      commandQueue: {
+        maxSize: 100,
+        processInterval: 100,
+        retryConfig: {
+          maxRetries: 3,
+          initialDelay: 1000,
+          maxDelay: 5000,
+          backoffFactor: 2
+        }
+      },
+      toolSelection: {
+        efficiencyWeight: 0.2,
+        durabilityWeight: 0.3,
+        materialWeight: 0.3,
+        enchantmentWeight: 0.2
+      },
+      crafting: {
+        allowTierDowngrade: true,
+        maxDowngradeAttempts: 2,
+        preferExistingTools: true
+      },
+      cache: {
+        ttl: 60000,
+        maxSize: 1000,
+        scanDebounceMs: 1000,
+        cleanupInterval: 300000
+      }
     });
 
     this.gameState = this.initializeGameState();

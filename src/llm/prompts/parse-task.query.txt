@@ -22,6 +22,40 @@ The response must match this structure:
       "itemType"?: string,  // For inventory queries
       "radius"?: number,    // For nearby queries
       "category"?: string   // For status queries
+    },
+    "context": {
+      "previousQueries": Array<{
+        queryType: string,
+        filters: any,
+        timestamp: number,
+        success: boolean
+      }>,
+      "botState": {
+        "position": { x: number, y: number, z: number },
+        "health": number,
+        "food": number,
+        "inventory": Array<{ name: string, count: number }>,
+        "biome": string,
+        "isDay": boolean,
+        "isRaining": boolean,
+        "nearbyEntities": Array<{
+          type: string,
+          name: string,
+          distance: number,
+          position: { x: number, y: number, z: number }
+        }>
+      },
+      "taskHistory": Array<{
+        type: string,
+        parameters: any,
+        status: 'success' | 'failure' | 'in_progress',
+        timestamp: number
+      }>
+    },
+    "qualityMetrics": {
+      "precision": number,    // 0-1
+      "completeness": number, // 0-1
+      "relevance": number     // 0-1
     }
   }
 }
@@ -85,6 +119,9 @@ IMPORTANT RULES:
 5. For nearby queries, use a reasonable default radius (16 blocks)
 6. Consider the context of the question when choosing queryType
 7. If the query is ambiguous, prefer the most common interpretation
+8. Track query history for pattern recognition
+9. Score query quality using metrics
+10. Consider task context when interpreting queries
 
 CRITICAL QUERY RULES:
 
@@ -106,36 +143,44 @@ CRITICAL QUERY RULES:
    - Include item counts and durability
    - For specific item queries, use filters.itemType
    - For quantity queries, use filters.minCount/maxCount
+   - Consider recent inventory changes
 
 3. For position queries:
    - Include current coordinates
    - Add biome and dimension info
    - List nearby landmarks
+   - Consider recent movement patterns
 
 4. For nearby queries:
    - Use default radius of 16 blocks
    - Group similar blocks together
    - Include distance information
+   - Consider entity behavior patterns
 
 5. For status queries:
    - Include health and food levels
    - List active tasks
    - Show equipment status
+   - Consider task completion patterns
 
 6. For help queries:
    - List available commands
    - Include usage examples
    - Show task-specific help
+   - Consider user's previous queries
 
 7. Always consider:
    - Current task context
    - Previous queries
    - Bot capabilities
+   - Query success patterns
+   - Response quality metrics
 
 8. Format responses to be:
    - Clear and concise
    - Easy to read in chat
    - Relevant to the query
+   - Consistent with previous responses
 
 EXAMPLES:
 

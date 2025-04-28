@@ -1,11 +1,74 @@
 import { Router, Request, Response, RequestHandler } from 'express';
-import { botInstance } from '../server';
+import { MinecraftBot } from '../../bot/bot';
 import { parseTask } from '../../llm/parse';
-import { MiningTask, MiningTaskParameters } from '../../tasks/mining';
-import { FarmingTask, FarmingTaskParameters } from '../../tasks/farming';
-import { InventoryTask, InventoryTaskParameters } from '../../tasks/inventory';
+import { MiningTask } from '../../tasks/mining';
+import { FarmingTask } from '../../tasks/farming';
+import { InventoryTask } from '../../tasks/inventory';
 import { CommandHandler } from '../../commands';
-import { NavigationTask, NavigationTaskParameters } from '../../tasks/nav';
+import { NavTask } from '../../tasks/nav';
+import { Vec3 } from 'vec3';
+import { MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters } from '../../types/task';
+
+const botInstance = new MinecraftBot({
+  host: process.env.MINECRAFT_HOST || 'localhost',
+  port: parseInt(process.env.MINECRAFT_PORT || '50000', 10),
+  username: process.env.MINECRAFT_USERNAME || 'tob',
+  password: process.env.MINECRAFT_PASSWORD || undefined,
+  version: process.env.MINECRAFT_VERSION || '1.21.4',
+  checkTimeoutInterval: 60000,
+  hideErrors: false,
+  repairThreshold: 20,
+  repairQueue: {
+    maxQueueSize: 10,
+    processInterval: 1000,
+    priorityWeights: {
+      durability: 0.7,
+      material: 0.3
+    }
+  },
+  commandQueue: {
+    maxSize: 100,
+    processInterval: 100,
+    retryConfig: {
+      maxRetries: 3,
+      initialDelay: 1000,
+      maxDelay: 5000,
+      backoffFactor: 2
+    }
+  },
+  toolSelection: {
+    efficiencyWeight: 0.2,
+    durabilityWeight: 0.3,
+    materialWeight: 0.3,
+    enchantmentWeight: 0.2
+  },
+  crafting: {
+    allowTierDowngrade: true,
+    maxDowngradeAttempts: 2,
+    preferExistingTools: true
+  },
+  preferredEnchantments: {
+    pickaxe: ['efficiency', 'unbreaking', 'fortune'],
+    axe: ['efficiency', 'unbreaking', 'fortune'],
+    shovel: ['efficiency', 'unbreaking', 'fortune'],
+    sword: ['sharpness', 'unbreaking', 'looting'],
+    hoe: ['efficiency', 'unbreaking']
+  },
+  repairMaterials: {
+    wooden: 'planks',
+    stone: 'cobblestone',
+    iron: 'iron_ingot',
+    golden: 'gold_ingot',
+    diamond: 'diamond',
+    netherite: 'netherite_ingot'
+  },
+  cache: {
+    ttl: 60000,
+    maxSize: 1000,
+    scanDebounceMs: 1000,
+    cleanupInterval: 300000
+  }
+});
 
 export function setupRoutes(app: Router) {
   // Health check endpoint
@@ -61,42 +124,47 @@ export function setupRoutes(app: Router) {
       switch (parsedTask.type) {
         case 'mining':
           const miningTask = new MiningTask(botInstance, commandHandler, {
-            block: (parsedTask.parameters as MiningTaskParameters).block,
+            targetBlock: (parsedTask.parameters as unknown as MiningTaskParameters).targetBlock,
             quantity: 64,
             maxDistance: 32,
             usePathfinding: true
           });
-          result = await miningTask.execute(parsedTask, taskId);
+          result = await miningTask.execute(null, taskId);
           break;
         case 'farming':
           const farmingTask = new FarmingTask(botInstance, commandHandler, {
-            cropType: (parsedTask.parameters as FarmingTaskParameters).cropType || 'wheat',
+            cropType: (parsedTask.parameters as unknown as FarmingTaskParameters).cropType || 'wheat',
             action: 'harvest',
-            radius: 32,
+            area: {
+              start: new Vec3(0, 64, 0),
+              end: new Vec3(32, 64, 32)
+            },
+            quantity: 64,
             checkInterval: 5000,
             requiresWater: true,
-            minWaterBlocks: 4
+            minWaterBlocks: 4,
+            usePathfinding: true
           });
-          result = await farmingTask.execute(parsedTask, taskId);
+          result = await farmingTask.execute(null, taskId);
           break;
         case 'navigation':
-          const navParams = parsedTask.parameters as import('../../tasks/nav').NavigationTaskParameters;
-          const navigationTask = new NavigationTask(botInstance, commandHandler, {
+          const navParams = parsedTask.parameters as unknown as NavigationTaskParameters;
+          const navigationTask = new NavTask(botInstance, commandHandler, {
             location: navParams.location,
-            mode: navParams.mode ?? 'walk',
+            mode: 'walk',
             avoidWater: navParams.avoidWater ?? false,
             maxDistance: navParams.maxDistance ?? 32,
             usePathfinding: navParams.usePathfinding ?? true
           });
-          result = await navigationTask.execute(parsedTask, taskId);
+          result = await navigationTask.execute(null, taskId);
           break;
         case 'inventory':
           const inventoryTask = new InventoryTask(botInstance, commandHandler, {
-            action: (parsedTask.parameters as InventoryTaskParameters).action || 'store',
-            itemType: (parsedTask.parameters as InventoryTaskParameters).itemType,
-            quantity: (parsedTask.parameters as InventoryTaskParameters).quantity || 1
+            operation: (parsedTask.parameters as unknown as InventoryTaskParameters).operation || 'sort',
+            itemType: (parsedTask.parameters as unknown as InventoryTaskParameters).itemType,
+            quantity: (parsedTask.parameters as unknown as InventoryTaskParameters).quantity
           });
-          result = await inventoryTask.execute(parsedTask, taskId);
+          result = await inventoryTask.execute(null, taskId);
           break;
         default:
           return res.status(400).json({ error: 'Unknown task type' });

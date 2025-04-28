@@ -31,7 +31,9 @@ export class ErrorRecoveryManager {
       priority: 1,
       maxRetries: 3,
       backoffStrategy: (attempt) =>
-        Math.min(1000 * Math.pow(2, attempt), 10000),
+        process.env.NODE_ENV === 'test' 
+          ? 100 // Use shorter delay for tests
+          : Math.min(1000 * Math.pow(2, attempt), 10000),
       execute: async (error, context) => {
         // Implementation would go here
         return false;
@@ -95,7 +97,6 @@ export class ErrorRecoveryManager {
     const errorKey = `${errorType}-${context.taskId || "unknown"}`;
 
     let retryCount = this.retryCounts.get(errorKey) || 0;
-    this.retryCounts.set(errorKey, retryCount + 1);
 
     for (const strategy of strategies) {
       if (retryCount >= strategy.maxRetries) {
@@ -105,6 +106,9 @@ export class ErrorRecoveryManager {
         });
         continue;
       }
+
+      // Increment retry count before executing the strategy
+      this.retryCounts.set(errorKey, retryCount + 1);
 
       try {
         const delay = strategy.backoffStrategy(retryCount);

@@ -7,11 +7,20 @@ import { TaskStorage, StorageConfig } from '../storage/taskStorage';
 import { ErrorHandler, ErrorContext } from '../error/errorHandler';
 import { MinecraftBot } from '../bot/bot';
 import { Position } from '../types/common';
+import { MLStateManager } from '../ml/state/manager';
+import { WorldTracker } from '../bot/worldTracking';
+import { CentralizedDataCollector } from '../ml/state/centralized_data_collector';
+import { TrainingDataStorage } from '../ml/state/training_data_storage';
+import { Vec3 } from 'vec3';
+import { goals } from 'mineflayer-pathfinder';
 
 export interface BaseTaskOptions {
   maxRetries?: number;
   retryDelay?: number;
   timeout?: number;
+  useML?: boolean;
+  avoidWater?: boolean;
+  usePathfinding?: boolean;
 }
 
 export type TaskOptions = TaskParameters & BaseTaskOptions;
@@ -41,6 +50,16 @@ export abstract class BaseTask implements BaseTaskInterface {
   protected error: Error | null = null;
   protected stopRequested: boolean = false;
 
+  // ML and State Management
+  protected readonly stateManager: MLStateManager;
+  protected readonly worldTracker: WorldTracker;
+  protected readonly dataCollector: CentralizedDataCollector;
+  protected readonly trainingStorage: TrainingDataStorage;
+  protected useML: boolean = false;
+  protected radius: number = 10;
+  protected isStopped: boolean = false;
+  protected progress: number = 0;
+
   constructor(bot: MinecraftBot, commandHandler: CommandHandler, options: TaskOptions) {
     this.bot = bot;
     this.mineflayerBot = bot.getMineflayerBot();
@@ -51,8 +70,17 @@ export abstract class BaseTask implements BaseTaskInterface {
       maxRetries: 3,
       retryDelay: 5000,
       timeout: 70000,
+      useML: false,
+      avoidWater: false,
       ...options,
     };
+
+    // Initialize ML and state management
+    this.stateManager = new MLStateManager(bot);
+    this.worldTracker = new WorldTracker(bot);
+    this.dataCollector = new CentralizedDataCollector(this.mineflayerBot);
+    this.trainingStorage = new TrainingDataStorage();
+    this.useML = this.options.useML || false;
   }
 
   public async execute(task: Task | null, taskId: string): Promise<TaskResult> {
@@ -232,5 +260,101 @@ export abstract class BaseTask implements BaseTaskInterface {
 
   public stop(): void {
     this.stopRequested = true;
+  }
+
+  protected async navigateTo(position: Vec3): Promise<void> {
+    if (!this.mineflayerBot.pathfinder) {
+      throw new Error('Pathfinder not initialized');
+    }
+
+    if (this.options.usePathfinding) {
+      const goal = new goals.GoalBlock(position.x, position.y, position.z);
+      const movements = this.mineflayerBot.pathfinder.movements;
+      
+      if (this.options.avoidWater) {
+        movements.allowSprinting = true;
+        movements.allowParkour = true;
+      }
+      
+      await this.mineflayerBot.pathfinder.goto(goal);
+    } else {
+      await this.mineflayerBot.lookAt(position);
+      await this.mineflayerBot.setControlState('forward', true);
+      
+      while (this.mineflayerBot.entity.position.distanceTo(position) > 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      await this.mineflayerBot.setControlState('forward', false);
+    }
+  }
+
+  protected async ensureTool(toolType: string, target: string): Promise<void> {
+    const toolManager = this.bot.getToolManager();
+    await toolManager.ensureTool(toolType, target);
+  }
+
+  protected abstract getTaskSpecificState(): Promise<any>;
+
+  protected async updateMLState(): Promise<void> {
+    if (!this.useML) return;
+    
+    const baseState = {
+      position: this.mineflayerBot.entity.position,
+      inventory: this.mineflayerBot.inventory.items(),
+      biome: this.mineflayerBot.world.getBiome(this.mineflayerBot.entity.position)
+    };
+    
+    const taskState = await this.getTaskSpecificState();
+    const state = { ...baseState, ...taskState };
+    
+    await this.collectTrainingData({
+      type: this.constructor.name.toLowerCase(),
+      state,
+      metadata: {
+        biome: baseState.biome,
+        position: baseState.position
+      }
+    });
+  }
+
+  protected async initializeMLState(): Promise<void> {
+    if (!this.useML) return;
+    
+    try {
+      await this.stateManager.updateStateAsync();
+      await this.dataCollector.recordPrediction(
+        'task_initialization',
+        { taskType: this.constructor.name },
+        { success: true },
+        true,
+        1.0,
+        0
+      );
+    } catch (error) {
+      logger.error('Failed to initialize ML state', { error });
+      this.useML = false;
+    }
+  }
+
+  protected calculateEfficiency(metric: string, value: number, maxValue: number): number {
+    return Math.min(Math.max(value / maxValue, 0), 1);
+  }
+
+  protected async collectTrainingData(data: any): Promise<void> {
+    if (!this.useML) return;
+    
+    try {
+      await this.dataCollector.recordPrediction(
+        'training_data',
+        data,
+        { success: true },
+        true,
+        1.0,
+        0
+      );
+    } catch (error) {
+      logger.error('Failed to collect training data', { error });
+    }
   }
 } 

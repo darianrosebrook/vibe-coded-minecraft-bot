@@ -1,58 +1,76 @@
-# Machine Learning
+# Machine Learning Components
 
-This directory contains machine learning components for the Minecraft bot, including resource hotspot detection and reinforcement learning.
+This directory contains machine learning components for the Minecraft bot, organized into specialized modules for different aspects of the bot's learning capabilities.
 
-## Components
+## Directory Structure
 
-### `hotspot.ts`
-- Resource hotspot detection
-- Pattern recognition
-- Cluster analysis
-- Prediction models
+### `hotspot/`
+- Resource hotspot detection and analysis
+- Pattern recognition for resource clusters
+- Density-based analysis
+- Predictive modeling for resource locations
 
-### `reinforcement.ts`
-- Reinforcement learning
+### `command/`
+- Command execution and management
+- Command pattern recognition
+- Command sequence optimization
+- Command success prediction
+
+### `task/`
+- Task planning and execution
+- Task prioritization
+- Task completion prediction
+- Task optimization
+
+### `reinforcement/`
+- Reinforcement learning algorithms
 - Policy optimization
-- Reward calculation
-- State management
+- Reward calculation and shaping
+- State-action value estimation
 
-### `training.ts`
-- Model training
-- Data collection
-- Feature extraction
-- Model evaluation
+### `state/`
+- State representation and management
+- State transition modeling
+- State feature extraction
+- State space optimization
 
-### `prediction.ts`
-- Resource prediction
-- Behavior prediction
-- Risk assessment
+### `performance/`
+- Performance monitoring and analysis
 - Performance optimization
+- Resource usage tracking
+- Efficiency metrics
 
-## Features
+## Core Features
 
 ### Hotspot Detection
-- Resource clustering
-- Pattern recognition
-- Density analysis
-- Prediction models
+- Resource clustering and analysis
+- Pattern recognition in resource distribution
+- Density-based hotspot identification
+- Predictive modeling for resource discovery
 
 ### Reinforcement Learning
-- Policy optimization
-- Reward calculation
-- State management
-- Action selection
+- Policy optimization for bot actions
+- Reward calculation and shaping
+- State management and representation
+- Action selection and optimization
 
-### Training System
-- Data collection
-- Feature extraction
-- Model training
-- Performance evaluation
+### Task Management
+- Task planning and execution
+- Task prioritization based on goals
+- Task completion prediction
+- Task sequence optimization
 
-### Prediction System
-- Resource prediction
-- Behavior prediction
-- Risk assessment
-- Performance optimization
+### State Management
+- World state representation
+- State transition modeling
+- Feature extraction from game state
+- State space optimization
+
+### Performance Optimization
+- Resource usage monitoring
+- Efficiency metrics tracking
+- Performance bottleneck identification
+- Optimization strategies
 
 ## Data Structures
 
@@ -68,95 +86,95 @@ interface Hotspot {
 }
 ```
 
-### Training Data
+### State Data
 ```typescript
-interface TrainingData {
-  state: State;
-  action: Action;
-  reward: number;
-  nextState: State;
-  done: boolean;
+interface State {
+  position: Vec3;
+  inventory: Item[];
+  health: number;
+  hunger: number;
+  nearbyEntities: Entity[];
+  worldState: WorldState;
 }
 ```
 
-## Usage
+## Usage Examples
 
 ```typescript
 import { HotspotDetector } from './hotspot';
-import { ReinforcementLearner } from './reinforcement';
-import { ModelTrainer } from './training';
-import { ResourcePredictor } from './prediction';
+import { TaskPlanner } from './task';
+import { StateManager } from './state';
+import { PerformanceMonitor } from './performance';
 
+// Initialize components
 const detector = new HotspotDetector();
-const learner = new ReinforcementLearner();
-const trainer = new ModelTrainer();
-const predictor = new ResourcePredictor();
+const planner = new TaskPlanner();
+const stateManager = new StateManager();
+const monitor = new PerformanceMonitor();
 
-// Detect hotspots
+// Detect resource hotspots
 const hotspots = await detector.detectHotspots(worldState);
 
-// Train model
-await trainer.train({
-  epochs: 100,
-  batchSize: 32,
-  learningRate: 0.001
+// Plan and execute tasks
+const task = await planner.createTask({
+  type: 'mining',
+  priority: 1,
+  requirements: ['pickaxe', 'torch']
 });
 
-// Predict resources
-const prediction = await predictor.predict(position);
-
-// Learn from experience
-await learner.learn(experience);
+// Monitor performance
+const metrics = await monitor.getMetrics();
 ```
 
-## Models
+## Models and Algorithms
 
 ### Hotspot Detection
 - K-means clustering
-- Density-based clustering
-- Pattern recognition
+- DBSCAN for density-based clustering
+- Pattern recognition algorithms
 - Predictive modeling
 
 ### Reinforcement Learning
 - Q-learning
-- Policy gradients
-- Actor-critic
+- Policy gradient methods
+- Actor-critic architectures
 - Deep Q-networks
 
-### Prediction Models
-- Time series analysis
-- Spatial prediction
-- Behavior modeling
-- Risk assessment
+### Task Planning
+- Hierarchical task networks
+- Planning algorithms
+- Priority-based scheduling
+- Resource allocation
 
-## Training Process
+## Development Process
 
 1. Data Collection
-   - World state
-   - Bot actions
-   - Rewards
-   - Outcomes
+   - World state observation
+   - Action recording
+   - Performance metrics
+   - Resource distribution
 
-2. Feature Extraction
+2. Feature Engineering
    - Position features
    - Resource features
    - State features
-   - Action features
+   - Performance features
 
-3. Model Training
-   - Supervised learning
-   - Unsupervised learning
-   - Reinforcement learning
-   - Transfer learning
+3. Model Development
+   - Algorithm selection
+   - Model architecture design
+   - Training pipeline setup
+   - Validation framework
 
-4. Evaluation
+4. Evaluation and Optimization
    - Performance metrics
-   - Validation
-   - Testing
-   - Optimization
+   - Model validation
+   - Hyperparameter tuning
+   - System optimization
 
 ## Dependencies
 
-- `tensorflow.js` - Machine learning
+- `tensorflow.js` - Machine learning framework
 - `ml-matrix` - Matrix operations
-- `winston` - Logging 
+- `winston` - Logging system
+- `mineflayer` - Minecraft bot framework 

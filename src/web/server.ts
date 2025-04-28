@@ -1,66 +1,66 @@
-import express from 'express';
-import http from 'http';
+import { createServer } from 'http';
+import { parse } from 'url';
+import next from 'next';
 import { Server } from 'socket.io';
-import path from 'path';
 import { setupSocketHandlers } from './sockets/socketHandlers';
-import { setupRoutes } from './routes/routes';
 import { MinecraftBot } from '../bot/bot';
 import { register } from 'prom-client';
-import logger, { stream } from '../utils/observability/logger';
-import morgan from 'morgan';
-import { metrics, initializeMetrics } from '../utils/observability/metrics';
+import logger from '../utils/observability/logger';
+import { initializeMetrics } from '../utils/observability/metrics';
 
-let botInstance: MinecraftBot | null = null;
+const dev = process.env.NODE_ENV !== 'production';
+const hostname = 'localhost';
+const port = parseInt(process.env.PORT || '3000', 10);
 
 export function initializeWebServer(bot: MinecraftBot) {
-  botInstance = bot;
-  
-  const app = express();
-  const server = http.createServer(app);
-  const io = new Server(server);
+  const app = next({ dev, hostname, port });
+  const handle = app.getRequestHandler();
 
-  // Middleware
-  app.use(morgan('combined', { stream }));
-  app.use(express.json());
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.prepare().then(() => {
+    const server = createServer(async (req, res) => {
+      try {
+        const parsedUrl = parse(req.url!, true);
+        
+        // Handle health check endpoint
+        if (parsedUrl.pathname === '/health') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            status: 'ok',
+            timestamp: Date.now(),
+            uptime: process.uptime(),
+          }));
+          return;
+        }
 
-  // Setup routes
-  setupRoutes(app);
+        // Handle metrics endpoint
+        if (parsedUrl.pathname === '/metrics') {
+          try {
+            res.setHeader('Content-Type', register.contentType);
+            res.end(await register.metrics());
+          } catch (error) {
+            logger.error('Failed to collect metrics', { error });
+            res.statusCode = 500;
+            res.end();
+          }
+          return;
+        }
 
-  // Setup socket handlers
-  setupSocketHandlers(io, bot);
+        await handle(req, res, parsedUrl);
+      } catch (err) {
+        console.error('Error occurred handling', req.url, err);
+        res.statusCode = 500;
+        res.end('Internal Server Error');
+      }
+    });
 
-  // Health check endpoint
-  app.get('/health', (req, res) => {
-    const health = {
-      status: 'ok',
-      timestamp: Date.now(),
-      uptime: process.uptime(),
-    };
-    res.json(health);
+    const io = new Server(server);
+    setupSocketHandlers(io, bot);
+
+    // Initialize metrics
+    initializeMetrics();
+
+    server.listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}`);
+    });
   });
-
-  // Metrics endpoint
-  app.get('/metrics', async (req, res) => {
-    try {
-      res.set('Content-Type', register.contentType);
-      res.end(await register.metrics());
-    } catch (error) {
-      logger.error('Failed to collect metrics', { error });
-      res.status(500).end();
-    }
-  });
-
-  // Initialize metrics
-  initializeMetrics();
-
-  // Start server
-  const PORT = process.env.WEB_PORT || 3000;
-  server.listen(PORT, () => {
-    logger.info(`Web dashboard running on port ${PORT}`);
-  });
-
-  return { app, server, io };
-}
-
-export { botInstance }; 
+} 

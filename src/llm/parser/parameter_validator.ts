@@ -172,7 +172,7 @@ export class ParameterValidator {
     // Run additional validation rules from the engine
     const task = { 
       type: taskType as TaskType, 
-      parameters: parameters as TaskParameters, 
+      parameters: validatedParameters as TaskParameters, 
       status: TaskStatus.PENDING,
       id: crypto.randomUUID(),
       priority: TaskPriority.MEDIUM,
@@ -190,7 +190,7 @@ export class ParameterValidator {
       isValid: errors.length === 0,
       errors,
       warnings,
-      validatedParameters: ruleResult.task.parameters
+      validatedParameters: validatedParameters
     };
   }
 
@@ -248,12 +248,49 @@ export class ParameterValidator {
       if (lower === 'true' || lower === '1') return true;
       if (lower === 'false' || lower === '0') return false;
     }
+    if (typeof value === 'number') {
+      return value !== 0;
+    }
     throw new Error('Value must be a boolean');
   }
 
   private validateComplex(value: any, schema: ParameterSchema): any {
+    if (schema.type !== 'complex') {
+      throw new Error('Schema type must be complex');
+    }
+    if (!schema.schema) {
+      throw new Error('Complex schema must have a schema definition');
+    }
+
     try {
-      return schema.schema.parse(value);
+      if (schema.schema instanceof z.ZodType) {
+        return schema.schema.parse(value);
+      }
+      // Handle nested schema definitions
+      if (typeof schema.schema === 'object') {
+        const result: Record<string, any> = {};
+        for (const [key, subSchema] of Object.entries(schema.schema)) {
+          if (typeof subSchema === 'string') {
+            switch (subSchema) {
+              case 'string':
+                result[key] = this.validateString(value[key], { type: 'string' });
+                break;
+              case 'number':
+                result[key] = this.validateNumeric(value[key], { type: 'numeric' });
+                break;
+              case 'boolean':
+                result[key] = this.validateBoolean(value[key]);
+                break;
+              default:
+                throw new Error(`Unknown schema type: ${subSchema}`);
+            }
+          } else if (typeof subSchema === 'object') {
+            result[key] = this.validateComplex(value[key], { type: 'complex', schema: subSchema });
+          }
+        }
+        return result;
+      }
+      throw new Error('Invalid complex schema definition');
     } catch (error) {
       throw new Error(`Complex validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }

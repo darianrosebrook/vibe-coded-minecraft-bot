@@ -25,6 +25,45 @@ export const metrics = {
     buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60],
   }),
 
+  // Command metrics
+  commandLatency: new Histogram({
+    name: "bot_command_latency_ms",
+    help: "Latency in ms for command parsing",
+    labelNames: ["command_type", "status"] as const,
+    buckets: [50, 100, 200, 500, 1000, 2000],
+  }),
+  commandRetries: new Counter({
+    name: "bot_command_retries",
+    help: "Number of command retries",
+    labelNames: ["command_type", "status"] as const,
+  }),
+
+  // Cache metrics
+  cacheSize: new Gauge({
+    name: "bot_cache_size",
+    help: "Current number of entries in cache",
+  }),
+  cacheHitRate: new Gauge({
+    name: "bot_cache_hit_rate",
+    help: "Current cache hit rate",
+  }),
+  cacheEvictions: new Counter({
+    name: "bot_cache_evictions_total",
+    help: "Total number of cache evictions",
+  }),
+
+  // Queue metrics
+  queueLength: new Gauge({
+    name: "bot_command_queue_length",
+    help: "Current length of command queue",
+  }),
+  queueProcessingTime: new Histogram({
+    name: "bot_queue_processing_time_ms",
+    help: "Time spent processing queue items",
+    labelNames: ["status"] as const,
+    buckets: [10, 50, 100, 500, 1000, 5000],
+  }),
+
   // Minecraft-specific metrics
   blocksMined: new Counter({
     name: "blocks_mined_total",
@@ -95,6 +134,40 @@ export const mlMetrics = {
     name: "ml_prediction_confidence",
     help: "Confidence of ML predictions",
     labelNames: ["type"] as const,
+  }),
+  redstoneEfficiency: new Gauge({
+    name: "redstone_efficiency",
+    help: "Current efficiency of redstone circuits",
+  }),
+  redstonePowerUsage: new Gauge({
+    name: "redstone_power_usage",
+    help: "Current power usage of redstone circuits",
+  }),
+  circuitOptimizationTime: new Histogram({
+    name: "redstone_circuit_optimization_time_ms",
+    help: "Time taken to optimize redstone circuits",
+    buckets: [10, 50, 100, 500, 1000, 5000],
+  }),
+  farmOptimizationTime: new Histogram({
+    name: "redstone_farm_optimization_time_ms",
+    help: "Time taken to optimize redstone farms",
+    buckets: [10, 50, 100, 500, 1000, 5000],
+  }),
+  powerFlowOptimization: new Gauge({
+    name: "redstone_power_flow_optimization",
+    help: "Current power flow optimization score",
+  }),
+  devicePlacementScore: new Gauge({
+    name: "redstone_device_placement_score",
+    help: "Current device placement optimization score",
+  }),
+  updateIntervalEfficiency: new Gauge({
+    name: "redstone_update_interval_efficiency",
+    help: "Current update interval optimization efficiency",
+  }),
+  farmEfficiency: new Gauge({
+    name: "redstone_farm_efficiency",
+    help: "Current farm optimization efficiency",
   }),
 };
 

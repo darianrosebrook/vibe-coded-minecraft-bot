@@ -1,7 +1,7 @@
 import { Bot as MineflayerBot } from 'mineflayer';
 import { Tool, ToolManagerConfig, ToolManagerState, Enchantment } from '../types/tool';
 import { toolRecipes, ToolRecipe } from '../config/crafting';
-import { MinecraftBot } from './bot';
+import { MinecraftBot, BotConfig } from './bot';
 import { Window as PrismarineWindow } from 'prismarine-windows';
 
 interface ToolUsageStats {
@@ -569,5 +569,14 @@ export class ToolManager {
     } finally {
       this.isRepairing = false;
     }
+  }
+
+  public updateConfig(config: Partial<BotConfig>): void {
+    if (config.repairThreshold) this.config.repairThreshold = config.repairThreshold;
+    if (config.preferredEnchantments) this.config.preferredEnchantments = config.preferredEnchantments;
+    if (config.repairMaterials) this.config.repairMaterials = config.repairMaterials;
+    if (config.repairQueue) this.config.repairQueue = config.repairQueue;
+    if (config.toolSelection) this.config.toolSelection = config.toolSelection;
+    if (config.crafting) this.config.crafting = config.crafting;
   }
 } 

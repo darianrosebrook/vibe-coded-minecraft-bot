@@ -16,7 +16,9 @@ services:
       - MINECRAFT_USERNAME=${MINECRAFT_USERNAME:-bot}
       - OLLAMA_HOST=http://ollama:11434
       - DEBUG=*
-    command: npm run dev
+      - WEB_PORT=3000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:3000
+    command: npm run dev:all
     ports:
       - "3000:3000"
       - "9229:9229" # Node.js debug port

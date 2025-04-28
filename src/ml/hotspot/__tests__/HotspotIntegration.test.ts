@@ -31,7 +31,47 @@ describe('HotspotIntegration', () => {
       host: 'localhost',
       port: 25565,
       username: 'test',
-      version: '1.20.1'
+      version: '1.20.1',
+      checkTimeoutInterval: 1000,
+      hideErrors: false,
+      repairThreshold: 0.5,
+      repairQueue: {
+        maxQueueSize: 10,
+        processInterval: 1000,
+        priorityWeights: {
+          durability: 1,
+          material: 1
+        }
+      },
+      commandQueue: {
+        processInterval: 1000,
+        maxSize: 10,
+        retryConfig: {
+          maxRetries: 3,
+          initialDelay: 1000,
+          maxDelay: 10000,
+          backoffFactor: 2
+        }
+      },
+      toolSelection: {
+        efficiencyWeight: 1,
+        durabilityWeight: 1,
+        materialWeight: 1,
+        enchantmentWeight: 1
+      },
+      crafting: {
+        allowTierDowngrade: true,
+        maxDowngradeAttempts: 3,
+        preferExistingTools: true
+      },
+      preferredEnchantments: {},
+      repairMaterials: {},
+      cache: {
+        maxSize: 1000,
+        ttl: 60000,
+        scanDebounceMs: 1000,
+        cleanupInterval: 60000
+      }
     });
     integration = new HotspotIntegration(bot);
   });

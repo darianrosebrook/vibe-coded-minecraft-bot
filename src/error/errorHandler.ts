@@ -40,7 +40,6 @@ export interface FallbackStrategy {
 
 export class ErrorHandler {
   private bot: MinecraftBot;
-  private mineflayerBot: MineflayerBot;
   private errorCount: number = 0;
   private lastErrorTime: number = 0;
   private errorThreshold: number = 5;
@@ -50,7 +49,6 @@ export class ErrorHandler {
 
   constructor(bot: MinecraftBot) {
     this.bot = bot;
-    this.mineflayerBot = bot.getMineflayerBot();
     this.retryStrategies = new Map();
     this.fallbackStrategies = new Map();
     this.initializeStrategies();
@@ -99,11 +97,7 @@ export class ErrorHandler {
         shouldFallback: (context) => context.retryCount >= 5,
         execute: async (context) => {
           // Try to reconnect to the server
-          await this.mineflayerBot.connect({
-            host: this.mineflayerBot._client.socket.remoteAddress,
-            port: this.mineflayerBot._client.socket.remotePort,
-            username: this.mineflayerBot.username,
-          });
+          await this.bot.reconnect();
         },
       },
     ]);

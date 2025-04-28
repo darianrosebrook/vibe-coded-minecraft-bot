@@ -2,7 +2,7 @@ import { MinecraftBot } from '../bot/bot';
 import { parseTask } from '../llm/parse';
 import { QueryTaskParameters, Task, MiningTaskParameters, FarmingTaskParameters, NavigationTaskParameters, InventoryTaskParameters, TaskType } from '../types/task';
 import { BaseTask } from '../tasks/base';
-import { NavigationTask } from '../tasks/nav';
+import { NavTask } from '../tasks/nav';
 import { ChatTask } from '../tasks/chat';
 import logger from '../utils/observability/logger';
 import { MiningTask } from '../tasks/mining';
@@ -197,7 +197,7 @@ export class CommandHandler {
           blockAtFeet: mineflayerBot.blockAt(mineflayerBot.entity.position)?.name || 'unknown',
           blockAtHead: mineflayerBot.blockAt(mineflayerBot.entity.position.offset(0, 1, 0))?.name || 'unknown',
           lightLevel: mineflayerBot.world.getBlockLight(mineflayerBot.entity.position),
-          isInWater: mineflayerBot.entity.isInWater,
+          isInWater: !mineflayerBot.entity.onGround,
           onGround: mineflayerBot.entity.onGround
         },
         movement: {
@@ -296,7 +296,7 @@ export class CommandHandler {
       switch (task.type) {
         case 'mining':
           taskHandler = new MiningTask(this.bot, this, {
-            block: (task.parameters as MiningTaskParameters).block,
+            targetBlock: (task.parameters as MiningTaskParameters).targetBlock,
             quantity: 64,
             maxDistance: 32,
             usePathfinding: true
@@ -309,7 +309,11 @@ export class CommandHandler {
             radius: 32,
             checkInterval: 5000,
             requiresWater: true,
-            minWaterBlocks: 4
+            minWaterBlocks: 4,
+            area: {
+              start: { x: 0, y: 0, z: 0 },
+              end: { x: 0, y: 0, z: 0 }
+            }
           });
           break;
         case 'navigation':
@@ -349,7 +353,7 @@ export class CommandHandler {
             navParams.location = player.position;
           }
           
-          const navigationTask = new NavigationTask(this.bot, this, {
+          const navigationTask = new NavTask(this.bot, this, {
             location: navParams.location,
             mode: 'jump',
             avoidWater: navParams.avoidWater ?? false,
@@ -360,7 +364,7 @@ export class CommandHandler {
           break;
         case 'inventory':
           taskHandler = new InventoryTask(this.bot, this, {
-            action: (task.parameters as InventoryTaskParameters).action || 'store',
+            operation: (task.parameters as InventoryTaskParameters).operation || 'store',
             itemType: (task.parameters as InventoryTaskParameters).itemType,
             quantity: (task.parameters as InventoryTaskParameters).quantity || 1
           });
@@ -374,9 +378,9 @@ export class CommandHandler {
           break;
         case 'gathering':
           taskHandler = new GatheringTask(this.bot, this, {
-            itemType: (task.parameters as GatheringTaskParameters).itemType,
+            resourceType: (task.parameters as GatheringTaskParameters).itemType,
             quantity: (task.parameters as GatheringTaskParameters).quantity || 1,
-            maxDistance: (task.parameters as GatheringTaskParameters).maxDistance || 32,
+            radius: (task.parameters as GatheringTaskParameters).radius || 32,
             usePathfinding: (task.parameters as GatheringTaskParameters).usePathfinding ?? true
           });
           break;

@@ -3,7 +3,7 @@ import { Vec3 } from 'vec3';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';
 import { MinecraftBot } from './bot';
-import { Biome } from 'prismarine-biome';
+import prismarineBiome from 'prismarine-biome';
 
 export class WorldTracker {
   private bot: MinecraftBot;
@@ -12,14 +12,14 @@ export class WorldTracker {
   private resourceLocations: Map<string, Vec3[]>; // block type -> positions
   private lastScanTime: number = 0;
   private scanInterval: number = 5000; // 5 seconds
-  private biomeData: any;
+  private Biome: any;
 
   constructor(bot: MinecraftBot) {
     this.bot = bot;
     this.mineflayerBot = bot.getMineflayerBot();
     this.knownBlocks = new Map();
     this.resourceLocations = new Map();
-    this.biomeData = require('prismarine-biome')(this.mineflayerBot.version);
+    this.Biome = prismarineBiome(this.mineflayerBot.version);
     this.setupEventListeners();
   }
 
@@ -47,7 +47,7 @@ export class WorldTracker {
 
   private updateBlockTracking(position: Vec3, block: any) {
     const biomeId = this.mineflayerBot.world.getBiome(position);
-    const biome = this.biomeData.fromId(biomeId);
+    const biome = new this.Biome(biomeId);
     const biomeName = biome.name;
     const blockType = block.name;
 
@@ -64,7 +64,7 @@ export class WorldTracker {
       }
       const locations = this.resourceLocations.get(blockType)!;
       locations.push(position.clone());
-      
+
       // Update metrics
       metrics.blocksMined.inc({ block_type: blockType });
     }
@@ -160,12 +160,12 @@ export class WorldTracker {
 
   public getBiomeAt(position: Vec3): string {
     const biomeId = this.mineflayerBot.world.getBiome(position);
-    const biome = this.biomeData.fromId(biomeId);
+    const biome = new this.Biome(biomeId);
     return biome.name;
   }
 
-  public getBiomeData(position: Vec3): Biome {
+  public getBiomeData(position: Vec3): any {
     const biomeId = this.mineflayerBot.world.getBiome(position);
-    return this.biomeData.fromId(biomeId);
+    return new this.Biome(biomeId);
   }
 } 
