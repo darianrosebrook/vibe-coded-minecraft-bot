@@ -1,6 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-Our types are in the src/types, update those as we progress.
