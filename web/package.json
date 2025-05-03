@@ -1,0 +1,32 @@
+{
+  "name": "minecraft-bot-web",
+  "version": "1.0.0",
+  "description": "Web interface for Minecraft bot with ML dashboard",
+  "scripts": {
+    "dev": "node src/server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node src/server.js",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@radix-ui/react-label": "^2.0.2",
+    "@tensorflow/tfjs": "^4.17.0",
+    "express": "^4.18.2",
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io": "^4.7.4",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/react": "^18.2.57",
+    "@types/react-dom": "^18.2.19",
+    "typescript": "^5.3.3",
+    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.1.0"
+  }
+} 

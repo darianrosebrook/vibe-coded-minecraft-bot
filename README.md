@@ -1,3 +1,90 @@
+# Minecraft Bot Project
+
+This project consists of two main components:
+
+1. **Bot** (`/bot`): The Minecraft bot implementation with LLM-powered task execution
+2. **Web** (`/web`): The web interface with ML dashboard
+
+## Project Structure
+
+```
+minecraft-bot/
+├── bot/                    # Bot project
+│   ├── src/               # Source code
+│   ├── scripts/           # Utility scripts
+│   ├── docs/              # Documentation
+│   ├── examples/          # Example configurations
+│   ├── data/              # Data files
+│   ├── mining_data/       # Mining-related data
+│   ├── farming_data/      # Farming-related data
+│   ├── task_data/         # Task-related data
+│   ├── logs/              # Log files
+│   └── package.json       # Bot dependencies
+├── web/                    # Web project
+│   ├── src/               # Source code
+│   ├── public/            # Static assets
+│   └── package.json       # Web dependencies
+└── docker-compose.yml     # Docker configuration
+```
+
+## Setup
+
+### Bot Setup
+
+```bash
+cd bot
+npm install
+npm run dev
+```
+
+### Web Setup
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+## Development
+
+Both projects can be developed independently. The bot exposes a WebSocket API that the web interface connects to for real-time updates and control.
+
+### Bot Development
+
+The bot is written in TypeScript and uses Mineflayer for Minecraft interaction. Key features include:
+- LLM-powered task execution
+- Pathfinding and navigation
+- Resource gathering
+- Combat capabilities
+
+### Web Development
+
+The web interface is built with Next.js and React, featuring:
+- Real-time bot status monitoring
+- ML training dashboard
+- Command interface
+- Resource usage visualization
+
+## Docker Deployment
+
+The project includes Docker configurations for both development and production environments. Use:
+
+```bash
+# Development
+docker-compose -f docker-compose.dev.yml up
+
+# Production
+docker-compose up
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
 # Minecraft Bot with LLM Integration
 
 A Minecraft bot that uses local LLM (Ollama) to interpret natural language commands and execute complex tasks in-game.

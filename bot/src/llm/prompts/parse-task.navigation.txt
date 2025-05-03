@@ -1,0 +1,142 @@
+version: 1.1.0
+
+NAVIGATION TASKS:
+You are responsible for interpreting commands that involve movement or location-based actions.
+
+Valid navigation commands include:
+- "come here"
+- "follow me"
+- "go to X"
+- "find me"
+- "explore the area"
+- "return to base"
+- "move to X"
+- "walk to X"
+
+The response must match this structure:
+{
+  "type": "navigation",
+  "parameters": {
+    "location": {
+      "x": number,
+      "y": number,
+      "z": number
+    },
+    "avoidWater": boolean,
+    "maxDistance": number,
+    "mode": "walk" | "sprint" | "jump",
+    "usePathfinding": boolean,
+    "radius": number
+  }
+}
+
+EXAMPLES:
+
+"come here" ->
+{
+  "type": "navigation",
+  "parameters": {
+    "location": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "avoidWater": true,
+    "maxDistance": 32,
+    "mode": "walk",
+    "usePathfinding": true,
+    "radius": 5
+  }
+}
+
+"follow me" ->
+{
+  "type": "navigation",
+  "parameters": {
+    "location": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "avoidWater": true,
+    "maxDistance": 5,
+    "mode": "walk",
+    "usePathfinding": true,
+    "radius": 2
+  }
+}
+
+"explore the area" ->
+{
+  "type": "navigation",
+  "parameters": {
+    "location": {
+      "x": 0,
+      "y": 64,
+      "z": 0
+    },
+    "avoidWater": false,
+    "maxDistance": 64,
+    "mode": "walk",
+    "usePathfinding": false,
+    "radius": 32
+  }
+}
+
+IMPORTANT RULES:
+1. Always use the "navigation" type for any command that involves movement
+2. For "come here" or "follow me", use the player's current position
+3. For exploration, use a reasonable default location and larger maxDistance
+4. Set appropriate movement options based on the command type
+5. Use pathfinding for precise movement, disable for exploration
+6. Consider the terrain and obstacles when setting movement options
+7. If the destination is ambiguous, prefer the most common interpretation
+
+CRITICAL NAVIGATION RULES:
+
+1. ONLY use navigation tasks for commands that explicitly ask the bot to move somewhere
+2. This includes:
+   - "come here", "follow me", "come to me", "find me"
+   - "come to my location", "follow me please"
+   - "can you come to me", "can you follow me", "can you come here"
+3. DO NOT use navigation tasks for:
+   - "where are you" (use query with queryType: 'block')
+   - "what's your location" (use query with queryType: 'block')
+   - Any other question about the bot's current position
+4. For "come here" and similar commands:
+   - The location parameter will be filled in by the system
+   - DO NOT specify coordinates in the task
+   - The system will automatically use the player's current position
+5. Navigation tasks MUST have this EXACT structure:
+   {
+     "type": "navigation",
+     "parameters": {}
+   }
+   DO NOT add any other fields or parameters
+   DO NOT include coordinates for "come here" commands
+
+Navigation Rules:
+1. If coordinates are not specified, use relative positions based on:
+   - Current bot position
+   - Nearby landmarks
+   - Previous navigation points
+2. For "go to" commands without coordinates:
+   - Use the nearest matching location
+   - Consider the bot's current task context
+   - Prefer locations with known resources
+3. For "explore" commands:
+   - Start from current position
+   - Move in a spiral pattern
+   - Record discovered resources
+4. For "return" commands:
+   - Use the last known safe position
+   - Consider the bot's home base
+   - Avoid dangerous areas
+5. Always include navigation options that:
+   - Match the terrain type
+   - Consider the bot's capabilities
+   - Account for time of day
+6. For group navigation:
+   - Maintain formation
+   - Keep safe distances
+   - Share discovered paths 

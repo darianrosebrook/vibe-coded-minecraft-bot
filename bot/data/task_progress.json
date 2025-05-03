@@ -1,0 +1,3957 @@
+{
+  "Heliotropism-1745624552983": {
+    "taskId": "Heliotropism-1745624552983",
+    "currentProgress": 11,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 960,
+    "currentLocation": {
+      "x": -365,
+      "y": 60,
+      "z": 105
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745624561930,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745624575060,
+        "progress": 1
+      },
+      {
+        "timestamp": 1745624584131,
+        "progress": 2
+      },
+      {
+        "timestamp": 1745624592909,
+        "progress": 3
+      },
+      {
+        "timestamp": 1745624601629,
+        "progress": 4
+      },
+      {
+        "timestamp": 1745624614771,
+        "progress": 5
+      },
+      {
+        "timestamp": 1745624635014,
+        "progress": 6
+      },
+      {
+        "timestamp": 1745624643741,
+        "progress": 7
+      },
+      {
+        "timestamp": 1745624653121,
+        "progress": 8
+      },
+      {
+        "timestamp": 1745624662629,
+        "progress": 9
+      },
+      {
+        "timestamp": 1745624671149,
+        "progress": 10
+      },
+      {
+        "timestamp": 1745624680605,
+        "progress": 11
+      }
+    ],
+    "lastUpdated": 1745624680640,
+    "created": 1745624561930
+  },
+  "Heliotropism-1745628653422": {
+    "taskId": "Heliotropism-1745628653422",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -365,
+      "y": 60,
+      "z": 105
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745628654005,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745628654008,
+    "created": 1745628654005
+  },
+  "Heliotropism-1745628720823": {
+    "taskId": "Heliotropism-1745628720823",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -320,
+      "y": 61,
+      "z": 79
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745628721614,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745628721657,
+    "created": 1745628721614
+  },
+  "Heliotropism-1745628741308": {
+    "taskId": "Heliotropism-1745628741308",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -290,
+      "y": 62,
+      "z": 50
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745628742003,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745628742003,
+    "created": 1745628742003
+  },
+  "Heliotropism-1745628935671": {
+    "taskId": "Heliotropism-1745628935671",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -115,
+      "y": 45,
+      "z": -125
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745628936313,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745628936315,
+    "created": 1745628936313
+  },
+  "Heliotropism-1745629062051": {
+    "taskId": "Heliotropism-1745629062051",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": 100,
+      "y": 58,
+      "z": -200
+    },
+    "errorCount": 0,
+    "retryCount": 3,
+    "progressHistory": [
+      {
+        "timestamp": 1745629062717,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745629247700,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745629247701,
+    "created": 1745629062717
+  },
+  "Heliotropism-1745629552367": {
+    "taskId": "Heliotropism-1745629552367",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -360,
+      "y": 64,
+      "z": 108
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745629552367,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745629552368,
+    "created": 1745629552367
+  },
+  "Heliotropism-1745629722764": {
+    "taskId": "Heliotropism-1745629722764",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -360,
+      "y": 64,
+      "z": 108
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745629722764,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745629724008,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745629724008,
+    "created": 1745629722764
+  },
+  "Heliotropism-1745629736378": {
+    "taskId": "Heliotropism-1745629736378",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -360,
+      "y": 64,
+      "z": 108
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745629736378,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745629737364,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745629737365,
+    "created": 1745629736378
+  },
+  "Heliotropism-1745629899315": {
+    "taskId": "Heliotropism-1745629899315",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -360,
+      "y": 64,
+      "z": 108
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745629899316,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745629899717,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745629899718,
+    "created": 1745629899316
+  },
+  "Heliotropism-1745630193399": {
+    "taskId": "Heliotropism-1745630193399",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -360,
+      "y": 64,
+      "z": 108
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630193400,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630193678,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630193678,
+    "created": 1745630193400
+  },
+  "Heliotropism-1745630327550": {
+    "taskId": "Heliotropism-1745630327550",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -360,
+      "y": 64,
+      "z": 108
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630327550,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630327963,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630327963,
+    "created": 1745630327550
+  },
+  "Heliotropism-1745630346120": {
+    "taskId": "Heliotropism-1745630346120",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630346121,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630346622,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630346623,
+    "created": 1745630346121
+  },
+  "Heliotropism-1745630380881": {
+    "taskId": "Heliotropism-1745630380881",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630380881,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630381519,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630381519,
+    "created": 1745630380881
+  },
+  "Heliotropism-1745630496901": {
+    "taskId": "Heliotropism-1745630496901",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630496902,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630497443,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630497444,
+    "created": 1745630496902
+  },
+  "Heliotropism-1745630511992": {
+    "taskId": "Heliotropism-1745630511992",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630511993,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630512941,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630512943,
+    "created": 1745630511993
+  },
+  "Heliotropism-1745630536377": {
+    "taskId": "Heliotropism-1745630536377",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630536377,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630537212,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630537213,
+    "created": 1745630536377
+  },
+  "Heliotropism-1745630906633": {
+    "taskId": "Heliotropism-1745630906633",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745630906634,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630919905,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630919906,
+    "created": 1745630906634
+  },
+  "Heliotropism-1745630941344": {
+    "taskId": "Heliotropism-1745630941344",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630941345,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745630942528,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630942528,
+    "created": 1745630941345
+  },
+  "Heliotropism-1745630955229": {
+    "taskId": "Heliotropism-1745630955229",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745630955230,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745630955230,
+    "created": 1745630955230
+  },
+  "Heliotropism-1745631059896": {
+    "taskId": "Heliotropism-1745631059896",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631059897,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631061100,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631061100,
+    "created": 1745631059897
+  },
+  "Heliotropism-1745631182922": {
+    "taskId": "Heliotropism-1745631182922",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745631182923,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631195331,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631195332,
+    "created": 1745631182923
+  },
+  "Heliotropism-1745631226356": {
+    "taskId": "Heliotropism-1745631226356",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631226356,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631226358,
+    "created": 1745631226356
+  },
+  "Heliotropism-1745631485846": {
+    "taskId": "Heliotropism-1745631485846",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631485847,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631486237,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631486238,
+    "created": 1745631485847
+  },
+  "Heliotropism-1745631584325": {
+    "taskId": "Heliotropism-1745631584325",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631584325,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631585358,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631585359,
+    "created": 1745631584325
+  },
+  "Heliotropism-1745631630295": {
+    "taskId": "Heliotropism-1745631630295",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631630296,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631630675,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631630675,
+    "created": 1745631630296
+  },
+  "Heliotropism-1745631769856": {
+    "taskId": "Heliotropism-1745631769856",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 64,
+      "z": 106
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631769856,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631772179,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631772181,
+    "created": 1745631769856
+  },
+  "Heliotropism-1745631794078": {
+    "taskId": "Heliotropism-1745631794078",
+    "currentProgress": 1,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 1399,
+    "currentLocation": {
+      "x": -357,
+      "y": 60,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631801644,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745631815776,
+        "progress": 1
+      }
+    ],
+    "lastUpdated": 1745631815776,
+    "created": 1745631801644
+  },
+  "Heliotropism-1745631829151": {
+    "taskId": "Heliotropism-1745631829151",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -357,
+      "y": 61,
+      "z": 104
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631849532,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631849534,
+    "created": 1745631849532
+  },
+  "Heliotropism-1745631950397": {
+    "taskId": "Heliotropism-1745631950397",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -357,
+      "y": 61,
+      "z": 104
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745631951867,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745631951868,
+    "created": 1745631951867
+  },
+  "Heliotropism-1745632458643": {
+    "taskId": "Heliotropism-1745632458643",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -142,
+      "y": 49,
+      "z": -98
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632458644,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745632460633,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632460634,
+    "created": 1745632458644
+  },
+  "Heliotropism-1745632542128": {
+    "taskId": "Heliotropism-1745632542128",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -142,
+      "y": 39,
+      "z": -98
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632542129,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745632543307,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632543307,
+    "created": 1745632542129
+  },
+  "Heliotropism-1745632610716": {
+    "taskId": "Heliotropism-1745632610716",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632610717,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632610718,
+    "created": 1745632610717
+  },
+  "Heliotropism-1745632629294": {
+    "taskId": "Heliotropism-1745632629294",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632629295,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632629296,
+    "created": 1745632629295
+  },
+  "Heliotropism-1745632685521": {
+    "taskId": "Heliotropism-1745632685521",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632685521,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632685522,
+    "created": 1745632685521
+  },
+  "Heliotropism-1745632749326": {
+    "taskId": "Heliotropism-1745632749326",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632749327,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632749328,
+    "created": 1745632749327
+  },
+  "Heliotropism-1745632762843": {
+    "taskId": "Heliotropism-1745632762843",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632762844,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632762845,
+    "created": 1745632762844
+  },
+  "Heliotropism-1745632779246": {
+    "taskId": "Heliotropism-1745632779246",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632779246,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632779247,
+    "created": 1745632779246
+  },
+  "Heliotropism-1745632789323": {
+    "taskId": "Heliotropism-1745632789323",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632789323,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632789323,
+    "created": 1745632789323
+  },
+  "Heliotropism-1745632832264": {
+    "taskId": "Heliotropism-1745632832264",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632832265,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632832266,
+    "created": 1745632832265
+  },
+  "Heliotropism-1745632842416": {
+    "taskId": "Heliotropism-1745632842416",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632842417,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632842417,
+    "created": 1745632842417
+  },
+  "Heliotropism-1745632847838": {
+    "taskId": "Heliotropism-1745632847838",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -377,
+      "y": 64,
+      "z": 103
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745632847839,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745632847839,
+    "created": 1745632847839
+  },
+  "Heliotropism-1745634482932": {
+    "taskId": "Heliotropism-1745634482932",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -374,
+      "y": 64,
+      "z": 104
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634482934,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634483622,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634483623,
+    "created": 1745634482934
+  },
+  "Heliotropism-1745634488262": {
+    "taskId": "Heliotropism-1745634488262",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -366,
+      "y": 64,
+      "z": 112
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634488264,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634490318,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634490319,
+    "created": 1745634488264
+  },
+  "Heliotropism-1745634496100": {
+    "taskId": "Heliotropism-1745634496100",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -363,
+      "y": 63,
+      "z": 131
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634496102,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634500565,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634500567,
+    "created": 1745634496102
+  },
+  "Heliotropism-1745634545084": {
+    "taskId": "Heliotropism-1745634545084",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -325,
+      "y": 62,
+      "z": 101
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634545084,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634590867,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634590991,
+    "created": 1745634545084
+  },
+  "Heliotropism-1745634559836": {
+    "taskId": "Heliotropism-1745634559836",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -367,
+      "y": 63,
+      "z": 139
+    },
+    "errorCount": 0,
+    "retryCount": 3,
+    "progressHistory": [
+      {
+        "timestamp": 1745634559880,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634605812,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634605812,
+    "created": 1745634559880
+  },
+  "Heliotropism-1745634635902": {
+    "taskId": "Heliotropism-1745634635902",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 139
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634635902,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634637919,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634637920,
+    "created": 1745634635902
+  },
+  "Heliotropism-1745634648788": {
+    "taskId": "Heliotropism-1745634648788",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745634648789,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634659289,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634659289,
+    "created": 1745634648789
+  },
+  "Heliotropism-1745634669322": {
+    "taskId": "Heliotropism-1745634669322",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634669322,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634669323,
+    "created": 1745634669322
+  },
+  "Heliotropism-1745634781452": {
+    "taskId": "Heliotropism-1745634781452",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745634781453,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745634782742,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745634782743,
+    "created": 1745634781453
+  },
+  "Heliotropism-1745635017451": {
+    "taskId": "Heliotropism-1745635017451",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745635017452,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635037550,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635037551,
+    "created": 1745635017452
+  },
+  "Heliotropism-1745635064810": {
+    "taskId": "Heliotropism-1745635064810",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635064811,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635064812,
+    "created": 1745635064811
+  },
+  "Heliotropism-1745635228728": {
+    "taskId": "Heliotropism-1745635228728",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745635228729,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635236942,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635236942,
+    "created": 1745635228729
+  },
+  "Heliotropism-1745635366856": {
+    "taskId": "Heliotropism-1745635366856",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745635366857,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635374117,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635374119,
+    "created": 1745635366857
+  },
+  "Heliotropism-1745635727650": {
+    "taskId": "Heliotropism-1745635727650",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635727651,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635729857,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635729858,
+    "created": 1745635727651
+  },
+  "Heliotropism-1745635835582": {
+    "taskId": "Heliotropism-1745635835582",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635835583,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635838463,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635838463,
+    "created": 1745635835583
+  },
+  "Heliotropism-1745635880396": {
+    "taskId": "Heliotropism-1745635880396",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635880397,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635881580,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635881580,
+    "created": 1745635880397
+  },
+  "Heliotropism-1745635920219": {
+    "taskId": "Heliotropism-1745635920219",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635920219,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635922593,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635922594,
+    "created": 1745635920219
+  },
+  "Heliotropism-1745635946815": {
+    "taskId": "Heliotropism-1745635946815",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635946816,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635946816,
+    "created": 1745635946816
+  },
+  "Heliotropism-1745635970591": {
+    "taskId": "Heliotropism-1745635970591",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745635970592,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745635973090,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745635973091,
+    "created": 1745635970592
+  },
+  "Heliotropism-1745636005620": {
+    "taskId": "Heliotropism-1745636005620",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745636005620,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745636014564,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745636014565,
+    "created": 1745636005620
+  },
+  "Heliotropism-1745636046042": {
+    "taskId": "Heliotropism-1745636046042",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745636046042,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745636047440,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745636047441,
+    "created": 1745636046042
+  },
+  "Heliotropism-1745636082091": {
+    "taskId": "Heliotropism-1745636082091",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745636082092,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745636089520,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745636089520,
+    "created": 1745636082092
+  },
+  "Heliotropism-1745636134778": {
+    "taskId": "Heliotropism-1745636134778",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745636134778,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745636134780,
+    "created": 1745636134778
+  },
+  "Heliotropism-1745636185952": {
+    "taskId": "Heliotropism-1745636185952",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745636185952,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745636199392,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745636199393,
+    "created": 1745636185952
+  },
+  "Heliotropism-1745636291647": {
+    "taskId": "Heliotropism-1745636291647",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -368,
+      "y": 63,
+      "z": 128
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745636291649,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745636308310,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745636308310,
+    "created": 1745636291649
+  },
+  "Heliotropism-1745637822404": {
+    "taskId": "Heliotropism-1745637822404",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -356,
+      "y": 70,
+      "z": 147
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745637822404,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745637829871,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745637829872,
+    "created": 1745637822404
+  },
+  "Heliotropism-1745637838674": {
+    "taskId": "Heliotropism-1745637838674",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -348,
+      "y": 68,
+      "z": 149
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745637838675,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745637898080,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745637898082,
+    "created": 1745637838675
+  },
+  "Heliotropism-1745637857954": {
+    "taskId": "Heliotropism-1745637857954",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -349,
+      "y": 70,
+      "z": 149
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745637857954,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745637866771,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745637866772,
+    "created": 1745637857954
+  },
+  "Heliotropism-1745637880187": {
+    "taskId": "Heliotropism-1745637880187",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -349,
+      "y": 68,
+      "z": 150
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745637880188,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745637880608,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745637880609,
+    "created": 1745637880188
+  },
+  "Heliotropism-1745637898457": {
+    "taskId": "Heliotropism-1745637898457",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 67,
+      "z": 149
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745637898460,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745637935862,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745637935863,
+    "created": 1745637898460
+  },
+  "Heliotropism-1745637938767": {
+    "taskId": "Heliotropism-1745637938767",
+    "currentProgress": 5,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 710,
+    "currentLocation": {
+      "x": -352,
+      "y": 67,
+      "z": 150
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745637939309,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745637957847,
+        "progress": 3
+      },
+      {
+        "timestamp": 1745637967329,
+        "progress": 4
+      },
+      {
+        "timestamp": 1745637976688,
+        "progress": 5
+      }
+    ],
+    "lastUpdated": 1745637976689,
+    "created": 1745637939309
+  },
+  "Heliotropism-1745638038108": {
+    "taskId": "Heliotropism-1745638038108",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -338,
+      "y": 71,
+      "z": 154
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638038108,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638047860,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638047860,
+    "created": 1745638038108
+  },
+  "Heliotropism-1745638055534": {
+    "taskId": "Heliotropism-1745638055534",
+    "currentProgress": 1,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 994,
+    "currentLocation": {
+      "x": -338,
+      "y": 68,
+      "z": 154
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638055815,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638065858,
+        "progress": 1
+      }
+    ],
+    "lastUpdated": 1745638065859,
+    "created": 1745638055815
+  },
+  "Heliotropism-1745638118478": {
+    "taskId": "Heliotropism-1745638118478",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -340,
+      "y": 70,
+      "z": 165
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638118479,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638132923,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638132923,
+    "created": 1745638118479
+  },
+  "Heliotropism-1745638178474": {
+    "taskId": "Heliotropism-1745638178474",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -340,
+      "y": 70,
+      "z": 165
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638178765,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638178765,
+    "created": 1745638178765
+  },
+  "Heliotropism-1745638204157": {
+    "taskId": "Heliotropism-1745638204157",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -340,
+      "y": 67,
+      "z": 165
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638204431,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638204431,
+    "created": 1745638204431
+  },
+  "Heliotropism-1745638247756": {
+    "taskId": "Heliotropism-1745638247756",
+    "currentProgress": 1,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 881,
+    "currentLocation": {
+      "x": -343,
+      "y": 66,
+      "z": 165
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638248019,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638256919,
+        "progress": 1
+      }
+    ],
+    "lastUpdated": 1745638256920,
+    "created": 1745638248019
+  },
+  "Heliotropism-1745638417941": {
+    "taskId": "Heliotropism-1745638417941",
+    "currentProgress": 1,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 1260,
+    "currentLocation": {
+      "x": -342,
+      "y": 66,
+      "z": 164
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638418202,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638430927,
+        "progress": 1
+      }
+    ],
+    "lastUpdated": 1745638430927,
+    "created": 1745638418202
+  },
+  "Heliotropism-1745638459374": {
+    "taskId": "Heliotropism-1745638459374",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -339,
+      "y": 69,
+      "z": 176
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638459375,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638473403,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638473403,
+    "created": 1745638459375
+  },
+  "Heliotropism-1745638487704": {
+    "taskId": "Heliotropism-1745638487704",
+    "currentProgress": 1,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 1125,
+    "currentLocation": {
+      "x": -339,
+      "y": 65,
+      "z": 176
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638487998,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638499362,
+        "progress": 1
+      }
+    ],
+    "lastUpdated": 1745638499363,
+    "created": 1745638487998
+  },
+  "Heliotropism-1745638547265": {
+    "taskId": "Heliotropism-1745638547265",
+    "currentProgress": 17,
+    "totalProgress": 41,
+    "status": "pending",
+    "estimatedTimeRemaining": 1096,
+    "currentLocation": {
+      "x": -353,
+      "y": 70,
+      "z": 154
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745638547551,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638600449,
+        "progress": 1
+      },
+      {
+        "timestamp": 1745638605737,
+        "progress": 2
+      },
+      {
+        "timestamp": 1745638627118,
+        "progress": 3
+      },
+      {
+        "timestamp": 1745638632084,
+        "progress": 4
+      },
+      {
+        "timestamp": 1745638639054,
+        "progress": 5
+      },
+      {
+        "timestamp": 1745638642481,
+        "progress": 6
+      },
+      {
+        "timestamp": 1745638648943,
+        "progress": 7
+      },
+      {
+        "timestamp": 1745638655783,
+        "progress": 8
+      },
+      {
+        "timestamp": 1745638669509,
+        "progress": 9
+      },
+      {
+        "timestamp": 1745638677784,
+        "progress": 10
+      },
+      {
+        "timestamp": 1745638691504,
+        "progress": 11
+      },
+      {
+        "timestamp": 1745638701645,
+        "progress": 12
+      },
+      {
+        "timestamp": 1745638712562,
+        "progress": 13
+      },
+      {
+        "timestamp": 1745638738955,
+        "progress": 14
+      },
+      {
+        "timestamp": 1745638763559,
+        "progress": 15
+      },
+      {
+        "timestamp": 1745638768909,
+        "progress": 16
+      },
+      {
+        "timestamp": 1745638772082,
+        "progress": 17
+      }
+    ],
+    "lastUpdated": 1745638772083,
+    "created": 1745638547551
+  },
+  "Heliotropism-1745638728884": {
+    "taskId": "Heliotropism-1745638728884",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -347,
+      "y": 71,
+      "z": 157
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638728885,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638741495,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638741495,
+    "created": 1745638728885
+  },
+  "Heliotropism-1745638840169": {
+    "taskId": "Heliotropism-1745638840169",
+    "currentProgress": 33,
+    "totalProgress": 64,
+    "status": "pending",
+    "estimatedTimeRemaining": 196,
+    "currentLocation": {
+      "x": -354,
+      "y": 68,
+      "z": 152
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638840468,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638841288,
+        "progress": 1
+      },
+      {
+        "timestamp": 1745638843381,
+        "progress": 2
+      },
+      {
+        "timestamp": 1745638845723,
+        "progress": 3
+      },
+      {
+        "timestamp": 1745638847874,
+        "progress": 4
+      },
+      {
+        "timestamp": 1745638855585,
+        "progress": 5
+      },
+      {
+        "timestamp": 1745638858120,
+        "progress": 6
+      },
+      {
+        "timestamp": 1745638860687,
+        "progress": 7
+      },
+      {
+        "timestamp": 1745638861501,
+        "progress": 8
+      },
+      {
+        "timestamp": 1745638864765,
+        "progress": 9
+      },
+      {
+        "timestamp": 1745638867491,
+        "progress": 10
+      },
+      {
+        "timestamp": 1745638870080,
+        "progress": 11
+      },
+      {
+        "timestamp": 1745638872163,
+        "progress": 12
+      },
+      {
+        "timestamp": 1745638875121,
+        "progress": 13
+      },
+      {
+        "timestamp": 1745638878779,
+        "progress": 14
+      },
+      {
+        "timestamp": 1745638882117,
+        "progress": 15
+      },
+      {
+        "timestamp": 1745638884723,
+        "progress": 16
+      },
+      {
+        "timestamp": 1745638887718,
+        "progress": 17
+      },
+      {
+        "timestamp": 1745638890237,
+        "progress": 18
+      },
+      {
+        "timestamp": 1745638893437,
+        "progress": 19
+      },
+      {
+        "timestamp": 1745638897264,
+        "progress": 20
+      },
+      {
+        "timestamp": 1745638900124,
+        "progress": 21
+      },
+      {
+        "timestamp": 1745638902978,
+        "progress": 22
+      },
+      {
+        "timestamp": 1745638906549,
+        "progress": 23
+      },
+      {
+        "timestamp": 1745638910123,
+        "progress": 24
+      },
+      {
+        "timestamp": 1745638913023,
+        "progress": 25
+      },
+      {
+        "timestamp": 1745638916654,
+        "progress": 26
+      },
+      {
+        "timestamp": 1745638919720,
+        "progress": 27
+      },
+      {
+        "timestamp": 1745638922928,
+        "progress": 28
+      },
+      {
+        "timestamp": 1745638925799,
+        "progress": 29
+      },
+      {
+        "timestamp": 1745638928639,
+        "progress": 30
+      },
+      {
+        "timestamp": 1745638931261,
+        "progress": 31
+      },
+      {
+        "timestamp": 1745638935135,
+        "progress": 32
+      },
+      {
+        "timestamp": 1745638937119,
+        "progress": 33
+      }
+    ],
+    "lastUpdated": 1745638937119,
+    "created": 1745638840468
+  },
+  "Heliotropism-1745638851259": {
+    "taskId": "Heliotropism-1745638851259",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 70,
+      "z": 158
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638851261,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638851645,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638851648,
+    "created": 1745638851261
+  },
+  "Heliotropism-1745638888860": {
+    "taskId": "Heliotropism-1745638888860",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -354,
+      "y": 68,
+      "z": 157
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745638888861,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745638889244,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745638889244,
+    "created": 1745638888861
+  },
+  "Heliotropism-1745639048116": {
+    "taskId": "Heliotropism-1745639048116",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639048117,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745639048452,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639048454,
+    "created": 1745639048117
+  },
+  "Heliotropism-1745639083167": {
+    "taskId": "Heliotropism-1745639083167",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639083168,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639083169,
+    "created": 1745639083168
+  },
+  "Heliotropism-1745639099693": {
+    "taskId": "Heliotropism-1745639099693",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639099694,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639099695,
+    "created": 1745639099694
+  },
+  "Heliotropism-1745639133665": {
+    "taskId": "Heliotropism-1745639133665",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639133665,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639133666,
+    "created": 1745639133665
+  },
+  "Heliotropism-1745639177609": {
+    "taskId": "Heliotropism-1745639177609",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639177610,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745639177875,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639177876,
+    "created": 1745639177610
+  },
+  "Heliotropism-1745639292922": {
+    "taskId": "Heliotropism-1745639292922",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639292923,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745639293196,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639293197,
+    "created": 1745639292923
+  },
+  "Heliotropism-1745639363826": {
+    "taskId": "Heliotropism-1745639363826",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639363826,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745639364095,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639364095,
+    "created": 1745639363826
+  },
+  "Heliotropism-1745639376045": {
+    "taskId": "Heliotropism-1745639376045",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639376046,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745639376418,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639376420,
+    "created": 1745639376046
+  },
+  "Heliotropism-1745639391549": {
+    "taskId": "Heliotropism-1745639391549",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745639391550,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745639391849,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745639391849,
+    "created": 1745639391550
+  },
+  "Heliotropism-1745640066439": {
+    "taskId": "Heliotropism-1745640066439",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745640066440,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745640067864,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745640067866,
+    "created": 1745640066440
+  },
+  "Heliotropism-1745640158877": {
+    "taskId": "Heliotropism-1745640158877",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745640158878,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745640159147,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745640159148,
+    "created": 1745640158878
+  },
+  "Heliotropism-1745640171808": {
+    "taskId": "Heliotropism-1745640171808",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745640171809,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745640172097,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745640172097,
+    "created": 1745640171809
+  },
+  "Heliotropism-1745640216162": {
+    "taskId": "Heliotropism-1745640216162",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745640216163,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745640216426,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745640216427,
+    "created": 1745640216163
+  },
+  "Heliotropism-1745640632639": {
+    "taskId": "Heliotropism-1745640632639",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745640632640,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745640634823,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745640634824,
+    "created": 1745640632639
+  },
+  "Heliotropism-1745642733398": {
+    "taskId": "Heliotropism-1745642733398",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745642733399,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745642733400,
+    "created": 1745642733399
+  },
+  "Heliotropism-1745642921998": {
+    "taskId": "Heliotropism-1745642921998",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745642922000,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745642922412,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745642922412,
+    "created": 1745642922000
+  },
+  "Heliotropism-1745642936797": {
+    "taskId": "Heliotropism-1745642936797",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745642936798,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745642937476,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745642937477,
+    "created": 1745642936798
+  },
+  "Heliotropism-1745680760977": {
+    "taskId": "Heliotropism-1745680760977",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745680760978,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745680760979,
+    "created": 1745680760978
+  },
+  "Heliotropism-1745680789004": {
+    "taskId": "Heliotropism-1745680789004",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745680789005,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745680789006,
+    "created": 1745680789005
+  },
+  "Heliotropism-1745680828284": {
+    "taskId": "Heliotropism-1745680828284",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745680828285,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745680828286,
+    "created": 1745680828285
+  },
+  "Heliotropism-1745680871741": {
+    "taskId": "Heliotropism-1745680871741",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745680871741,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745680871742,
+    "created": 1745680871741
+  },
+  "Heliotropism-1745680913033": {
+    "taskId": "Heliotropism-1745680913033",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745680913034,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745680913036,
+    "created": 1745680913034
+  },
+  "Heliotropism-1745680957147": {
+    "taskId": "Heliotropism-1745680957147",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745680957148,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745680957149,
+    "created": 1745680957148
+  },
+  "Heliotropism-1745681130097": {
+    "taskId": "Heliotropism-1745681130097",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681130097,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681130098,
+    "created": 1745681130097
+  },
+  "Heliotropism-1745681403948": {
+    "taskId": "Heliotropism-1745681403948",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681403949,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681403950,
+    "created": 1745681403949
+  },
+  "Heliotropism-1745681466556": {
+    "taskId": "Heliotropism-1745681466556",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681466557,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681466558,
+    "created": 1745681466557
+  },
+  "Heliotropism-1745681758462": {
+    "taskId": "Heliotropism-1745681758462",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681758462,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681758463,
+    "created": 1745681758462
+  },
+  "Heliotropism-1745681800901": {
+    "taskId": "Heliotropism-1745681800901",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681800901,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681801570,
+    "created": 1745681800901
+  },
+  "Heliotropism-1745681894030": {
+    "taskId": "Heliotropism-1745681894030",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681894031,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745681894858,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681894859,
+    "created": 1745681894031
+  },
+  "Heliotropism-1745681908800": {
+    "taskId": "Heliotropism-1745681908800",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745681908801,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745681909289,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745681909290,
+    "created": 1745681908801
+  },
+  "Heliotropism-1745682094248": {
+    "taskId": "Heliotropism-1745682094248",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682094250,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745682094873,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682094874,
+    "created": 1745682094250
+  },
+  "Heliotropism-1745682308841": {
+    "taskId": "Heliotropism-1745682308841",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682308841,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745682309028,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682309028,
+    "created": 1745682308841
+  },
+  "Heliotropism-1745682373335": {
+    "taskId": "Heliotropism-1745682373335",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -355,
+      "y": 68,
+      "z": 153
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682374023,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682374024,
+    "created": 1745682374023
+  },
+  "Heliotropism-1745682533358": {
+    "taskId": "Heliotropism-1745682533358",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -196,
+      "y": 53,
+      "z": 41
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682534061,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682534062,
+    "created": 1745682534061
+  },
+  "Heliotropism-1745682676586": {
+    "taskId": "Heliotropism-1745682676586",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -50,
+      "y": 53,
+      "z": 23
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682677397,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682677398,
+    "created": 1745682677397
+  },
+  "Heliotropism-1745682919021": {
+    "taskId": "Heliotropism-1745682919021",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -16,
+      "y": 56,
+      "z": 18
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682919726,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682919727,
+    "created": 1745682919726
+  },
+  "Heliotropism-1745682998100": {
+    "taskId": "Heliotropism-1745682998100",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -36,
+      "y": 60,
+      "z": 36
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745682999272,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745682999275,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745682999276,
+    "created": 1745682999272
+  },
+  "Heliotropism-1745683004034": {
+    "taskId": "Heliotropism-1745683004034",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -36,
+      "y": 60,
+      "z": 36
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683005125,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683005126,
+    "created": 1745683005125
+  },
+  "Heliotropism-1745683093985": {
+    "taskId": "Heliotropism-1745683093985",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": 0,
+      "y": 57,
+      "z": 1
+    },
+    "errorCount": 0,
+    "retryCount": 2,
+    "progressHistory": [
+      {
+        "timestamp": 1745683095549,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745683122856,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683122857,
+    "created": 1745683095549
+  },
+  "Heliotropism-1745683130782": {
+    "taskId": "Heliotropism-1745683130782",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": 0,
+      "y": 61,
+      "z": 1
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683130784,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683131441,
+    "created": 1745683130784
+  },
+  "Heliotropism-1745683236411": {
+    "taskId": "Heliotropism-1745683236411",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -2,
+      "y": 54,
+      "z": 3
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683237617,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683237618,
+    "created": 1745683237617
+  },
+  "Heliotropism-1745683412968": {
+    "taskId": "Heliotropism-1745683412968",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": 0,
+      "y": 57,
+      "z": 2
+    },
+    "errorCount": 0,
+    "retryCount": 1,
+    "progressHistory": [
+      {
+        "timestamp": 1745683414130,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745683464430,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683464431,
+    "created": 1745683414129
+  },
+  "Heliotropism-1745683501815": {
+    "taskId": "Heliotropism-1745683501815",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": 0,
+      "y": 53,
+      "z": 2
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683502868,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683502869,
+    "created": 1745683502868
+  },
+  "Heliotropism-1745683786279": {
+    "taskId": "Heliotropism-1745683786279",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -379,
+      "y": 69,
+      "z": 180
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683787256,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745683806798,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683806800,
+    "created": 1745683787256
+  },
+  "Heliotropism-1745683847684": {
+    "taskId": "Heliotropism-1745683847684",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -346,
+      "y": 70,
+      "z": 144
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683851641,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745683866737,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683868118,
+    "created": 1745683851641
+  },
+  "Heliotropism-1745683889150": {
+    "taskId": "Heliotropism-1745683889150",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -346,
+      "y": 70,
+      "z": 144
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745683891577,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745683891593,
+    "created": 1745683891577
+  },
+  "Heliotropism-1745684046203": {
+    "taskId": "Heliotropism-1745684046203",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -346,
+      "y": 70,
+      "z": 142
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684050996,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684076096,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684076097,
+    "created": 1745684050995
+  },
+  "Heliotropism-1745684114501": {
+    "taskId": "Heliotropism-1745684114501",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -347,
+      "y": 70,
+      "z": 144
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684116709,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684117291,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684117295,
+    "created": 1745684116709
+  },
+  "Heliotropism-1745684244136": {
+    "taskId": "Heliotropism-1745684244136",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -349,
+      "y": 70,
+      "z": 142
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684244140,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684245044,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684245046,
+    "created": 1745684244140
+  },
+  "Heliotropism-1745684255164": {
+    "taskId": "Heliotropism-1745684255164",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -348,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684255166,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684255453,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684255454,
+    "created": 1745684255166
+  },
+  "Heliotropism-1745684285303": {
+    "taskId": "Heliotropism-1745684285303",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -349,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684285307,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684285472,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684285474,
+    "created": 1745684285307
+  },
+  "Heliotropism-1745684316454": {
+    "taskId": "Heliotropism-1745684316454",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684320221,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684321076,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684321077,
+    "created": 1745684320221
+  },
+  "Heliotropism-1745684359888": {
+    "taskId": "Heliotropism-1745684359888",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745684363743,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745684364608,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745684364613,
+    "created": 1745684363742
+  },
+  "Heliotropism-1745702047756": {
+    "taskId": "Heliotropism-1745702047756",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745702048915,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745702048919,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745702048919,
+    "created": 1745702048915
+  },
+  "Heliotropism-1745702063283": {
+    "taskId": "Heliotropism-1745702063283",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745702063670,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745702063672,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745702063673,
+    "created": 1745702063670
+  },
+  "Heliotropism-1745702081751": {
+    "taskId": "Heliotropism-1745702081751",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745702081752,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745702081754,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745702081754,
+    "created": 1745702081752
+  },
+  "Heliotropism-1745707747945": {
+    "taskId": "Heliotropism-1745707747945",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -350,
+      "y": 70,
+      "z": 143
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745707752541,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745707752544,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745707752544,
+    "created": 1745707752541
+  },
+  "Heliotropism-1745785353238": {
+    "taskId": "Heliotropism-1745785353238",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -376,
+      "y": 64,
+      "z": 109
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745785355957,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745785355958,
+    "created": 1745785355957
+  },
+  "Heliotropism-1745785378421": {
+    "taskId": "Heliotropism-1745785378421",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -376,
+      "y": 64,
+      "z": 109
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745785380026,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745785380027,
+    "created": 1745785380026
+  },
+  "Heliotropism-1745785432380": {
+    "taskId": "Heliotropism-1745785432380",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -376,
+      "y": 64,
+      "z": 109
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745785435274,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745785435277,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745785435277,
+    "created": 1745785435274
+  },
+  "Heliotropism-1745785661928": {
+    "taskId": "Heliotropism-1745785661928",
+    "currentProgress": 0,
+    "totalProgress": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -376,
+      "y": 64,
+      "z": 109
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1745785665072,
+        "progress": 0
+      },
+      {
+        "timestamp": 1745785665074,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1745785665075,
+    "created": 1745785665072
+  },
+  "undefined": {
+    "current": 0,
+    "total": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -272,
+      "y": 61,
+      "z": 93
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1746296748977,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1746296749695,
+    "created": 1746296748977,
+    "currentProgress": 0,
+    "totalProgress": 0
+  },
+  "task-1746293780736": {
+    "taskId": "task-1746293780736",
+    "current": 0,
+    "total": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -323,
+      "y": 54,
+      "z": 126
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1746293780738,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1746293780738,
+    "created": 1746293780738,
+    "currentProgress": 0,
+    "totalProgress": 0
+  },
+  "task-1746293902364": {
+    "taskId": "task-1746293902364",
+    "current": 0,
+    "total": 0,
+    "status": "pending",
+    "estimatedTimeRemaining": 0,
+    "currentLocation": {
+      "x": -323,
+      "y": 47,
+      "z": 126
+    },
+    "errorCount": 0,
+    "retryCount": 0,
+    "progressHistory": [
+      {
+        "timestamp": 1746293902370,
+        "progress": 0
+      }
+    ],
+    "lastUpdated": 1746293902520,
+    "created": 1746293902370,
+    "currentProgress": 0,
+    "totalProgress": 0
+  }
+}
