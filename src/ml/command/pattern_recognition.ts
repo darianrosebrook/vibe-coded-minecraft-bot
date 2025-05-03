@@ -1,6 +1,15 @@
-import { CommandPattern } from '@/types';
+import { CommandContext, CommandPattern } from '@/types/ml/command';
 import { LLMClient } from '../../utils/llmClient';
-import { TaskContext } from '@/types';
+import { TaskContext } from '../types';
+import { 
+  createDefaultCommandContext, 
+  createCommandPattern,
+  getPatternConfidence,
+  updatePatternConfidence, 
+  applyConfidenceDecay 
+} from './pattern_helpers';
+import { patternStore } from './pattern_store';
+import logger from '../../utils/observability/logger';
 
 interface CommandGroup {
   commands: string[];
@@ -37,6 +46,25 @@ interface ErrorPrevention {
   confidence: number;
 }
 
+interface ScoredPattern {
+  pattern: CommandPattern;
+  score: number;
+}
+
+interface PatternAnalysisResult {
+  pattern: string;
+  confidence: number;
+  parameters: Record<string, any>;
+  examples: string[];
+  intent: string;
+}
+
+interface PatternMatch {
+  confidence: number;
+  parameters: Record<string, any>;
+  pattern: CommandPattern;
+}
+
 export class PatternRecognitionSystem {
   private commandPatterns: CommandPattern[] = [];
   private commandSequences: Map<string, CommandSequence> = new Map();
@@ -48,94 +76,133 @@ export class PatternRecognitionSystem {
   private maxRecentCommands: number = 10;
   private suggestionThreshold: number = 0.7;
   private errorHistory: Map<string, number> = new Map();
+  private defaultContext: CommandContext;
 
-  constructor(llmClient: LLMClient, initialPatterns: CommandPattern[] = []) {
+  constructor(llmClient: LLMClient, initialPatterns?: CommandPattern[] | boolean) {
     this.llmClient = llmClient;
-    this.commandPatterns = initialPatterns;
+    this.defaultContext = createDefaultCommandContext();
+
+    try {
+      if (initialPatterns === true) {
+        this.commandPatterns = patternStore.getPatterns();
+      } else if (Array.isArray(initialPatterns)) {
+        this.commandPatterns = initialPatterns;
+      }
+    } catch (error) {
+      logger.error('Failed to initialize pattern recognition system', { error });
+      this.commandPatterns = [];
+    }
   }
 
-  private matchCommandPattern(command: string): CommandPattern {
-    let bestMatch: CommandPattern | null = null;
-    let highestConfidence = 0;
-
-    for (const pattern of this.commandPatterns) {
-      const match = this.matchPattern(command, pattern);
-      if (match.confidence > highestConfidence) {
-        bestMatch = pattern;
-        highestConfidence = match.confidence;
+  private matchCommandPattern(command: string): CommandPattern | null {
+    try {
+      let bestMatch: PatternMatch | null = null;
+      
+      for (const pattern of this.commandPatterns) {
+        const match = this.matchPattern(command, pattern);
+        if (match.confidence > (bestMatch?.confidence ?? 0)) {
+          bestMatch = { ...match, pattern };
+        }
       }
+      
+      return bestMatch?.pattern ?? null;
+    } catch (error) {
+      logger.error('Failed to match command pattern', { error, command });
+      return null;
     }
-
-    return bestMatch || {
-      pattern: "",
-      intent: "unknown",
-      parameters: {},
-      examples: [],
-      confidence: 0
-    };
   }
 
   private matchPattern(command: string, pattern: CommandPattern): { confidence: number; parameters: Record<string, any> } {
-    const patternParts = pattern.pattern.split(" ");
-    const commandParts = command.split(" ");
+    try {
+      if (!pattern.pattern) return { confidence: 0, parameters: {} };
+      
+      const patternParts = pattern.pattern.split(" ");
+      const commandParts = command.split(" ");
 
-    if (patternParts.length !== commandParts.length) {
+      if (patternParts.length !== commandParts.length) {
+        return { confidence: 0, parameters: {} };
+      }
+
+      const parameters: Record<string, any> = {};
+      let matches = 0;
+
+      for (let i = 0; i < patternParts.length; i++) {
+        const patternPart = patternParts[i];
+        const commandPart = commandParts[i];
+        
+        if (patternPart && patternPart.startsWith("{") && patternPart.endsWith("}")) {
+          const paramName = patternPart.slice(1, -1);
+          if (commandPart) {
+            parameters[paramName] = commandPart;
+            matches++;
+          }
+        } else if (patternPart === commandPart) {
+          matches++;
+        }
+      }
+
+      // Get the pattern confidence from the context metadata
+      const patternConfidence = getPatternConfidence(pattern);
+      const confidence = (matches / patternParts.length) * patternConfidence;
+      return { confidence, parameters };
+    } catch (error) {
+      logger.error('Failed to match pattern', { error, command, pattern });
       return { confidence: 0, parameters: {} };
     }
-
-    const parameters: Record<string, any> = {};
-    let matches = 0;
-
-    for (let i = 0; i < patternParts.length; i++) {
-      if (patternParts[i].startsWith("{") && patternParts[i].endsWith("}")) {
-        const paramName = patternParts[i].slice(1, -1);
-        parameters[paramName] = commandParts[i];
-        matches++;
-      } else if (patternParts[i] === commandParts[i]) {
-        matches++;
-      }
-    }
-
-    const confidence = (matches / patternParts.length) * pattern.confidence;
-    return { confidence, parameters };
   }
 
   public async getCommandSuggestions(context: TaskContext): Promise<CommandSuggestion[]> {
-    const suggestions: CommandSuggestion[] = [];
-    
-    // 1. Suggest based on recent commands
-    if (this.recentCommands.length > 0) {
-      const lastCommand = this.recentCommands[this.recentCommands.length - 1];
-      const nextCommands = await this.predictNextCommand(lastCommand, context);
+    try {
+      const suggestions: CommandSuggestion[] = [];
       
-      for (const command of nextCommands) {
-        suggestions.push({
-          command,
-          confidence: 0.8,
-          context: { type: 'sequence', lastCommand },
-          reason: 'Common sequence continuation'
-        });
+      // 1. Suggest based on recent commands
+      if (this.recentCommands.length > 0) {
+        const lastCommand = this.recentCommands[this.recentCommands.length - 1];
+        if (lastCommand) {
+          const nextCommands = await this.predictNextCommand(lastCommand, context);
+          
+          for (const command of nextCommands) {
+            suggestions.push({
+              command,
+              confidence: 0.8,
+              context: { type: 'sequence', lastCommand },
+              reason: 'Common sequence continuation'
+            });
+          }
+        }
       }
-    }
 
-    // 2. Suggest based on common patterns
-    for (const pattern of this.commandPatterns) {
-      if (pattern.confidence > this.suggestionThreshold) {
-        suggestions.push({
-          command: pattern.examples[0],
-          confidence: pattern.confidence,
-          context: { type: 'pattern', intent: pattern.intent },
-          reason: 'Common command pattern'
-        });
+      // 2. Suggest based on common patterns
+      for (const pattern of this.commandPatterns) {
+        // Get confidence from pattern context metadata
+        if (!pattern.examples || pattern.examples.length === 0) {
+          continue;
+        }
+        const example = pattern.examples[0];
+        if (!example) {
+          continue;
+        }
+        const patternConfidence = getPatternConfidence(pattern);
+        if (patternConfidence > this.suggestionThreshold) {
+          suggestions.push({
+            command: example,
+            confidence: patternConfidence,
+            context: { type: 'pattern', intent: pattern.intent },
+            reason: 'Common command pattern'
+          });
+        }
       }
+
+      // 3. Suggest based on context
+      const contextSuggestions = await this.generateContextSuggestions(context);
+      suggestions.push(...contextSuggestions);
+
+      // 4. Optimize suggestions
+      return this.optimizeSuggestions(suggestions);
+    } catch (error) {
+      logger.error('Failed to get command suggestions', { error, context });
+      return [];
     }
-
-    // 3. Suggest based on context
-    const contextSuggestions = await this.generateContextSuggestions(context);
-    suggestions.push(...contextSuggestions);
-
-    // 4. Optimize suggestions
-    return this.optimizeSuggestions(suggestions);
   }
 
   private async generateContextSuggestions(context: TaskContext): Promise<CommandSuggestion[]> {
@@ -279,7 +346,7 @@ Respond with "true" or "false".
 
     for (const command of sequence) {
       const pattern = this.matchCommandPattern(command);
-      if (pattern.intent !== 'unknown') {
+      if (pattern && pattern.intent !== 'unknown') {
         context.intents.push(pattern.intent);
         context.patterns.push(pattern.pattern);
         Object.keys(pattern.parameters).forEach(param => context.parameters.add(param));
@@ -312,8 +379,11 @@ Respond with "true" or "false".
     // Find sequences that start with the current command
     for (const [sequence, data] of this.commandSequences.entries()) {
       const commands = sequence.split(' -> ');
-      if (commands[0] === currentCommand && data.confidence > 0.7) {
-        predictions.push(commands[1]);
+      if (commands[0] === currentCommand && data.confidence > 0.7 && commands.length > 1) {
+        const nextCommand = commands[1];
+        if (nextCommand) {
+          predictions.push(nextCommand);
+        }
       }
     }
 
@@ -358,22 +428,20 @@ Return a JSON array of possible next commands.
 
       if (existingPattern) {
         // Update confidence based on success
-        existingPattern.confidence = Math.min(
-          1.0,
-          existingPattern.confidence + 0.1
-        );
+        const currentConfidence = getPatternConfidence(existingPattern);
+        updatePatternConfidence(existingPattern, Math.min(1.0, currentConfidence + 0.1));
       } else {
-        // Add new pattern with initial confidence
-        this.commandPatterns.push({
-          ...newPattern,
-          confidence: 0.7
-        });
+        // Add new pattern
+        this.commandPatterns.push(newPattern);
       }
     }
 
     // Apply confidence decay to all patterns and sequences
     this.decayPatternConfidence();
     this.decaySequenceConfidence();
+    
+    // Persist patterns to store
+    this.savePatterns();
   }
 
   private decaySequenceConfidence(): void {
@@ -398,15 +466,17 @@ Return a JSON array of possible next commands.
       if (groupCommands.length > 1) {
         const semanticGroups = await this.groupBySemanticSimilarity(groupCommands);
         groups.push(...semanticGroups);
-      } else {
+      } else if (groupCommands.length === 1) {
         // Single command group
         const command = groupCommands[0];
-        groups.push({
-          commands: [command],
-          intent: await this.detectIntent(command),
-          structure,
-          parameters: this.extractParameters(command)
-        });
+        if (command) {
+          groups.push({
+            commands: [command],
+            intent: await this.detectIntent(command),
+            structure,
+            parameters: this.extractParameters(command)
+          });
+        }
       }
     }
     
@@ -536,19 +606,31 @@ Consider:
     for (let i = 0; i < patternParts.length; i++) {
       if (patternParts[i] === '{param}') {
         const paramName = `param${i}`;
-        parameters[paramName] = await this.determineParameterType(
-          group.commands.map(c => c.split(' ')[i])
-        );
+        const values: string[] = [];
+        
+        for (const cmd of group.commands) {
+          const parts = cmd.split(' ');
+          const value = parts[i];
+          if (value) {
+            values.push(value);
+          }
+        }
+        
+        parameters[paramName] = await this.determineParameterType(values);
       }
     }
     
-    return {
-      pattern: group.structure,
-      intent: group.intent,
+    // Calculate confidence based on the number of examples in the group
+    const confidence = Math.min(0.9, 0.7 + (group.commands.length * 0.1));
+    
+    // Create and return the pattern with proper context
+    return createCommandPattern(
+      group.structure,
+      group.intent,
       parameters,
-      examples: group.commands.slice(0, 3),
-      confidence: Math.min(0.9, 0.7 + (group.commands.length * 0.1))
-    };
+      group.commands.slice(0, 3),
+      confidence
+    );
   }
 
   private async determineParameterType(values: string[]): Promise<string> {
@@ -609,17 +691,20 @@ What type are they? Choose from:
 
   private decayPatternConfidence(): void {
     for (const pattern of this.commandPatterns) {
-      pattern.confidence *= this.patternConfidenceDecay;
+      applyConfidenceDecay(pattern, this.patternConfidenceDecay);
       
       // Remove patterns with very low confidence
-      if (pattern.confidence < 0.1) {
+      if (getPatternConfidence(pattern) < 0.1) {
         this.commandPatterns = this.commandPatterns.filter(p => p !== pattern);
       }
     }
   }
 
+  /**
+   * Get all available patterns
+   */
   public getPatterns(): CommandPattern[] {
-    return this.commandPatterns;
+    return [...this.commandPatterns];
   }
 
   public async predictSequenceErrors(sequence: string[], context: TaskContext): Promise<SequenceError[]> {
@@ -832,5 +917,14 @@ Return a JSON object with:
     const sequenceKey = sequence.join(' -> ');
     const currentCount = this.errorHistory.get(sequenceKey) || 0;
     this.errorHistory.set(sequenceKey, currentCount + 1);
+  }
+
+  /**
+   * Save the current patterns to the pattern store
+   */
+  private savePatterns(): void {
+    for (const pattern of this.commandPatterns) {
+      patternStore.updatePattern(pattern);
+    }
   }
 } 

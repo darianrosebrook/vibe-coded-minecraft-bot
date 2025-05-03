@@ -1,8 +1,6 @@
-import { Task } from '@/types';
-import { TaskNode, DependencyGraph as DependencyGraphInterface } from '@/types';
-import { TaskNode as TaskNodeClass } from './node';
-
-export class DependencyGraph implements DependencyGraphInterface {
+import { Task } from '@/types';  
+import { TaskNode } from './node';
+export class DependencyGraph   {
   public readonly nodes: Map<string, TaskNode>;
   public readonly edges: Map<string, Set<string>>;
 
@@ -12,7 +10,7 @@ export class DependencyGraph implements DependencyGraphInterface {
   }
 
   public addNode(task: Task, id?: string): TaskNode {
-    const node = new TaskNodeClass(task, id);
+    const node = new TaskNode(task, id);
     this.nodes.set(node.id, node);
     this.edges.set(node.id, new Set());
     return node;

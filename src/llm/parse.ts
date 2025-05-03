@@ -1,14 +1,13 @@
-import { Task, TaskParameters, MiningTaskParameters, QueryTaskParameters, TaskType, TaskPriority, TaskStatus } from '@/types/task';
-import { LLMClient, LLMError } from '../utils/llmClient';
-import { SchemaValidator } from '../utils/taskValidator';
-import { readFileSync } from 'fs';
-import { join } from 'path';
- 
-import { TaskParsingLogger } from './logging/logger';
-import { ParsingErrorHandler, ParsingErrorContext } from './error/parsingErrorHandler';
-import { ErrorHandler } from '../error/errorHandler';
 import { CommandCache } from './cache/commandCache';
+import { ErrorHandler } from '../error/errorHandler';
+import { join } from 'path'; 
+import { LLMClient, LLMError } from '../utils/llmClient';
+import { ParsingErrorHandler, ParsingErrorContext } from './error/parsingErrorHandler';
 import { PerformanceMonitor } from './monitoring/performanceMonitor';
+import { readFileSync } from 'fs';
+import { SchemaValidator } from '../utils/taskValidator';
+import { Task, TaskParameters, MiningTaskParameters, QueryTaskParameters, TaskType, TaskPriority, TaskStatus } from '../types/task';
+import { TaskParsingLogger } from './logging/logger';
 
 // Map of common block names to their Minecraft IDs
 const BLOCK_MAP: Record<string, string> = {
@@ -146,7 +145,7 @@ export class TaskParser {
       // First try to find JSON content within markdown code blocks
       const jsonMatch = response.match(/```(?:json)?\n?([\s\S]*?)\n?```/);
       if (jsonMatch) {
-        const jsonContent = jsonMatch[1].trim();
+        const jsonContent = jsonMatch[1]?.trim() || '';
         try {
           return JSON.parse(jsonContent);
         } catch (e) {
@@ -159,7 +158,7 @@ export class TaskParser {
       // If no markdown code blocks, try to find Python-formatted JSON
       const pythonMatch = response.match(/```python\n?([\s\S]*?)\n?```/);
       if (pythonMatch) {
-        const pythonContent = pythonMatch[1].trim();
+        const pythonContent = pythonMatch[1]?.trim() || '';
         // Convert Python dict to JSON
         const jsonContent = pythonContent
           .replace(/'/g, '"')  // Replace single quotes with double quotes
@@ -178,7 +177,7 @@ export class TaskParser {
       // If no code blocks, try to find JSON object directly
       const jsonObjectMatch = response.match(/\{[\s\S]*\}/);
       if (jsonObjectMatch) {
-        const jsonContent = jsonObjectMatch[0].trim();
+        const jsonContent = jsonObjectMatch[0]?.trim() || '';
         try {
           return JSON.parse(jsonContent);
         } catch (e) {
@@ -248,10 +247,7 @@ export class TaskParser {
         id: `task-${Date.now()}`,
         type: TaskType.QUERY,
         parameters: {
-          queryType: 'inventory',
-          filters: itemType ? {
-            itemType: itemType
-          } : undefined
+          queryType: 'inventory'
         } as QueryTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -372,8 +368,8 @@ export class TaskParser {
 
   private handleMiningCommand(task: Task, description: string): Task {
     if (task.type === 'mining') {
-      const miningParams = task.parameters as MiningTaskParameters;
-      if (!miningParams.block) {
+      const miningParams = task.parameters as MiningTaskParameters; 
+      if (!miningParams.targetBlock) {
         const blockType = this.detectBlockType(description);
         if (blockType) {
           this.logger.info('Detected block type from description', {
@@ -399,7 +395,7 @@ export class TaskParser {
         id: `task-${Date.now()}`,
         type: TaskType.MINING,
         parameters: {
-          block: this.detectBlockType(description)!
+          targetBlock: this.detectBlockType(description)!
         } as MiningTaskParameters,
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.PENDING,
@@ -564,11 +560,29 @@ export class TaskParser {
     }
   }
 
-  public getPerformanceMetrics() {
+  public getPerformanceMetrics(): { 
+    totalRequests: number;
+    totalTokens: number; 
+    averageResponseTime: number;
+    errorCount: number;
+    cacheHitRate: number;
+    tokenUsageByCommand: Map<string, number>;
+    responseTimes: number[];
+  } {
     return this.performanceMonitor.getMetrics();
   }
 
-  public getCacheMetrics() {
+  public getCacheMetrics(): { 
+    hitRate: number;
+    size: number;
+    metrics: {
+      hits: number;
+      misses: number;
+      evictions: number;
+      averageResponseTime: number;
+      totalCommands: number;
+    }
+  } {
     return {
       hitRate: this.commandCache.getHitRate(),
       size: this.commandCache.getCacheSize(),

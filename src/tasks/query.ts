@@ -3,8 +3,7 @@ import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
 import { Task, TaskParameters, QueryTaskParameters, TaskResult, TaskType, TaskStatus } from '@/types/task';
 import logger from '../utils/observability/logger';
-import { metrics } from '../utils/observability/metrics';
-import { Bot as MineflayerBot } from 'mineflayer';
+import { metrics } from '../utils/observability/metrics'; 
 import { Vec3 } from 'vec3';
 
 interface QueryMLState {
@@ -23,8 +22,8 @@ interface QueryMLState {
 
 export class QueryTask extends BaseTask {
   protected queryType: 'inventory' | 'block' | 'entity' | 'biome' | 'time';
-  protected target?: string | Vec3;
-  protected radius: number;
+  protected target?: string | Vec3 | undefined;
+  protected override  radius: number;
   protected results: any[] = [];
   protected mlState: QueryMLState | null = null;
 
@@ -36,7 +35,6 @@ export class QueryTask extends BaseTask {
       retryDelay: options.retryDelay ?? 5000,
       timeout: options.timeout ?? 70000
     });
-    
     this.queryType = options.queryType;
     this.target = options.filters?.blockType;
     this.radius = options.filters?.radius || 16;
@@ -53,7 +51,7 @@ export class QueryTask extends BaseTask {
         efficiency: this.calculateQueryEfficiency()
       },
       biome: {
-        name: this.mineflayerBot.world.getBiome(this.mineflayerBot.entity.position),
+        name: this.bot.getBiomeAt(currentPos) || 'unknown',
         position: currentPos
       }
     };
@@ -82,7 +80,7 @@ export class QueryTask extends BaseTask {
         position: block,
         type: this.mineflayerBot.blockAt(block)?.name
       }));
-      
+
       return true;
     } catch (error) {
       logger.error('Failed to query blocks', { error });
@@ -107,7 +105,7 @@ export class QueryTask extends BaseTask {
         position: entity.position,
         type: entity.type
       }));
-      
+
       return true;
     } catch (error) {
       logger.error('Failed to query entities', { error });
@@ -125,7 +123,7 @@ export class QueryTask extends BaseTask {
         count: item.count,
         slot: item.slot
       }));
-      
+
       return true;
     } catch (error) {
       logger.error('Failed to query inventory', { error });
@@ -133,26 +131,26 @@ export class QueryTask extends BaseTask {
     }
   }
 
-  async validateTask(): Promise<void> {
+  override async validateTask(): Promise<void> {
     await super.validateTask();
-    
+
     if (!this.queryType) {
       throw new Error('Query type is required');
     }
-    
+
     if (this.queryType === 'block' && !this.target) {
       throw new Error('Target is required for block query');
     }
   }
 
-  async initializeProgress(): Promise<void> {
+  override async initializeProgress(): Promise<void> {
     await super.initializeProgress();
     this.results = [];
   }
 
-  async performTask(): Promise<void> {
+  override async performTask(): Promise<void> {
     await this.initializeMLState();
-    
+
     let success = false;
     switch (this.queryType) {
       case 'block':
@@ -167,16 +165,16 @@ export class QueryTask extends BaseTask {
       default:
         throw new Error(`Unsupported query type: ${this.queryType}`);
     }
-    
+
     if (!success) {
       this.retryCount++;
       if (this.retryCount > this.maxRetries) {
         throw new Error(`Failed to perform ${this.queryType} query after multiple attempts`);
       }
-      await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       return this.performTask();
     }
-    
+
     await this.updateProgress(100);
   }
 } 

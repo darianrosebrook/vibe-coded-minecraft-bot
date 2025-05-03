@@ -47,7 +47,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      test: ["CMD", "curl", "-X", "GET", "-H", "Accept: application/json", "-f", "http://localhost:11434/api/version"]
       interval: 30s
       timeout: 3s
       retries: 3

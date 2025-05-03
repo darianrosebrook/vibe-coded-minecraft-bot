@@ -1,4 +1,5 @@
-import { PerformanceMetrics } from '@/types';
+import { metrics } from '@/utils/observability/metrics';
+import { PerformanceMetrics } from './types';
 import * as os from 'os';
 import * as process from 'process';
 
@@ -13,32 +14,48 @@ export class MLPerformanceMonitor {
   }
 
   public async measurePerformance(modelName: string): Promise<PerformanceMetrics> {
+    const cpuUsage = this.getCPUUsage();
+    const memoryUsage = this.getMemoryUsage();
+    const networkLatency = await this.getNetworkLatency();
+    const inferenceTime = 0; // Will be set by the model
+    const trainingTime = 0; // Will be set by the model
+    const batchProcessingTime = 0; // Will be set by the model
+    const modelSize = 0; // Will be set by the model
+    const throughput = 0; // Will be set by the model
+    const errorRate = 0; // Will be set by the model
+
+    const resourceUtilization = {
+      cpu: this.getCPUUsage(),
+      memory: this.getMemoryUsage(),
+      ...(this.getGPUUsage() !== undefined && { gpu: this.getGPUUsage() as number }),
+      ...(this.getDiskUsage() !== undefined && { disk: this.getDiskUsage() as number })
+    };
+
+    const scalability = {
+      batchSize: 0, // Will be set by the model
+      processingTime: 0, // Will be set by the model
+      memoryGrowth: this.getMemoryGrowth()
+    };
+
+    const efficiency = {
+      operationsPerSecond: 0, // Will be set by the model
+      memoryEfficiency: this.getMemoryEfficiency(),
+      ...(this.getEnergyEfficiency() !== undefined && { energyEfficiency: this.getEnergyEfficiency() as number })
+    };
+
     const metrics: PerformanceMetrics = {
-      cpuUsage: this.getCPUUsage(),
-      memoryUsage: this.getMemoryUsage(),
-      networkLatency: await this.getNetworkLatency(),
-      inferenceTime: 0, // Will be set by the model
-      trainingTime: 0, // Will be set by the model
-      batchProcessingTime: 0, // Will be set by the model
-      modelSize: 0, // Will be set by the model
-      throughput: 0, // Will be set by the model
-      errorRate: 0, // Will be set by the model
-      resourceUtilization: {
-        cpu: this.getCPUUsage(),
-        memory: this.getMemoryUsage(),
-        gpu: this.getGPUUsage(),
-        disk: this.getDiskUsage()
-      },
-      scalability: {
-        batchSize: 0, // Will be set by the model
-        processingTime: 0, // Will be set by the model
-        memoryGrowth: this.getMemoryGrowth()
-      },
-      efficiency: {
-        operationsPerSecond: 0, // Will be set by the model
-        memoryEfficiency: this.getMemoryEfficiency(),
-        energyEfficiency: this.getEnergyEfficiency()
-      }
+      cpuUsage,
+      memoryUsage,
+      networkLatency,
+      inferenceTime,
+      trainingTime,
+      batchProcessingTime,
+      modelSize,
+      throughput,
+      errorRate,
+      resourceUtilization,
+      scalability,
+      efficiency
     };
 
     this.updateMetricsHistory(modelName, metrics);

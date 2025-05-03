@@ -80,7 +80,8 @@ export class LLMService {
 
   private extractPromptVersion(content: string): string {
     const versionMatch = content.match(/version:\s*([\d.]+)/i);
-    return versionMatch ? versionMatch[1] : '1.0.0';
+    const version = versionMatch && versionMatch[1] ? versionMatch[1] : '1.0.0';
+    return version;
   }
 
   private async loadAvailableModels(): Promise<void> {

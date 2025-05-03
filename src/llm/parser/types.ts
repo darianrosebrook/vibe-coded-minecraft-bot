@@ -22,9 +22,10 @@ export interface TaskParseResult {
 }
 
 export interface ParsingError {
+  type: string;
   message: string;
-  code: string;
   context: any;
+  recoveryStrategy: string;
 }
 
 export interface TaskValidationResult {
@@ -54,4 +55,32 @@ export interface PluginContext {
   state: any;
   capabilities: string[];
   dependencies: string[];
+}
+
+export interface ParsingMetrics {
+  totalAttempts: number;
+  successfulParses: number;
+  averageConfidence: number;
+  averageTime: number;
+  errorCount: number;
+  tokenUsage: number;
+}
+
+export interface ParsingResult {
+  task: TaskParseResult;
+  confidence: number;
+  alternatives: TaskParseResult[];
+  metrics: ParsingMetrics;
+  debugInfo: {
+    intent: string;
+    semanticScore: number;
+    patternMatch: boolean;
+    validationSteps: string[];
+  };
+}
+
+export interface TaskParserConfig {
+  enableCaching: boolean;
+  cacheSize: number;
+  maxAlternatives: number;
 } 

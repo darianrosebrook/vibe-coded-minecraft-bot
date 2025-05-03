@@ -2,9 +2,8 @@ import { Task, TaskPriority, TaskStatus, TaskType, MiningTaskParameters, Craftin
 import { GameState } from '../../llm/context/manager';
 import { MLStateManager } from '../state/manager';
 import { EnhancedResourceNeedPredictor } from '../state/enhanced_predictors';
-import { TaskHistory } from '@/types';
-import { Logger } from '../../utils/observability/logger';
-import { EnhancedGameState } from '@/types';
+import { TaskHistory } from '@/types/ml/state';
+import { Logger } from '../../utils/observability/logger'; 
 
 export interface TaskOptimizationResult {
   priority: TaskPriority;
@@ -86,8 +85,8 @@ export class MLTaskOptimizer {
     // Add resource dependencies based on task type
     if (task.type === TaskType.MINING) {
       const miningParams = task.parameters as MiningTaskParameters;
-      if (miningParams.block) {
-        dependencies.push(`block:${miningParams.block}`);
+      if (miningParams.targetBlock) {
+        dependencies.push(`block:${miningParams.targetBlock}`);
       }
     } else if (task.type === TaskType.CRAFTING) {
       const craftingParams = task.parameters as unknown as CraftingTaskParameters;
@@ -199,12 +198,12 @@ export class MLTaskOptimizer {
   ): Promise<void> {
     const history: TaskHistory = {
       taskId: task.id,
-      taskType: task.type,
       success: true,
       startTime: Date.now(),
       endTime: Date.now(),
-      resourcesUsed: new Map(),
-      executionTime: optimizationTime
+      resourcesUsed: {}, 
+      type: task.type,
+      status: TaskStatus.COMPLETED
     };
     
     this.taskHistory.set(task.id, history);

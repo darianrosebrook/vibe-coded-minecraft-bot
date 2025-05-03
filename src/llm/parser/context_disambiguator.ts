@@ -1,6 +1,6 @@
 import { Task, TaskType } from '@/types/task';
-import { TaskContext } from '@/types';
 import { AmbiguityDetector, AmbiguityResult } from './ambiguity_detector';
+import { TaskContext } from '../types';
 
 export interface DisambiguationResult {
   resolvedType: TaskType;
@@ -35,8 +35,8 @@ export class ContextDisambiguator {
   ): Promise<DisambiguationResult> {
     if (!ambiguityResult.isAmbiguous) {
       return {
-        resolvedType: ambiguityResult.suggestedTypes[0],
-        confidence: ambiguityResult.scores[0].totalScore,
+        resolvedType: ambiguityResult.suggestedTypes[0] || TaskType.UNKNOWN,
+        confidence: ambiguityResult.scores[0]?.totalScore || 0,
         contextFactors: ambiguityResult.contextFactors,
         historicalPatterns: [],
         currentStateRelevance: 1
@@ -65,7 +65,7 @@ export class ContextDisambiguator {
 
     return {
       resolvedType,
-      confidence: ambiguityResult.scores[0].totalScore,
+      confidence: ambiguityResult.scores[0]?.totalScore || 0,
       contextFactors: ambiguityResult.contextFactors,
       historicalPatterns: historicalMatches.map(m => m.command),
       currentStateRelevance

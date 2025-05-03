@@ -1,5 +1,7 @@
-import { Task, TaskType } from '@/types/task';
-import { TaskContext } from '@/types';
+import { TaskType } from "@/types/task";
+import { TaskContext } from "../types";
+
+ 
 
 
 export interface AmbiguityPattern {
@@ -130,6 +132,7 @@ export class AmbiguityDetector {
 
     // Determine if the command is ambiguous
     const isAmbiguous = scores.length > 1 && 
+                       scores[0]?.totalScore && scores[1]?.totalScore &&
                        scores[0].totalScore - scores[1].totalScore < 0.2;
 
     // Get suggested task types
@@ -138,7 +141,7 @@ export class AmbiguityDetector {
       .map(score => this.patternToTaskType(score.patternId));
 
     return {
-      isAmbiguous,
+      isAmbiguous: isAmbiguous || false,
       scores,
       suggestedTypes,
       contextFactors

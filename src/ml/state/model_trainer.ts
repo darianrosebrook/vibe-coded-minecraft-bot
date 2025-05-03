@@ -3,6 +3,9 @@ import { DataPreprocessor, ProcessedData } from './data_preprocessor';
 import { mlMetrics } from '../../utils/observability/metrics';
 import { Model, ResourceNeedModel, PlayerRequestModel, TaskDurationModel } from './models';
 import { ModelStorage } from './model_storage';
+import { Logger } from '@/utils/observability/logger';
+
+const logger = new Logger();
 
 interface ModelConfig {
   batchSize: number;
@@ -51,32 +54,47 @@ export class ModelTrainer {
 
   public async trainModel(predictionType: string): Promise<TrainingResult> {
     try {
+      logger.info(`Starting model training for prediction type: ${predictionType}`);
+      
       // Get training data
+      logger.info('Fetching training data...');
       const trainingData = this.dataCollector.getTrainingData(predictionType);
       if (!trainingData) {
         throw new Error(`No training data available for ${predictionType}`);
       }
+      logger.info(`Retrieved ${trainingData.predictions.length} training records`);
 
       // Preprocess data
+      logger.info('Preprocessing training data...');
       const processedData = await this.preprocessor.preprocessData(trainingData);
+      logger.info('Data preprocessing completed');
 
       // Split data into training and validation sets
+      logger.info('Splitting data into training and validation sets...');
       const { trainData, valData } = this.splitData(processedData);
+      logger.info(`Split data: ${trainData.features.length} training samples, ${valData.features.length} validation samples`);
 
       // Initialize model based on prediction type
+      logger.info('Initializing model...');
       const model = this.initializeModel(predictionType);
+      logger.info('Model initialization completed');
 
       // Train model
+      logger.info('Starting model training...');
       const startTime = Date.now();
       const result = await this.trainModelWithData(model, trainData, valData);
       const trainingTime = Date.now() - startTime;
+      logger.info(`Model training completed in ${trainingTime}ms`);
 
       // Update model version
       const currentVersion = this.modelVersions.get(predictionType) || 0;
       this.modelVersions.set(predictionType, currentVersion + 1);
+      logger.info(`Updated model version to v${currentVersion + 1}`);
 
       // Store model
+      logger.info('Storing trained model...');
       await this.storeModel(predictionType, model, result);
+      logger.info('Model storage completed');
 
       return {
         modelId: `${predictionType}_v${currentVersion + 1}`,
@@ -86,12 +104,15 @@ export class ModelTrainer {
       };
     } catch (error) {
       mlMetrics.stateUpdates.inc({ type: 'training_error' });
+      logger.error('Error during model training:', error);
       throw error;
     }
   }
 
   private splitData(data: ProcessedData): { trainData: ProcessedData; valData: ProcessedData } {
+    logger.info('Splitting data into training and validation sets...');
     const splitIndex = Math.floor(data.features.length * (1 - this.config.validationSplit));
+    logger.info(`Split point: ${splitIndex} (${Math.round((1 - this.config.validationSplit) * 100)}% training, ${Math.round(this.config.validationSplit * 100)}% validation)`);
     
     return {
       trainData: {

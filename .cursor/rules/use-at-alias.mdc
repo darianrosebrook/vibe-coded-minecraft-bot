@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+Utilize aliased '@' imports for relative imports from 'src'

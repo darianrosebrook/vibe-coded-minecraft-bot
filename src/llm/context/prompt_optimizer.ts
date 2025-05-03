@@ -1,5 +1,5 @@
-import { TaskContext } from "@/types";
 import { MetricsStorage } from "./metrics_storage";
+import { TaskContext } from "../types";
 
 /**
  * Interface for prompt template configuration
@@ -182,10 +182,10 @@ export class PromptOptimizer {
     const startTime = Date.now();
     const selectedContext = this.selectRelevantContext(
       context,
-      template[0].template.contextRequirements
+      template[0]?.template?.contextRequirements || []
     );
     const prompt = this.formatPrompt(
-      template[0].template.template,
+      template[0]?.template?.template || "",
       selectedContext
     );
 
@@ -425,7 +425,7 @@ export class PromptOptimizer {
     // Update template version metrics
     const versions = this.templates.get(metrics.promptId);
     if (versions && versions.length > 0) {
-      versions[0].metrics.push(metrics);
+      versions[0]?.metrics?.push(metrics);
       await this.storage.storeTemplateVersions(metrics.promptId, versions);
     }
 
@@ -449,7 +449,7 @@ export class PromptOptimizer {
 
     // Analyze context relevance
     const avgRelevance = this.calculateAverageMetric(
-      latestVersion.metrics,
+      latestVersion?.metrics || [],
       "contextRelevance"
     );
     if (avgRelevance < this.config.minRelevance) {
@@ -465,7 +465,7 @@ export class PromptOptimizer {
 
     // Analyze token usage
     const avgTokens = this.calculateAverageMetric(
-      latestVersion.metrics,
+      latestVersion?.metrics || [],
       "tokenUsage"
     );
     if (avgTokens > this.config.maxTokens * 0.8) {
@@ -482,7 +482,7 @@ export class PromptOptimizer {
 
     // Analyze response quality
     const avgQuality = this.calculateAverageMetric(
-      latestVersion.metrics,
+      latestVersion?.metrics || [],
       "responseQuality"
     );
     if (avgQuality < this.config.qualityThreshold) {

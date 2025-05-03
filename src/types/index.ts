@@ -1,30 +1,27 @@
 // Core types
-import * as Core from './core';
+export * from './core';
 
 // Bot types
-import * as Bot from './bot';
+export * from './bot';
 
 // Inventory types
-import * as Inventory from './inventory';
+export * from './inventory';
 
-// ML types
-import * as ML from './ml';
+// ML types - explicitly re-export to avoid ambiguity
+import * as MLTypes from './ml';
+export { MLTypes };
 
 // Task types
-import * as Task from './task';
+export * from './task';
 
 // Module types
-import * as Modules from './modules';
+export * from './modules';
 
-// Common types
-import * as Common from './common';
+// World types
+export * from './world';
 
-export {
-  Core,
-  Bot,
-  Inventory,
-  ML,
-  Task,
-  Modules,
-  Common
-}; 
+export * from './modules/config';
+
+export * from './ml/gameState';
+
+ 

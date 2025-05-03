@@ -3,14 +3,52 @@ import { TaskQueue, TaskNode } from '../queue/queue';
 import { Conflict, ConflictResolution, ConflictType, ResourceConflict, LocationConflict, ToolConflict, TimeConflict } from '@/types';
 import { ConflictDetector } from './detector';
 import { TaskPriority } from '@/types/task';
+import { MinecraftBot } from '@/bot/bot';
+import { GameState } from '@/llm/context/manager';
 
 export class ConflictResolver {
   private queue: TaskQueue;
   private detector: ConflictDetector;
-
-  constructor(queue: TaskQueue) {
+  private bot: MinecraftBot;
+  constructor(queue: TaskQueue, bot: MinecraftBot) {
+    this.bot = bot;
     this.queue = queue;
-    this.detector = new ConflictDetector(queue);
+    
+    // Get initial empty game state - ConflictDetector will initialize properly
+    const gameState: GameState = {
+      position: this.bot.getMineflayerBot().entity.position,
+      health: this.bot.getMineflayerBot().health,
+      food: this.bot.getMineflayerBot().food,
+      inventory: {
+        items: [],
+        totalSlots: 36,
+        usedSlots: 0
+      },
+      biome: '',
+      timeOfDay: 0,
+      isRaining: false,
+      nearbyBlocks: [],
+      nearbyEntities: [],
+      movement: {
+        velocity: this.bot.getMineflayerBot().entity.velocity,
+        yaw: 0,
+        pitch: 0,
+        control: {
+          sprint: false,
+          sneak: false
+        }
+      },
+      environment: {
+        blockAtFeet: '',
+        blockAtHead: '',
+        lightLevel: 0,
+        isInWater: false,
+        onGround: true
+      },
+      recentTasks: []
+    };
+    
+    this.detector = new ConflictDetector(queue, gameState);
   }
 
   async resolveConflicts(conflicts: Conflict[]): Promise<ConflictResolution[]> {
@@ -28,7 +66,7 @@ export class ConflictResolver {
     if (!priority) {
       return 0;
     }
-    
+
     switch (priority) {
       case TaskPriority.HIGH: return 3;
       case TaskPriority.MEDIUM: return 2;
@@ -108,16 +146,18 @@ export class ConflictResolver {
     // Try to find alternative locations
     for (let i = 1; i < sortedTasks.length; i++) {
       const task = sortedTasks[i];
-      const alternativeLocation = await this.findAlternativeLocation(task.task.id, conflict.position);
-      
-      if (alternativeLocation) {
-        return {
-          conflict,
-          resolution: 'AUTO',
-          resolved: true,
-          action: 'MOVE_LOCATION',
-          message: `Found alternative location for task ${task.task.id}.`
-        };
+      if (task) {
+        const alternativeLocation = await this.findAlternativeLocation(task.task.id, conflict.position);
+
+        if (alternativeLocation) {
+          return {
+            conflict,
+            resolution: 'AUTO',
+            resolved: true,
+            action: 'MOVE_LOCATION',
+            message: `Found alternative location for task ${task.task.id}.`
+          };
+        }
       }
     }
 
@@ -141,16 +181,18 @@ export class ConflictResolver {
     // Try to find alternative tools
     for (let i = 1; i < sortedTasks.length; i++) {
       const task = sortedTasks[i];
-      const alternativeTool = await this.findAlternativeTool(task.task.id, conflict.toolType);
-      
-      if (alternativeTool) {
-        return {
-          conflict,
-          resolution: 'AUTO',
-          resolved: true,
-          action: 'CHANGE_TOOL',
-          message: `Found alternative tool for task ${task.task.id}.`
-        };
+      if (task) {
+        const alternativeTool = await this.findAlternativeTool(task.task.id, conflict.toolType);
+
+        if (alternativeTool) {
+          return {
+            conflict,
+            resolution: 'AUTO',
+            resolved: true,
+            action: 'CHANGE_TOOL',
+            message: `Found alternative tool for task ${task.task.id}.`
+          };
+        }
       }
     }
 
@@ -174,20 +216,22 @@ export class ConflictResolver {
     // Try to find alternative time windows
     for (let i = 1; i < sortedTasks.length; i++) {
       const task = sortedTasks[i];
-      const alternativeTime = await this.findAlternativeTimeWindow(
-        task.task.id,
-        conflict.startTime,
-        conflict.endTime
-      );
-      
-      if (alternativeTime) {
-        return {
-          conflict,
-          resolution: 'AUTO',
-          resolved: true,
-          action: 'RESCHEDULE',
-          message: `Found alternative time window for task ${task.task.id}.`
-        };
+      if (task) {
+        const alternativeTime = await this.findAlternativeTimeWindow(
+          task.task.id,
+          conflict.startTime,
+          conflict.endTime
+        );
+
+        if (alternativeTime) {
+          return {
+            conflict,
+            resolution: 'AUTO',
+            resolved: true,
+            action: 'RESCHEDULE',
+            message: `Found alternative time window for task ${task.task.id}.`
+          };
+        }
       }
     }
 

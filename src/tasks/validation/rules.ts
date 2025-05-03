@@ -1,6 +1,6 @@
 import { ValidationRule, ValidationContext, ValidationResult } from './validator';
 import { Task } from '@/types/task';
-import { Item } from '@/types';
+import { Item } from '@/types/inventory';
 
 export class InventoryRequirementRule implements ValidationRule {
   constructor(private requiredItems: Item[]) {}
@@ -10,11 +10,11 @@ export class InventoryRequirementRule implements ValidationRule {
     
     for (const requiredItem of this.requiredItems) {
       const hasItem = context.inventory.items.some(item => 
-        item.type === requiredItem.type && item.quantity >= requiredItem.quantity
+        item.type === requiredItem.type && item.count >= requiredItem.count
       );
       
       if (!hasItem) {
-        errors.push(`Missing required item: ${requiredItem.type} (${requiredItem.quantity} needed)`);
+        errors.push(`Missing required item: ${requiredItem.type} (${requiredItem.count} needed)`);
       }
     }
 
@@ -30,7 +30,7 @@ export class ToolRequirementRule implements ValidationRule {
 
   async validate(task: Task, context: ValidationContext): Promise<ValidationResult> {
     const hasTool = context.inventory.items.some(item => 
-      item.type === this.requiredTool && item.quantity > 0
+      item.type === this.requiredTool && item.count > 0
     );
 
     return {

@@ -76,7 +76,7 @@ export class PerformanceMonitor {
     this.logger.logPerformance({
       command,
       responseTime,
-      tokenUsage,
+      tokenUsage: tokenUsage || { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
       cacheHit,
       timestamp: endTime,
     });

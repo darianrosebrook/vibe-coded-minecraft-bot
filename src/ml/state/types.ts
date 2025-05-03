@@ -1,39 +1,88 @@
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
+import { EntityInfo, BlockInfo, TaskHistory } from '@/types/ml/state';
+import { Recipe } from 'prismarine-recipe';
 
+/**
+ * EnhancedGameState interface with a focus on ML training and prediction needs.
+ * This extends the base GameState with additional information needed for ML operations.
+ */
 export interface EnhancedGameState {
   /** Bot instance */
   bot: Bot;
+  
   /** Timestamp of state capture */
   timestamp: number;
+  
   /** Position in the world */
   position: Vec3;
+  
   /** Current health level */
   health: number;
+  
   /** Current food level */
   food: number;
+  
   /** Biome information */
   biome: { name: string; temperature: number; rainfall: number };
+  
   /** Time of day */
   timeOfDay: number;
+  
   /** Whether it is raining */
   isRaining?: boolean;
+  
   /** Nearby blocks */
-  nearbyBlocks: Array<{ type: string; position: Vec3 }>;
+  nearbyBlocks: Array<BlockInfo>;
+  
   /** Nearby entities */
-  nearbyEntities: Array<{ type: string; position: Vec3; distance: number }>;
+  nearbyEntities: Array<EntityInfo & { distance: number }>;
+  
   /** Movement and orientation data */
-  movement: { velocity: Vec3; yaw: number; pitch: number; control: { sprint: boolean; sneak: boolean } };
+  movement: { 
+    velocity: Vec3; 
+    yaw: number; 
+    pitch: number; 
+    control: { 
+      sprint: boolean; 
+      sneak: boolean 
+    } 
+  };
+  
   /** Environmental context */
-  environment: { blockAtFeet: string; blockAtHead: string; lightLevel: number; isInWater: boolean; onGround: boolean };
+  environment: { 
+    blockAtFeet: string; 
+    blockAtHead: string; 
+    lightLevel: number; 
+    isInWater: boolean; 
+    onGround: boolean 
+  };
+  
   /** Recent tasks executed by the bot */
-  recentTasks: Array<{ type: string; parameters: Record<string, any>; status: 'success' | 'failure' | 'in_progress'; timestamp: number }>;
+  recentTasks: Array<{ 
+    type: string; 
+    parameters: Record<string, any>; 
+    status: 'success' | 'failure' | 'in_progress'; 
+    timestamp: number 
+  }>;
+  
   /** Inventory accessors */
-  inventory: { items: () => Array<{ name: string; count: number }>; emptySlots: () => number; slots: Array<any> };
+  inventory: { 
+    items: () => Array<{ name: string; count: number }>; 
+    emptySlots: () => number; 
+    slots: Array<any> 
+  };
+  
   /** Known players in the vicinity */
-  players: { [key: string]: { username: string; position: Vec3 } };
+  players: { 
+    [key: string]: { 
+      username: string; 
+      position: Vec3 
+    } 
+  };
+  
   /** Tracked tasks for ML optimizations */
-  tasks: Array<{ id: string; type: string; status: 'running' | 'completed' | 'failed'; startTime: number; endTime?: number }>;
+  tasks: Array<TaskHistory>;
 }
 
 export interface ResourceDependency {
@@ -48,14 +97,11 @@ export interface ResourceDependency {
   craftingSteps: string[];
 }
 
-export interface CraftingRecipe {
-  result: string;
-  ingredients: Array<{
-    name: string;
-    count: number;
-  }>;
-  craftingTime: number;
-  difficulty: number;
+export interface CraftingRecipe extends Recipe {
+  output: string;
+  inputs: Record<string, number>;
+  tools: string[];
+  time: number;
 }
 
 export interface PlayerBehavior {
@@ -66,29 +112,23 @@ export interface PlayerBehavior {
   successRate: number;
   timestamp: number;
   success: boolean;
+  lastAction?: string;
+  actionHistory?: string[];
+  preferences?: Record<string, any>;
+  skillLevel?: number;
 }
 
 export interface EnvironmentalFactor {
   type: string;
-  impact: number;
-  weight: number;
-}
-
-export interface TaskHistory {
-  taskId: string;
-  taskType: string;
-  startTime: number;
-  endTime: number;
-  success: boolean;
-  resourcesUsed: Map<string, number>;
-  executionTime: number;
+  intensity: number;
+  impact: string;
 }
 
 export interface ResourceImpact {
-  type: string;
-  impact: number;
-  availability: number;
-  distance: number;
+  resource: string;
+  change: number;
+  source: string;
+  timestamp: number;
 }
 
 export interface NearbyResource {

@@ -1,5 +1,5 @@
 import { Bot as MineflayerBot } from 'mineflayer';
-import { Tool, ToolManagerConfig, ToolManagerState, Enchantment } from '@/types';
+import { Tool, ToolManagerConfig, ToolManagerState, Enchantment } from '@/types/modules/tool';
 import { toolRecipes, ToolRecipe } from '../config/crafting';
 import { MinecraftBot, BotConfig } from './bot';
 import { Window as PrismarineWindow } from 'prismarine-windows';
@@ -475,7 +475,7 @@ export class ToolManager {
       let downgradeAttempts = 0;
       while (currentTierIndex > 0 && downgradeAttempts < this.config.crafting.maxDowngradeAttempts) {
         const lowerTier = materialTiers[currentTierIndex - 1];
-        if (await this.ensureTool(type, lowerTier)) {
+        if (lowerTier && await this.ensureTool(type, lowerTier)) {
           return true;
         }
         downgradeAttempts++;

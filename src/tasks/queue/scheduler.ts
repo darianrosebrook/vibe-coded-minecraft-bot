@@ -123,10 +123,7 @@ export class TaskScheduler {
   }
 
   getTaskProgress(taskId: string): number {
-    const node = this.queue.getTaskState(taskId);
-    if (!node) {
-      return 0;
-    }
-    return node.task.progress || 0;
+    const node = this.queue.getTaskState(taskId); 
+    return node?.task?.progress?.current || 0;
   }
 } 

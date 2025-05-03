@@ -14,7 +14,7 @@
  * - Shears: Used for harvesting wool and leaves
  * - Flint and Steel: Used for lighting fires and creating portals
  */
-type toolNames =
+export type toolNames =
   | "pickaxe"
   | "axe"
   | "shovel"
@@ -26,7 +26,7 @@ type toolNames =
  * Valid tool material tiers in Minecraft
  * @remarks Ordered from lowest to highest tier
  */
-type toolMaterials =
+export type toolMaterials =
   | "wooden"
   | "stone"
   | "iron"
@@ -38,12 +38,12 @@ type toolMaterials =
  * Maximum durability values for each tool material
  * @remarks Values represent the maximum uses before breaking
  */
-type toolDurability = 64 | 132 | 251 | 1562 | 1561 | 2031;
+export type toolDurability = 64 | 132 | 251 | 1562 | 1561 | 2031;
 
 /**
  * Current durability of a tool
  */
-type currentDurability = number;
+export type currentDurability = number;
 
 /**
  * Valid tool enchantments in Minecraft
@@ -55,7 +55,7 @@ type currentDurability = number;
  * - silk_touch: Preserves block form
  * - vanishing_curse: Item disappears on death
  */
-type toolEnchantments =
+export type toolEnchantments =
   | "efficiency"
   | "unbreaking"
   | "mending"

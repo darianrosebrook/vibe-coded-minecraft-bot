@@ -5,6 +5,8 @@
  * These types are used to maintain consistency and avoid duplication.
  */
 
+import { Vec3 } from 'vec3';
+
 /**
  * Base metrics interface for all ML models
  */
@@ -75,4 +77,34 @@ export interface ABTestConfig {
   sampleSize: number;
   confidenceLevel: number;
   successCriteria: Record<string, number>;
+}
+
+/**
+ * Interface for ML state prediction
+ */
+export interface MLStatePrediction {
+  resourceNeeds: {
+    type: string;
+    quantity: number;
+    confidence: number;
+  }[];
+  playerRequests: {
+    type: string;
+    confidence: number;
+    expectedTime: number;
+  }[];
+  taskDurations: {
+    taskType: string;
+    expectedDuration: number;
+    confidence: number;
+  }[];
+}
+
+/**
+ * Interface for context weighting
+ */
+export interface ContextWeight {
+  relevance: number;
+  decay: number;
+  lastUpdated: number;
 } 

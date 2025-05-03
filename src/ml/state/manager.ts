@@ -3,11 +3,13 @@ import { GameState } from '../../llm/context/manager';
 import { ContextManager } from '../../llm/context/manager';
 import { mlMetrics } from '../../utils/observability/metrics';
 import { ResourceNeedPredictor, PlayerRequestPredictor, TaskDurationPredictor } from './models';
-import { EnhancedGameState, TaskHistory, ResourceDependency, CraftingRecipe, PlayerBehavior, EnvironmentalFactor, ResourceImpact, NearbyResource, TerrainAnalysis, MobPresence } from '@/types';
+import { EnhancedGameState } from '@/types/ml/state';
 import { MinecraftBot } from '../../bot/bot';
 import { Bot as MineflayerBot } from 'mineflayer';
+import { IMLStateManager } from '@/types/ml/interfaces';
+import logger from '@/utils/observability/logger';
 
-interface MLStatePrediction {
+export interface MLStatePrediction {
   resourceNeeds: {
     type: string;
     quantity: number;
@@ -86,7 +88,7 @@ export interface MinecraftState {
   }>;
 }
 
-export class MLStateManager {
+export class MLStateManager implements IMLStateManager {
   private contextManager: ContextManager;
   private predictions: MLStatePrediction;
   private contextWeights: Map<string, ContextWeight>;
@@ -99,6 +101,7 @@ export class MLStateManager {
   private bot: MinecraftBot;
   private mineflayerBot: MineflayerBot;
   private gameState: MinecraftState;
+  private isInitialized: boolean = false;
 
   constructor(bot: MinecraftBot) {
     this.bot = bot;
@@ -121,6 +124,88 @@ export class MLStateManager {
     this.taskDurationPredictor = new TaskDurationPredictor();
   }
 
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
+    try {
+      logger.info('Starting MLStateManager initialization', {
+        position: this.mineflayerBot.entity.position,
+        health: this.mineflayerBot.health,
+        food: this.mineflayerBot.food
+      });
+
+      // Initialize basic state without heavy scanning
+      this.gameState = {
+        position: this.mineflayerBot.entity.position,
+        health: this.mineflayerBot.health,
+        food: this.mineflayerBot.food,
+        inventory: {
+          items: [],
+          totalSlots: 36,
+          usedSlots: 0
+        },
+        biome: {
+          name: 'unknown',
+          temperature: 0,
+          rainfall: 0
+        },
+        timeOfDay: this.mineflayerBot.time.timeOfDay,
+        nearbyBlocks: [],
+        nearbyEntities: [],
+        movement: {
+          velocity: this.mineflayerBot.entity.velocity,
+          yaw: this.mineflayerBot.entity.yaw,
+          pitch: this.mineflayerBot.entity.pitch,
+          control: {
+            sprint: false,
+            sneak: false
+          }
+        },
+        environment: {
+          blockAtFeet: 'unknown',
+          blockAtHead: 'unknown',
+          lightLevel: 0,
+          isInWater: false,
+          onGround: this.mineflayerBot.entity.onGround
+        },
+        recentTasks: []
+      };
+
+      logger.info('Basic state initialized', {
+        position: this.gameState.position,
+        health: this.gameState.health,
+        food: this.gameState.food
+      });
+
+      // Schedule the first state update
+      setTimeout(() => this.updateStateAsync(), 1000);
+      
+      this.isInitialized = true;
+      logger.info('MLStateManager initialization completed', {
+        predictionInterval: this.predictionInterval,
+        decayRate: this.decayRate
+      });
+    } catch (error) {
+      logger.error('Failed to initialize MLStateManager', { error });
+      throw error;
+    }
+  }
+
+  public async shutdown(): Promise<void> {
+    this.isInitialized = false;
+    logger.info('MLStateManager shut down successfully');
+  }
+
+  public async predictState(): Promise<any> {
+    try {
+      await this.updatePredictions(this.convertToGameState(await this.getState()));
+      return this.predictions;
+    } catch (error) {
+      logger.error('Failed to predict state', { error });
+      throw error;
+    }
+  }
+
   public async getState(): Promise<EnhancedGameState> {
     const timestamp = Date.now();
     this.gameState.timestamp = timestamp;
@@ -130,37 +215,107 @@ export class MLStateManager {
         username: player.username,
         position: player.entity.position,
       };
-    }
-    return {
-      ...this.gameState,
-      timestamp,
-      bot: this.mineflayerBot,
-      tasks: [],
-      inventory: {
-        items: () => this.mineflayerBot.inventory.items().map(item => ({
-          name: item.name,
-          count: item.count
-        })),
-        emptySlots: () => this.mineflayerBot.inventory.slots.filter(slot => slot === null).length,
-        slots: this.mineflayerBot.inventory.slots
+    } 
+    
+    // Transform MinecraftState to EnhancedGameState
+    const enhancedGameState: EnhancedGameState = {
+      botState: {
+        position: this.gameState.position,
+        velocity: this.mineflayerBot.entity.velocity,
+        inventory: {
+          items: this.gameState.inventory.items.map(item => ({
+            type: item.type,
+            quantity: item.quantity,
+            metadata: {
+              durability: (item as any).durability || 0,
+              enchantments: (item as any).enchantments || [],
+              nbt: (item as any).nbt || {}
+            }
+          })),
+          size: this.gameState.inventory.totalSlots - this.gameState.inventory.usedSlots
+        },
+        health: this.gameState.health,
+        food: this.gameState.food,
+        experience: 0, // Default value
+        selectedItem: this.mineflayerBot.heldItem?.name || '',
+        onGround: this.mineflayerBot.entity.onGround
+      },
+      worldState: {
+        time: this.gameState.timeOfDay,
+        weather: this.gameState.isRaining ? 'rain' : 'clear',
+        difficulty: 'normal', // Default value
+        dimension: this.gameState.biome.name,
+      },
+      nearbyEntities: this.gameState.nearbyEntities.map(entity => ({
+        type: entity.type,
+        position: entity.position,
+      })),
+      nearbyBlocks: this.gameState.nearbyBlocks.map(block => ({
+        type: block.type,
+        position: block.position,
+      })),
+      resourceState: {
+        available: {},
+        required: {},
+        dependencies: [],
+      },
+      craftingState: {
+        recipes: [],
+        available: {},
+      },
+      playerBehavior: {
+        lastAction: '',
+        actionHistory: [],
+        preferences: {},
+        skillLevel: 0,
+      },
+      environmentalFactors: [],
+      taskHistory: this.gameState.recentTasks?.map(task => ({
+        taskId: '',
+        type: task.type,
+        status: task.status === 'success' ? 'completed' : task.status === 'failure' ? 'failed' : 'in_progress',
+        startTime: task.timestamp,
+        resourcesUsed: {},
+        success: task.status === 'success',
+      })) || [],
+      resourceImpact: [],
+      nearbyResources: [],
+      terrainAnalysis: {
+        elevation: this.gameState.position.y,
+        biome: this.gameState.biome.name,
+        difficulty: 0,
+        safety: 0,
+      },
+      mobPresence: {
+        type: '',
+        count: 0,
+        distance: 0,
+        threatLevel: 0,
       }
-    } as EnhancedGameState;
+    };
+    
+    return enhancedGameState;
   }
 
   public convertToGameState(enhancedState: EnhancedGameState): GameState {
-    const biome = this.bot.getBiomeAt(enhancedState.position);
+    const biome = this.bot.getBiomeAt(enhancedState.botState.position);
 
     return {
-      position: enhancedState.position,
+      position: enhancedState.botState.position,
       health: this.mineflayerBot.health,
       food: this.mineflayerBot.food,
       inventory: {
-        items: enhancedState.inventory.items().map(item => ({
+        items: this.mineflayerBot.inventory.items().map(item => ({
           type: item.name,
-          quantity: item.count
+          quantity: item.count,
+          metadata: {
+            durability: item.maxDurability,
+            enchantments: item.enchants,
+            nbt: item.nbt
+          }
         })),
         totalSlots: 36,
-        usedSlots: 36 - enhancedState.inventory.emptySlots()
+        usedSlots: this.mineflayerBot.inventory.items().length
       },
       biome: biome || 'unknown',
       timeOfDay: this.mineflayerBot.time.timeOfDay,
@@ -173,10 +328,10 @@ export class MLStateManager {
         type: this.mineflayerBot.blockAt(block)?.name || 'unknown',
         position: block
       })),
-      nearbyEntities: Object.values(enhancedState.players || {}).map(player => ({
-        type: 'player',
+      nearbyEntities: Object.values(this.gameState.players || {}).map(player => ({
+        type: 'player', 
         position: player.position,
-        distance: player.position.distanceTo(enhancedState.position)
+        distance: player.position.distanceTo(this.gameState.position)
       })),
       movement: {
         velocity: this.mineflayerBot.entity.velocity,
@@ -191,23 +346,56 @@ export class MLStateManager {
         blockAtFeet: this.mineflayerBot.blockAt(this.mineflayerBot.entity.position.offset(0, -1, 0))?.name || 'unknown',
         blockAtHead: this.mineflayerBot.blockAt(this.mineflayerBot.entity.position.offset(0, 1, 0))?.name || 'unknown',
         lightLevel: this.mineflayerBot.blockAt(this.mineflayerBot.entity.position)?.light || 0,
-        isInWater: this.mineflayerBot.entity.isInWater,
+        isInWater: !this.mineflayerBot.entity.onGround,
         onGround: this.mineflayerBot.entity.onGround
       },
-      recentTasks: enhancedState.tasks.map(task => ({
-        type: task.type,
-        parameters: {},
-        status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
-        timestamp: task.startTime
-      }))
+      recentTasks: []
     };
   }
 
   public updateState(state: Partial<EnhancedGameState>): void {
-    this.gameState = {
-      ...this.gameState,
-      ...state
-    } as MinecraftState;
+    // Update MinecraftState properties from EnhancedGameState
+    if (state.botState) {
+      if (state.botState.position) this.gameState.position = state.botState.position;
+      if (state.botState.health) this.gameState.health = state.botState.health;
+      if (state.botState.food) this.gameState.food = state.botState.food;
+      if (state.botState.inventory) {
+        this.gameState.inventory.items = state.botState.inventory.items.map(item => ({
+          type: item.type,
+          quantity: item.quantity
+        }));
+      }
+    }
+
+    if (state.worldState) {
+      if (state.worldState.time) this.gameState.timeOfDay = state.worldState.time;
+      if (state.worldState.weather) this.gameState.isRaining = state.worldState.weather === 'rain';
+      if (state.worldState.dimension) this.gameState.biome.name = state.worldState.dimension;
+    }
+
+    if (state.nearbyBlocks) {
+      this.gameState.nearbyBlocks = state.nearbyBlocks.map(block => ({
+        type: block.type,
+        position: block.position
+      }));
+    }
+
+    if (state.nearbyEntities) {
+      this.gameState.nearbyEntities = state.nearbyEntities.map(entity => ({
+        type: entity.type,
+        position: entity.position,
+        distance: entity.position.distanceTo(this.gameState.position)
+      }));
+    }
+
+    if (state.taskHistory) {
+      this.gameState.recentTasks = state.taskHistory.map(task => ({
+        type: task.type,
+        parameters: {},
+        status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
+        timestamp: task.startTime
+      }));
+    }
   }
 
   public async updateStateAsync(): Promise<void> {
@@ -216,20 +404,112 @@ export class MLStateManager {
       return;
     }
 
-    const startTime = Date.now();
-    const gameState = await this.contextManager.getGameState();
+    try {
+      logger.debug('Starting state update', {
+        timeSinceLastUpdate: currentTime - this.lastUpdateTime,
+        position: this.mineflayerBot.entity.position
+      });
 
-    await this.updatePredictions(gameState);
-    await this.updateContextWeights(gameState);
+      // Update basic state information
+      this.gameState.position = this.mineflayerBot.entity.position;
+      this.gameState.health = this.mineflayerBot.health;
+      this.gameState.food = this.mineflayerBot.food;
+      this.gameState.timeOfDay = this.mineflayerBot.time.timeOfDay;
+      this.gameState.isRaining = this.mineflayerBot.isRaining;
 
-    this.lastUpdateTime = currentTime;
+      logger.debug('Basic state updated', {
+        health: this.gameState.health,
+        food: this.gameState.food,
+        timeOfDay: this.gameState.timeOfDay,
+        isRaining: this.gameState.isRaining
+      });
 
-    // Update metrics
-    mlMetrics.stateUpdates.inc({ type: 'full_update' });
-    mlMetrics.predictionLatency.observe(
-      { type: 'full_update' },
-      (Date.now() - startTime) / 1000
-    );
+      // Update inventory (lightweight operation)
+      const items = this.mineflayerBot.inventory.items();
+      this.gameState.inventory = {
+        items: items.map(item => ({
+          type: item.name,
+          quantity: item.count
+        })),
+        totalSlots: 36,
+        usedSlots: items.length
+      };
+
+      logger.debug('Inventory updated', {
+        itemCount: items.length,
+        usedSlots: this.gameState.inventory.usedSlots
+      });
+
+      // Update nearby entities (within a smaller radius)
+      const nearbyEntities = Object.values(this.mineflayerBot.entities)
+        .filter(e => e !== this.mineflayerBot.entity && e.position.distanceTo(this.mineflayerBot.entity.position) < 16)
+        .map(e => ({
+          type: e.type,
+          position: e.position,
+          distance: e.position.distanceTo(this.mineflayerBot.entity.position)
+        }));
+      this.gameState.nearbyEntities = nearbyEntities;
+
+      logger.debug('Nearby entities updated', {
+        entityCount: nearbyEntities.length,
+        types: [...new Set(nearbyEntities.map(e => e.type))]
+      });
+
+      // Update nearby blocks (only immediate surroundings)
+      const pos = this.mineflayerBot.entity.position;
+      const nearbyBlocks = [];
+      for (let y = -1; y <= 2; y++) {
+        for (let x = -2; x <= 2; x++) {
+          for (let z = -2; z <= 2; z++) {
+            const block = this.mineflayerBot.blockAt(pos.offset(x, y, z));
+            if (block && block.type !== 0) { // Skip air blocks
+              nearbyBlocks.push({
+                type: block.name,
+                position: block.position
+              });
+            }
+          }
+        }
+      }
+      this.gameState.nearbyBlocks = nearbyBlocks;
+
+      logger.debug('Nearby blocks updated', {
+        blockCount: nearbyBlocks.length,
+        types: [...new Set(nearbyBlocks.map(b => b.type))]
+      });
+
+      // Update environment
+      this.gameState.environment = {
+        blockAtFeet: this.mineflayerBot.blockAt(pos.offset(0, -1, 0))?.name || 'unknown',
+        blockAtHead: this.mineflayerBot.blockAt(pos.offset(0, 1, 0))?.name || 'unknown',
+        lightLevel: this.mineflayerBot.blockAt(pos)?.light || 0,
+        isInWater: !this.mineflayerBot.entity.onGround && this.mineflayerBot.blockAt(pos)?.name === 'water',
+        onGround: this.mineflayerBot.entity.onGround
+      };
+
+      logger.debug('Environment updated', {
+        blockAtFeet: this.gameState.environment.blockAtFeet,
+        blockAtHead: this.gameState.environment.blockAtHead,
+        lightLevel: this.gameState.environment.lightLevel,
+        isInWater: this.gameState.environment.isInWater,
+        onGround: this.gameState.environment.onGround
+      });
+
+      await this.updatePredictions(this.convertToGameState(await this.getState()));
+      await this.updateContextWeights(this.convertToGameState(await this.getState()));
+
+      this.lastUpdateTime = currentTime;
+
+      logger.info('State update completed', {
+        updateDuration: Date.now() - currentTime,
+        nextUpdateIn: this.predictionInterval
+      });
+
+      // Schedule next update
+      setTimeout(() => this.updateStateAsync(), this.predictionInterval);
+    } catch (error) {
+      logger.error('Error updating state:', error);
+    }
   }
 
   private async updatePredictions(gameState: GameState): Promise<void> {

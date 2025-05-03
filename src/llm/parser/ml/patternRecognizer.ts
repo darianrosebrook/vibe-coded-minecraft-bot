@@ -1,4 +1,4 @@
-import { TaskContext } from '@/types';
+import { TaskContext } from '../types';
 
 export class PatternRecognizer {
   private readonly patterns: Array<{
@@ -118,7 +118,7 @@ export class PatternRecognizer {
 
     return {
       matched,
-      pattern: pattern || undefined
+      pattern: pattern || null
     };
   }
 } 

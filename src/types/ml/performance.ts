@@ -281,4 +281,6 @@ export interface PerformanceMetrics {
   errorRate: number;
   successRate: number;
   confidence: number;
+  networkLatency: number;
+  inferenceTime: number;
 } 

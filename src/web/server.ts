@@ -3,10 +3,10 @@ import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
 import { setupSocketHandlers } from './sockets/socketHandlers';
-import { MinecraftBot } from '../bot/bot';
+import { MinecraftBot } from '@/bot/bot';
 import { register } from 'prom-client';
-import logger from '../utils/observability/logger';
-import { initializeMetrics } from '../utils/observability/metrics';
+import logger from '@/utils/observability/logger';
+import { initializeMetrics } from '@/utils/observability/metrics';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';

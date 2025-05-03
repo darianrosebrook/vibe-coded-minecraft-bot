@@ -1,12 +1,14 @@
-import { Task } from '@/types/task';
-import { TaskQueue, TaskNode } from '../queue/queue';
-import { Conflict, ConflictType, ResourceConflict, LocationConflict, ToolConflict, TimeConflict } from '@/types';
-
+import { Task, TaskParameters, MiningTaskParameters, NavigationTaskParameters } from '@/types/task';
+import { TaskQueue } from '../queue/queue';
+import { Conflict, ConflictType } from '@/types/task';
+import { GameState } from '@/llm/context/manager';
 export class ConflictDetector {
   private queue: TaskQueue;
+  private gameState: GameState;
 
-  constructor(queue: TaskQueue) {
+  constructor(queue: TaskQueue, gameState: GameState) {
     this.queue = queue;
+    this.gameState = gameState;
   }
 
   async detectConflicts(tasks: Task[]): Promise<Conflict[]> {
@@ -21,8 +23,9 @@ export class ConflictDetector {
     // Collect requirements from all tasks
     for (const task of tasks) {
       // Resource requirements
-      if (task.requirements?.items) {
-        for (const item of task.requirements.items) {
+      if (this.isMiningTask(task.parameters) && task.parameters.requirements?.items) {
+        const items = task.parameters.requirements.items;
+        for (const item of items) {
           if (!resourceRequirements.has(item.type)) {
             resourceRequirements.set(item.type, []);
           }
@@ -34,54 +37,46 @@ export class ConflictDetector {
       }
 
       // Location requirements
-      if (task.data?.position && 
-          typeof task.data.position === 'object' &&
-          'x' in task.data.position &&
-          'y' in task.data.position &&
-          'z' in task.data.position &&
-          typeof task.data.position.x === 'number' && 
-          typeof task.data.position.y === 'number' && 
-          typeof task.data.position.z === 'number') {
-        const key = `${task.data.position.x},${task.data.position.y},${task.data.position.z}`;
+      if (this.isNavigationTask(task.parameters) && task.parameters.location) {
+        const location = task.parameters.location;
+        const key = `${location.x},${location.y},${location.z}`;
         if (!locationRequirements.has(key)) {
           locationRequirements.set(key, []);
         }
         locationRequirements.get(key)!.push({
           taskId: task.id,
           position: {
-            x: task.data.position.x,
-            y: task.data.position.y,
-            z: task.data.position.z
+            x: location.x,
+            y: location.y,
+            z: location.z
           },
-          radius: typeof task.data.radius === 'number' ? task.data.radius : 1
+          radius: task.parameters.radius || 1
         });
       }
 
       // Tool requirements
-      if (task.requirements?.tools) {
-        for (const tool of task.requirements.tools) {
-          if (!toolRequirements.has(tool.type)) {
-            toolRequirements.set(tool.type, []);
-          }
-          toolRequirements.get(tool.type)!.push({
-            taskId: task.id
-          });
+      if (this.isMiningTask(task.parameters) && task.parameters.tool) {
+        const tool = task.parameters.tool;
+        if (!toolRequirements.has(tool)) {
+          toolRequirements.set(tool, []);
         }
+        toolRequirements.get(tool)!.push({
+          taskId: task.id
+        });
       }
 
       // Time requirements
-      if (task.data?.startTime && 
-          task.data?.endTime && 
-          typeof task.data.startTime === 'number' && 
-          typeof task.data.endTime === 'number') {
-        const key = `${task.data.startTime}-${task.data.endTime}`;
+      if (this.isMiningTask(task.parameters) && task.parameters.timeout) {
+        const startTime = Date.now();
+        const endTime = startTime + task.parameters.timeout;
+        const key = `${startTime}-${endTime}`;
         if (!timeRequirements.has(key)) {
           timeRequirements.set(key, []);
         }
         timeRequirements.get(key)!.push({
           taskId: task.id,
-          start: task.data.startTime,
-          end: task.data.endTime
+          start: startTime,
+          end: endTime
         });
       }
     }
@@ -91,7 +86,7 @@ export class ConflictDetector {
       if (requirements.length > 1) {
         const totalRequired = requirements.reduce((sum, req) => sum + req.quantity, 0);
         const available = this.getAvailableResourceQuantity(resourceType);
-        
+
         if (totalRequired > available) {
           conflicts.push({
             type: ConflictType.RESOURCE,
@@ -111,8 +106,8 @@ export class ConflictDetector {
           for (let j = i + 1; j < locations.length; j++) {
             const loc1 = locations[i];
             const loc2 = locations[j];
-            
-            if (this.isLocationOverlap(loc1, loc2)) {
+
+            if (loc1 && loc2 && this.isLocationOverlap(loc1, loc2)) {
               conflicts.push({
                 type: ConflictType.LOCATION,
                 position: loc1.position,
@@ -143,8 +138,8 @@ export class ConflictDetector {
           for (let j = i + 1; j < timeRanges.length; j++) {
             const range1 = timeRanges[i];
             const range2 = timeRanges[j];
-            
-            if (this.isTimeOverlap(range1, range2)) {
+
+            if (range1 && range2 && this.isTimeOverlap(range1, range2)) {
               conflicts.push({
                 type: ConflictType.TIME,
                 startTime: Math.max(range1.start, range2.start),
@@ -161,9 +156,8 @@ export class ConflictDetector {
   }
 
   private getAvailableResourceQuantity(resourceType: string): number {
-    // This would typically query the game state or inventory
-    // For now, return a mock value
-    return 100;
+    const item = this.gameState.inventory.items.find(item => item.type === resourceType);
+    return item ? item.quantity : 0;
   }
 
   private isLocationOverlap(
@@ -189,5 +183,13 @@ export class ConflictDetector {
     const runningTasks = this.queue.getRunningTasks();
     const pendingTasks = this.queue.getReadyTasks();
     return this.detectConflicts([task, ...runningTasks, ...pendingTasks]);
+  }
+
+  private isMiningTask(parameters: TaskParameters): parameters is MiningTaskParameters {
+    return 'targetBlock' in parameters;
+  }
+
+  private isNavigationTask(parameters: TaskParameters): parameters is NavigationTaskParameters {
+    return 'location' in parameters;
   }
 } 

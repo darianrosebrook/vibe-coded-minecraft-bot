@@ -1,15 +1,11 @@
-import { BaseTask, TaskOptions } from './base';
+import { BaseTask } from './base';
 import { MinecraftBot } from '../bot/bot';
 import { CommandHandler } from '../commands';
-import { Task, TaskParameters, NavigationTaskParameters, TaskResult, TaskType, TaskStatus } from '@/types/task';
-import logger from '../utils/observability/logger';
-import { metrics } from '../utils/observability/metrics';
-import { Bot as MineflayerBot } from 'mineflayer';
+import { NavigationTaskParameters } from '@/types/task';
+import logger from '../utils/observability/logger'; 
 import pathfinder from 'mineflayer-pathfinder';
 import { Vec3 } from 'vec3';
-import { Entity } from 'prismarine-entity';
-import { NavOptimizer } from '@/ml/reinforcement/navOptimizer';
-import { NavMLState } from '@/ml/state/navState';
+import { NavMLState, NavOptimizer } from '@/types/ml/navigation';
 
 export class NavTask extends BaseTask {
   protected destination: Vec3;
@@ -20,6 +16,7 @@ export class NavTask extends BaseTask {
   protected obstaclesEncountered: number = 0;
   protected optimizer: NavOptimizer;
   protected navState: NavMLState | null = null;
+  protected retryDelay: number;
 
   constructor(bot: MinecraftBot, commandHandler: CommandHandler, options: NavigationTaskParameters) {
     super(bot, commandHandler, {
@@ -40,8 +37,13 @@ export class NavTask extends BaseTask {
     this.avoidWater = options.avoidWater ?? true;
     this.usePathfinding = options.usePathfinding ?? true;
     this.maxDistance = options.maxDistance ?? Infinity;
+    this.retryDelay = options.retryDelay ?? 5000;
     
     this.optimizer = new NavOptimizer();
+  }
+
+  protected async getTaskSpecificState(): Promise<NavMLState> {
+    return this.getCurrentState();
   }
 
   protected async getCurrentState(): Promise<NavMLState> {
@@ -65,6 +67,7 @@ export class NavTask extends BaseTask {
   protected calculatePathEfficiency(): number {
     const currentPos = this.mineflayerBot.entity.position;
     const directDistance = currentPos.distanceTo(this.destination);
+    if (this.pathLength === 0) return 0;
     return (directDistance / this.pathLength) * 100;
   }
 
@@ -105,7 +108,7 @@ export class NavTask extends BaseTask {
     }
   }
 
-  async performTask(): Promise<void> {
+  override async performTask(): Promise<void> {
     this.startTime = Date.now();
     await this.initializeMLState();
     
@@ -131,16 +134,23 @@ export class NavTask extends BaseTask {
     }
   }
 
-  protected async handleError(error: Error, metadata: Record<string, any>): Promise<void> {
+  protected override async handleError(error: Error, metadata: Record<string, any>): Promise<void> {
     await super.handleError(error, {
       ...metadata,
-      destination: this.destination,
-      pathLength: this.pathLength,
-      obstacles: this.obstaclesEncountered
+      taskType: 'navigation',
+      metadata: {
+        destination: {
+          x: this.destination.x,
+          y: this.destination.y,
+          z: this.destination.z
+        },
+        pathLength: this.pathLength,
+        obstacles: this.obstaclesEncountered
+      }
     });
   }
 
-  stop(): void {
+  override stop(): void {
     this.stopRequested = true;
   }
 } 

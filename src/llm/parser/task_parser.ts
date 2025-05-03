@@ -1,12 +1,14 @@
-import { Task as LLMTask, TaskType, TaskPriority, TaskStatus, TaskParameters, QueryTaskParameters } from '@/types/task';
+import { Task as LLMTask, TaskType, TaskPriority, TaskStatus, TaskParameters, QueryTaskParameters, TaskProgress } from '@/types/task';
 import { Task } from '@/types/task';
 import { LLMClient, LLMError } from '../../utils/llmClient';
 import { SchemaValidator } from '../../utils/taskValidator';
-import { Logger } from '../../utils/observability/logger'; 
-import { ContextManager } from '../context/manager'; 
+import { Logger } from '../../utils/observability/logger';
+import { ContextManager } from '../context/manager';
 import { TaskParsingLogger } from '../logging/logger';
 import { ParameterValidator } from './parameter_validator';
-import { TaskParseResult, ParsingMetrics, ParsingError, ParsingResult, TaskParserConfig, TaskContext } from '@/types'; 
+import { ParsingMetrics, TaskParserConfig } from './types';
+import { ParsingError } from './types';
+import { TaskParseResult, ParsingResult, TaskContext } from '../types';
 import { ErrorHandler } from '../../error/errorHandler';
 import { SemanticMatcher } from './ml/semanticMatcher';
 import { CommandCache } from '../cache/commandCache';
@@ -16,6 +18,8 @@ import { PatternRecognizer } from './ml/patternRecognizer';
 import { TaskTypeResolver } from './type_resolver';
 import { PromptOptimizer } from '../context/prompt_optimizer';
 import { GameState } from '../context/manager';
+import { MinecraftBot } from '../../bot/bot';
+import { Bot, Player } from 'mineflayer';
 
 export class TaskParser {
   private readonly logger: TaskParsingLogger;
@@ -66,54 +70,64 @@ export class TaskParser {
     if (!gameState) {
       throw new Error('GameState is required');
     }
-    
-    return {
-      bot: this.contextManager.getBot(),
-      pluginContext: {},
+
+    const context: TaskContext = {
+      bot: this.contextManager.getBot() as unknown as MinecraftBot,
       conversationHistory: [],
       worldState: {
         inventory: {
-          hasTool: (tool: string) => false,
-          hasMaterials: (materials: string[]) => false,
+          hasTool: () => false,
+          hasMaterials: () => false,
           hasSpace: () => true,
           items: []
         },
-        position: gameState.position || { x: 0, y: 0, z: 0 },
-        surroundings: gameState.nearbyBlocks || [],
-        time: gameState.timeOfDay || 0
+        position: { x: 0, y: 0, z: 0 },
+        surroundings: [],
+        time: 0
       },
       recentTasks: [],
-      currentTask: undefined,
-      botState: {
-        health: gameState.health || 20,
-        hunger: gameState.food || 20,
-        position: gameState.position || { x: 0, y: 0, z: 0 }
-      }
+      pluginContext: {}
     };
+    return context;
   }
 
   private convertTaskParseResultToTask(taskParseResult: TaskParseResult): Task {
     return {
       id: `task-${Date.now()}`,
-      type: taskParseResult.type,
+      type: taskParseResult.type as TaskType,
       parameters: taskParseResult.parameters as TaskParameters,
-      priority: TaskPriority.MEDIUM, // Default to medium priority (50)
-      data: {},
-      progress: 0
+      priority: TaskPriority.MEDIUM,
+      status: TaskStatus.PENDING,
+      metadata: {},
+      progress: {
+        current: 0,
+        total: 100,
+        currentProgress: 0,
+        totalProgress: 100,
+        status: TaskStatus.PENDING,
+        taskId: `task-${Date.now()}`,
+        estimatedTimeRemaining: 0,
+        currentLocation: { x: 0, y: 0, z: 0 },
+        errorCount: 0,
+        retryCount: 0,
+        progressHistory: [],
+        lastUpdated: Date.now(),
+        created: Date.now()
+      }
     };
   }
-  
+
 
   private convertToLLMTask(task: Task): LLMTask {
     return {
       id: task.id,
       type: task.type as TaskType,
       parameters: task.parameters as TaskParameters,
-      priority: task.priority ?? TaskPriority.MEDIUM, // Default to medium priority (50)
+      priority: task.priority ?? TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
       createdAt: new Date(),
       updatedAt: new Date(),
-      metadata: task.data || {}
+      metadata: task.metadata || {}
     };
   }
 
@@ -124,7 +138,7 @@ export class TaskParser {
       confidence: 1.0,
       alternatives: [],
       context: {
-        bot: this.contextManager.getBot(),
+        bot: this.contextManager.getBot() as unknown as MinecraftBot,
         conversationHistory: [],
         worldState: {
           inventory: {
@@ -147,7 +161,7 @@ export class TaskParser {
   private extractItemType(description: string): string | undefined {
     const itemKeywords = ['wood', 'stone', 'iron', 'gold', 'diamond', 'pickaxe', 'axe', 'sword', 'shovel', 'hoe', 'armor', 'food'];
     const lowerDesc = description.toLowerCase();
-    
+
     for (const keyword of itemKeywords) {
       if (lowerDesc.includes(keyword)) {
         return keyword;
@@ -166,45 +180,17 @@ export class TaskParser {
       const gameState = await this.contextManager.getGameState();
       context = this.convertGameStateToTaskContext(gameState);
 
-      // Check cache if enabled
-      if (this.config.enableCaching) {
-        const cachedResult = this.commandCache.get(command);
-        if (cachedResult) {
-          const taskParseResult: TaskParseResult = {
-            type: cachedResult.type,
-            parameters: cachedResult.parameters as TaskParameters,
-            confidence: 1.0,
-            alternatives: [],
-            context: context,
-            pluginRequirements: []
-          };
-          return {
-            task: taskParseResult,
-            confidence: 1.0,
-            alternatives: [],
-            metrics: this.metrics,
-            debugInfo: {
-              intent: 'cached',
-              semanticScore: 1.0,
-              patternMatch: true,
-              validationSteps: ['cache_hit']
-            }
-          };
-        }
-      }
-
       // ML-based intent classification
       const intent = await this.intentClassifier.classify(command);
-      
+
       // Semantic similarity matching
       const semanticScore = await this.semanticMatcher.getSimilarity(command, context);
-      
+
       // Pattern recognition
       const patternMatch = await this.patternRecognizer.recognize(command);
 
-      // Generate optimized prompt
-      const prompt = await this.promptOptimizer.generatePrompt(command, context);
-      this.logger.logInput(command, context);
+      // Generate prompt
+      const prompt = this.promptOptimizer.generatePrompt('default', context);
 
       // Get LLM response
       const response = await this.llmClient.generate(prompt);
@@ -212,7 +198,7 @@ export class TaskParser {
 
       // Parse and validate response
       const task = this.parseResponse(response);
-      
+
       // Handle query tasks specifically
       if (task.type === 'query') {
         const queryParams = task.parameters as QueryTaskParameters;
@@ -226,7 +212,7 @@ export class TaskParser {
           }
         }
       }
-      
+
       this.schemaValidator.validate(task);
       this.logger.logTaskResolution(this.convertTaskParseResultToTask(task));
 
@@ -275,7 +261,7 @@ export class TaskParser {
       const result: ParsingResult = {
         task: taskParseResult,
         confidence,
-        alternatives,
+        alternatives: alternatives,
         metrics: this.metrics,
         debugInfo: {
           intent,
@@ -295,7 +281,7 @@ export class TaskParser {
           status: TaskStatus.PENDING,
           createdAt: new Date(),
           updatedAt: new Date(),
-          metadata: {}, 
+          metadata: {}
         };
         this.commandCache.set(command, taskToCache);
       }
@@ -331,12 +317,12 @@ export class TaskParser {
   ): number {
     // Base confidence from task
     const baseConfidence = task.confidence || 0.5;
-    
+
     // Adjust based on ML components
     const intentConfidence = this.intentClassifier.getConfidence(intent);
     const semanticConfidence = semanticScore;
     const patternConfidence = patternMatch ? 0.9 : 0.5;
-    
+
     // Weighted average
     return (baseConfidence * 0.4 + intentConfidence * 0.2 + semanticConfidence * 0.2 + patternConfidence * 0.2);
   }
@@ -356,10 +342,10 @@ export class TaskParser {
 
   private handleError(error: Error, command: string, context: TaskContext): ParsingError {
     const parsingError: ParsingError = {
-      type: this.determineErrorType(error),
+      type: 'type_mismatch',
       message: error.message,
       context,
-      recoveryStrategy: this.determineRecoveryStrategy(error)
+      recoveryStrategy: 'retry_with_fallback'
     };
     const errorContext = {
       category: 'LLM' as const,
@@ -375,25 +361,13 @@ export class TaskParser {
     return parsingError;
   }
 
-  private determineErrorType(error: Error): ParsingError['type'] {
-    if (error.message.includes('type')) return 'type_mismatch';
-    if (error.message.includes('parameter')) return 'parameter_invalid';
-    if (error.message.includes('context')) return 'context_missing';
-    return 'ambiguous';
-  }
-
-  private determineRecoveryStrategy(error: Error): string {
-    // Implement recovery strategy determination logic
-    return 'retry_with_fallback';
-  }
-
   private updateMetrics(processingTime: number, confidence: number): void {
     this.metrics.successfulParses++;
-    this.metrics.averageConfidence = 
-      (this.metrics.averageConfidence * (this.metrics.successfulParses - 1) + confidence) / 
+    this.metrics.averageConfidence =
+      (this.metrics.averageConfidence * (this.metrics.successfulParses - 1) + confidence) /
       this.metrics.successfulParses;
-    this.metrics.averageTime = 
-      (this.metrics.averageTime * (this.metrics.successfulParses - 1) + processingTime) / 
+    this.metrics.averageTime =
+      (this.metrics.averageTime * (this.metrics.successfulParses - 1) + processingTime) /
       this.metrics.successfulParses;
   }
 

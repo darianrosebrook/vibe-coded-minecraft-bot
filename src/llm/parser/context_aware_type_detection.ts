@@ -1,7 +1,10 @@
-import { Task, TaskType } from '@/types/task';
-import { WorldState, ResourceTracker } from '@/types/world';
-import { Hotspot } from '@/types/hotspot';
-import { ErrorCategory, ErrorSeverity } from '@/types/common';
+import { ErrorSeverity } from "@/types/core";
+import { Hotspot } from "@/types/modules/hotspot";
+import { ResourceTracker, WorldState } from "@/types/world/world";
+import { Task } from "@/types/task";
+import { TaskType } from "@/types/task";
+
+   
 
 export interface BotState {
   health: number;
@@ -258,7 +261,7 @@ export class ContextAwareTypeDetector {
     // If confidence is too low, return the highest confidence alternative
     if (confidence < 0.5) {
       const alternatives = await this.generateAlternatives({ type: baseType } as Task, checks);
-      return alternatives.length > 0 ? alternatives[0].type : baseType;
+      return alternatives.length > 0 ? alternatives[0]?.type || baseType : baseType;
     }
 
     return baseType;

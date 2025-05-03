@@ -1,4 +1,7 @@
-import { Position } from '../common';
+import { Vec3 } from 'vec3';
+import { Inventory } from '@/types/inventory'; 
+import { TaskHistory } from '@/types/ml/state';
+import { EnhancedGameState } from '@/types/ml/state';
 
 /**
  * Machine Learning Command Types
@@ -188,8 +191,11 @@ export interface CommandHandler {
  */
 export interface CommandContext {
   botState: {
-    position: Position;
+    position: Vec3;
     health: number;
+    food: number;
+    experience: number;
+    selectedItem?: string;
     inventory: Array<{
       name: string;
       count: number;
@@ -198,9 +204,10 @@ export interface CommandContext {
   worldState: {
     time: number;
     weather: string;
+    difficulty: string;
     nearbyEntities: Array<{
       type: string;
-      position: Position;
+      position: Vec3;
     }>;
   };
   mlState: {
@@ -210,6 +217,20 @@ export interface CommandContext {
       confidence: number;
     }>;
   };
+  gameState: EnhancedGameState;
+  playerState: {
+    position: Vec3;
+    inventory: Inventory;
+    health: number;
+    food: number;
+  };
+  recentCommands: string[];
+  environment: {
+    time: number;
+    weather: string;
+    difficulty: string;
+  };
+  taskHistory: TaskHistory[];
 }
 
 /**
@@ -390,12 +411,21 @@ export interface ResponseQuality {
   confidence: number;
 }
 
+/**
+ * Command pattern interface for pattern recognition.
+ */
 export interface CommandPattern {
   pattern: string;
   intent: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, string>;
   examples: string[];
   context: CommandContext;
+  metadata?: {
+    confidence: number;
+    updateTimestamp: number;
+    createdTimestamp?: number;
+    usageCount?: number;
+  };
 }
 
 export interface MLCommandParser {
@@ -417,21 +447,4 @@ export interface MLErrorHandler {
 export interface PatternRecognitionSystem {
   recognize: (input: string, context: CommandContext) => Promise<CommandPattern[]>;
   learn: (pattern: CommandPattern) => Promise<void>;
-}
-
-export interface CommandContext {
-  gameState: EnhancedGameState;
-  playerState: {
-    position: Vec3;
-    inventory: Inventory;
-    health: number;
-    food: number;
-  };
-  recentCommands: string[];
-  environment: {
-    time: number;
-    weather: string;
-    difficulty: string;
-  };
-  taskHistory: TaskHistory[];
 } 

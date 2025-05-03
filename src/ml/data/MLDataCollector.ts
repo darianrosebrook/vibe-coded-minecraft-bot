@@ -1,203 +1,121 @@
-import { EnhancedGameState } from '@/types';
-import { MLError } from '../error/MLErrorSystem';
-import { FeedbackData } from '../feedback/MLFeedbackSystem';
-import { MLDataManager } from '../storage/MLDataManager';
+import { Bot } from 'mineflayer';
+import logger from '@/utils/observability/logger';
+import { IDataCollector } from '@/types/ml/interfaces';
+import { TaskContext } from '@/ml/types';
 
-export interface InteractionLog {
+interface Prediction {
   timestamp: number;
-  command: string;
-  response: string;
+  type: string;
+  input: any;
+  output: any;
   success: boolean;
-  executionTime: number;
-  state: EnhancedGameState;
+  confidence: number;
+  latency: number;
+  metadata?: any;
 }
 
-export interface StateChangeLog {
-  timestamp: number;
-  stateBefore: EnhancedGameState;
-  stateAfter: EnhancedGameState;
-  changes: {
-    position?: boolean;
-    health?: boolean;
-    inventory?: boolean;
-    environment?: boolean;
-  };
-}
+export class MLDataCollector implements IDataCollector {
+  private isInitialized: boolean = false;
+  private isCollecting: boolean = false;
+  private predictions: Map<string, Prediction[]> = new Map();
 
-export interface ResourceChangeLog {
-  timestamp: number;
-  resourceType: string;
-  quantity: number;
-  change: number;
-  location: { x: number; y: number; z: number };
-}
+  constructor(private bot: Bot) {}
 
-export class MLDataCollector {
-  private dataManager: MLDataManager;
-  private interactionLogs: InteractionLog[] = [];
-  private stateChangeLogs: StateChangeLog[] = [];
-  private resourceChangeLogs: ResourceChangeLog[] = [];
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
 
-  constructor(dataManager: MLDataManager) {
-    this.dataManager = dataManager;
+    try {
+      this.setupEventListeners();
+      this.isInitialized = true;
+      logger.info('MLDataCollector initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize MLDataCollector', { error });
+      throw error;
+    }
   }
 
-  public async logInteraction(
-    command: string,
-    response: string,
+  private setupEventListeners(): void {
+    try {
+      this.bot.on('chat', (username: string, message: string) => {
+        if (this.isCollecting) {
+          this.recordPrediction(
+            'chat',
+            { username, message },
+            { response: null },
+            true,
+            1.0,
+            Date.now()
+          );
+        }
+      });
+
+      this.bot.on('error', (error: Error) => {
+        if (this.isCollecting) {
+          this.recordPrediction(
+            'error',
+            { error: error.message },
+            { handled: false },
+            false,
+            0.0,
+            Date.now()
+          );
+        }
+      });
+    } catch (error) {
+      logger.error('Failed to setup event listeners', { error });
+      throw error;
+    }
+  }
+
+  public start(): void {
+    this.isCollecting = true;
+  }
+
+  public stop(): void {
+    this.isCollecting = false;
+  }
+
+  public async recordPrediction(
+    type: string,
+    input: any,
+    output: any,
     success: boolean,
-    executionTime: number,
-    state: EnhancedGameState
+    confidence: number,
+    latency: number,
+    metadata?: any
   ): Promise<void> {
-    const log: InteractionLog = {
-      timestamp: Date.now(),
-      command,
-      response,
-      success,
-      executionTime,
-      state
-    };
+    try {
+      const prediction: Prediction = {
+        timestamp: Date.now(),
+        type,
+        input,
+        output,
+        success,
+        confidence,
+        latency,
+        metadata
+      };
 
-    this.interactionLogs.push(log);
-    await this.dataManager.storeData('interactions', log);
-    await this.processInteractionData(log);
+      const predictions = this.predictions.get(type) || [];
+      predictions.push(prediction);
+      this.predictions.set(type, predictions);
+    } catch (error) {
+      logger.error('Failed to record prediction', { error, type });
+    }
   }
 
-  public async logStateChange(
-    stateBefore: EnhancedGameState,
-    stateAfter: EnhancedGameState
-  ): Promise<void> {
-    const changes = this.detectStateChanges(stateBefore, stateAfter);
-    const log: StateChangeLog = {
-      timestamp: Date.now(),
-      stateBefore,
-      stateAfter,
-      changes
-    };
-
-    this.stateChangeLogs.push(log);
-    await this.dataManager.storeData('stateChanges', log);
-    await this.processStateChangeData(log);
+  public getTrainingData(type: string): Prediction[] {
+    return this.predictions.get(type) || [];
   }
 
-  public async logResourceChange(
-    resourceType: string,
-    quantity: number,
-    change: number,
-    location: { x: number; y: number; z: number }
-  ): Promise<void> {
-    const log: ResourceChangeLog = {
-      timestamp: Date.now(),
-      resourceType,
-      quantity,
-      change,
-      location
-    };
-
-    this.resourceChangeLogs.push(log);
-    await this.dataManager.storeData('resourceChanges', log);
-    await this.processResourceData(log);
-  }
-
-  private detectStateChanges(
-    before: EnhancedGameState,
-    after: EnhancedGameState
-  ): StateChangeLog['changes'] {
-    return {
-      position: !before.position.equals(after.position),
-      health: before.health !== after.health,
-      inventory: this.hasInventoryChanged(before, after),
-      environment: this.hasEnvironmentChanged(before, after)
-    };
-  }
-
-  private hasInventoryChanged(
-    before: EnhancedGameState,
-    after: EnhancedGameState
-  ): boolean {
-    const beforeItems = before.inventory.items();
-    const afterItems = after.inventory.items();
-    
-    if (beforeItems.length !== afterItems.length) return true;
-    
-    return beforeItems.some((item, index) => {
-      const afterItem = afterItems[index];
-      return item.name !== afterItem.name || item.count !== afterItem.count;
-    });
-  }
-
-  private hasEnvironmentChanged(
-    before: EnhancedGameState,
-    after: EnhancedGameState
-  ): boolean {
-    return (
-      before.biome.name !== after.biome.name ||
-      before.timeOfDay !== after.timeOfDay ||
-      before.isRaining !== after.isRaining ||
-      before.environment.lightLevel !== after.environment.lightLevel
-    );
-  }
-
-  private async processInteractionData(log: InteractionLog): Promise<void> {
-    // Extract features for command understanding
-    const features = {
-      commandLength: log.command.length,
-      responseLength: log.response.length,
-      executionTime: log.executionTime,
-      success: log.success,
-      timeOfDay: log.state.timeOfDay,
-      biome: log.state.biome.name,
-      health: log.state.health,
-      food: log.state.food
-    };
-
-    await this.dataManager.storeData('interactionFeatures', features);
-  }
-
-  private async processStateChangeData(log: StateChangeLog): Promise<void> {
-    // Extract features for state prediction
-    const features = {
-      positionChange: log.changes.position,
-      healthChange: log.changes.health,
-      inventoryChange: log.changes.inventory,
-      environmentChange: log.changes.environment,
-      timeOfDay: log.stateAfter.timeOfDay,
-      biome: log.stateAfter.biome.name
-    };
-
-    await this.dataManager.storeData('stateChangeFeatures', features);
-  }
-
-  private async processResourceData(log: ResourceChangeLog): Promise<void> {
-    // Extract features for resource prediction
-    const features = {
-      resourceType: log.resourceType,
-      quantity: log.quantity,
-      change: log.change,
-      location: log.location
-    };
-
-    await this.dataManager.storeData('resourceFeatures', features);
-  }
-
-  public getInteractionLogs(): InteractionLog[] {
-    return this.interactionLogs;
-  }
-
-  public getStateChangeLogs(): StateChangeLog[] {
-    return this.stateChangeLogs;
-  }
-
-  public getResourceChangeLogs(): ResourceChangeLog[] {
-    return this.resourceChangeLogs;
-  }
-
-  public async clearLogs(): Promise<void> {
-    this.interactionLogs = [];
-    this.stateChangeLogs = [];
-    this.resourceChangeLogs = [];
-    await this.dataManager.clearData('interactions');
-    await this.dataManager.clearData('stateChanges');
-    await this.dataManager.clearData('resourceChanges');
+  public async shutdown(): Promise<void> {
+    try {
+      this.isCollecting = false;
+      this.isInitialized = false;
+      this.predictions.clear();
+    } catch (error) {
+      logger.error('Failed to shutdown MLDataCollector', { error });
+      throw error;
+    }
   }
 } 

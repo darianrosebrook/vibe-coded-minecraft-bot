@@ -1,13 +1,14 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { z } from "zod";
 import {
   Config,
   ConfigVersion,
   ConfigChangeCallback,
   baseConfigSchema,
-} from "@/types";
-import logger from "../utils/observability/logger";
+} from "@/types/modules/config";
+import logger from "@/utils/observability/logger";
 
 export class ConfigManager {
   private static instance: ConfigManager;
@@ -142,59 +143,59 @@ export class ConfigManager {
       // Convert environment variables to correct types
       const processedEnv = {
         ...process.env,
-        MINECRAFT_PORT: process.env.MINECRAFT_PORT
-          ? parseInt(process.env.MINECRAFT_PORT, 10)
+        MINECRAFT_PORT: process.env['MINECRAFT_PORT']
+          ? parseInt(process.env['MINECRAFT_PORT'], 10)
           : undefined,
-        BOT_VIEW_DISTANCE: process.env.BOT_VIEW_DISTANCE
-          ? parseInt(process.env.BOT_VIEW_DISTANCE, 10)
+        BOT_VIEW_DISTANCE: process.env['BOT_VIEW_DISTANCE']
+          ? parseInt(process.env['BOT_VIEW_DISTANCE'], 10)
           : undefined,
-        BOT_CHAT_DISTANCE: process.env.BOT_CHAT_DISTANCE
-          ? parseInt(process.env.BOT_CHAT_DISTANCE, 10)
+        BOT_CHAT_DISTANCE: process.env['BOT_CHAT_DISTANCE']
+          ? parseInt(process.env['BOT_CHAT_DISTANCE'], 10)
           : undefined,
-        OLLAMA_TEMPERATURE: process.env.OLLAMA_TEMPERATURE
-          ? parseFloat(process.env.OLLAMA_TEMPERATURE)
+        OLLAMA_TEMPERATURE: process.env['OLLAMA_TEMPERATURE']
+          ? parseFloat(process.env['OLLAMA_TEMPERATURE'])
           : undefined,
-        OLLAMA_MAX_TOKENS: process.env.OLLAMA_MAX_TOKENS
-          ? parseInt(process.env.OLLAMA_MAX_TOKENS, 10)
+        OLLAMA_MAX_TOKENS: process.env['OLLAMA_MAX_TOKENS']
+          ? parseInt(process.env['OLLAMA_MAX_TOKENS'], 10)
           : undefined,
-        STORAGE_MAX_AGE: process.env.STORAGE_MAX_AGE
-          ? parseInt(process.env.STORAGE_MAX_AGE, 10)
+        STORAGE_MAX_AGE: process.env['STORAGE_MAX_AGE']
+          ? parseInt(process.env['STORAGE_MAX_AGE'], 10)
           : undefined,
-        STORAGE_MAX_COMPLETED_AGE: process.env.STORAGE_MAX_COMPLETED_AGE
-          ? parseInt(process.env.STORAGE_MAX_COMPLETED_AGE, 10)
+        STORAGE_MAX_COMPLETED_AGE: process.env['STORAGE_MAX_COMPLETED_AGE']
+          ? parseInt(process.env['STORAGE_MAX_COMPLETED_AGE'], 10)
           : undefined,
-        STORAGE_CLEANUP_INTERVAL: process.env.STORAGE_CLEANUP_INTERVAL
-          ? parseInt(process.env.STORAGE_CLEANUP_INTERVAL, 10)
+        STORAGE_CLEANUP_INTERVAL: process.env['STORAGE_CLEANUP_INTERVAL']
+          ? parseInt(process.env['STORAGE_CLEANUP_INTERVAL'], 10)
           : undefined,
-        STORAGE_MAX_HISTORY: process.env.STORAGE_MAX_HISTORY
-          ? parseInt(process.env.STORAGE_MAX_HISTORY, 10)
+        STORAGE_MAX_HISTORY: process.env['STORAGE_MAX_HISTORY']
+          ? parseInt(process.env['STORAGE_MAX_HISTORY'], 10)
           : undefined,
-        LOG_MAX_SIZE: process.env.LOG_MAX_SIZE
-          ? parseInt(process.env.LOG_MAX_SIZE, 10)
+        LOG_MAX_SIZE: process.env['LOG_MAX_SIZE']
+          ? parseInt(process.env['LOG_MAX_SIZE'], 10)
           : undefined,
-        LOG_MAX_FILES: process.env.LOG_MAX_FILES
-          ? parseInt(process.env.LOG_MAX_FILES, 10)
+        LOG_MAX_FILES: process.env['LOG_MAX_FILES']
+          ? parseInt(process.env['LOG_MAX_FILES'], 10)
           : undefined,
-        METRICS_PORT: process.env.METRICS_PORT
-          ? parseInt(process.env.METRICS_PORT, 10)
+        METRICS_PORT: process.env['METRICS_PORT']
+          ? parseInt(process.env['METRICS_PORT'], 10)
           : undefined,
-        BOT_SAFE_MODE: process.env.BOT_SAFE_MODE
-          ? process.env.BOT_SAFE_MODE.toLowerCase() === "true"
+        BOT_SAFE_MODE: process.env['BOT_SAFE_MODE']
+          ? process.env['BOT_SAFE_MODE'].toLowerCase() === "true"
           : undefined,
-        FEATURE_AUTO_EAT: process.env.FEATURE_AUTO_EAT
-          ? process.env.FEATURE_AUTO_EAT.toLowerCase() === "true"
+        FEATURE_AUTO_EAT: process.env['FEATURE_AUTO_EAT']
+          ? process.env['FEATURE_AUTO_EAT'].toLowerCase() === "true"
           : undefined,
-        FEATURE_AUTO_COLLECT: process.env.FEATURE_AUTO_COLLECT
-          ? process.env.FEATURE_AUTO_COLLECT.toLowerCase() === "true"
+        FEATURE_AUTO_COLLECT: process.env['FEATURE_AUTO_COLLECT']
+          ? process.env['FEATURE_AUTO_COLLECT'].toLowerCase() === "true"
           : undefined,
-        FEATURE_PATHFINDING: process.env.FEATURE_PATHFINDING
-          ? process.env.FEATURE_PATHFINDING.toLowerCase() === "true"
+        FEATURE_PATHFINDING: process.env['FEATURE_PATHFINDING']
+          ? process.env['FEATURE_PATHFINDING'].toLowerCase() === "true"
           : undefined,
-        FEATURE_WORLD_TRACKING: process.env.FEATURE_WORLD_TRACKING
-          ? process.env.FEATURE_WORLD_TRACKING.toLowerCase() === "true"
+        FEATURE_WORLD_TRACKING: process.env['FEATURE_WORLD_TRACKING']
+          ? process.env['FEATURE_WORLD_TRACKING'].toLowerCase() === "true"
           : undefined,
-        METRICS_ENABLED: process.env.METRICS_ENABLED
-          ? process.env.METRICS_ENABLED.toLowerCase() === "true"
+        METRICS_ENABLED: process.env['METRICS_ENABLED']
+          ? process.env['METRICS_ENABLED'].toLowerCase() === "true"
           : undefined,
       };
 
@@ -258,24 +259,24 @@ export class ConfigManager {
   public async migrateConfig(
     oldConfig: Record<string, string>
   ): Promise<Record<string, string>> {
-    const currentVersion = oldConfig.CONFIG_VERSION || ConfigVersion.V1_0_0;
+    const currentVersion = oldConfig['CONFIG_VERSION'] || ConfigVersion.V1_0_0;
     const migratedConfig = { ...oldConfig };
 
     // Migration from V1_0_0 to V1_1_0
     if (currentVersion === ConfigVersion.V1_0_0) {
       // Add new feature flags
-      migratedConfig.FEATURE_AUTO_EAT = "true";
-      migratedConfig.FEATURE_AUTO_COLLECT = "true";
-      migratedConfig.FEATURE_PATHFINDING = "true";
-      migratedConfig.FEATURE_WORLD_TRACKING = "true";
+      migratedConfig['FEATURE_AUTO_EAT'] = "true";
+      migratedConfig['FEATURE_AUTO_COLLECT'] = "true";
+      migratedConfig['FEATURE_PATHFINDING'] = "true";
+      migratedConfig['FEATURE_WORLD_TRACKING'] = "true";
 
       // Add metrics settings
-      migratedConfig.METRICS_ENABLED = "true";
-      migratedConfig.METRICS_PORT = "9090";
-      migratedConfig.METRICS_PREFIX = "minecraft_bot_";
+      migratedConfig['METRICS_ENABLED'] = "true";
+      migratedConfig['METRICS_PORT'] = "9090";
+      migratedConfig['METRICS_PREFIX'] = "minecraft_bot_";
 
       // Update version
-      migratedConfig.CONFIG_VERSION = ConfigVersion.V1_1_0;
+      migratedConfig['CONFIG_VERSION'] = ConfigVersion.V1_1_0;
     }
 
     return migratedConfig;

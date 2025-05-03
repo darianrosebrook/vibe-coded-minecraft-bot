@@ -193,23 +193,81 @@ export interface MiningState {
   performance: MiningPerformance;
 }
 
+/**
+ * Consolidated MiningMLState interface that combines all mining-related state information
+ * for machine learning operations.
+ */
 export interface MiningMLState {
+  // Resource tracking
   resourceDistribution: {
     type: string;
     positions: Vec3[];
     quantities: number[];
     efficiency: number;
   };
+  
+  // Current mining target
+  targetBlock?: string;
+  position?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  
+  // Environment information
+  surroundingBlocks?: Array<{
+    type: string;
+    position: {
+      x: number;
+      y: number;
+      z: number;
+    };
+  }>;
+  biome?: string;
+  lightLevel?: number;
+  
+  // Mining path and navigation
   miningPath: {
     waypoints: Vec3[];
     distance: number;
     efficiency: number;
   };
+  
+  // Tool and equipment
+  tool?: string;
+  toolDurability?: number;
+  
+  // Performance metrics
   performance: {
     miningEfficiency: number;
     resourceDiscoveryRate: number;
     toolDurability: number;
+    blocksPerMinute: number;
+    pathEfficiency: number;
   };
+  
+  // Predictions and risk assessment
+  predictedYield?: number;
+  riskAssessment?: {
+    lava: number;
+    water: number;
+    mobs: number;
+    fall: number;
+  };
+  
+  // Mining pattern information
+  miningPattern?: {
+    type: 'strip' | 'branch' | 'quarry';
+    direction: 'north' | 'south' | 'east' | 'west';
+    depth: number;
+  };
+  
+  // Recent mining history
+  recentOres?: Array<{
+    type: string;
+    count: number;
+    location: Vec3;
+  }>;
 }
 
 /**
@@ -363,11 +421,4 @@ export interface MiningInventory {
  *   estimatedTime: 120
  * };
  * ```
- */
-export interface MiningPath {
-  start: Position;
-  end: Position;
-  waypoints: Position[];
-  difficulty: 'easy' | 'medium' | 'hard';
-  estimatedTime: number;
-} 
+ */ 

@@ -8,7 +8,9 @@ This directory contains all type definitions for the Minecraft bot project. The 
 src/types/
 ├── README.md                 # This documentation file
 ├── index.ts                  # Main type exports (barrel file)
-├── common.ts                 # Common types used across the project
+├── common.ts                 # Common types file
+├── common/                   # Common types directory
+│   └── index.d.ts           # Common types declarations
 ├── bot/                      # Bot-specific types
 │   └── index.ts              # Bot types barrel export
 ├── core/                     # Core system types
@@ -25,8 +27,10 @@ src/types/
 │   └── ml-packages.d.ts      # ML package type declarations
 ├── modules/                  # Module-specific types
 │   └── index.ts              # Module types barrel export
-└── task/                     # Task-related types
-    └── index.ts              # Task types barrel export
+├── task/                     # Task-related types
+│   └── index.ts              # Task types barrel export
+└── world/                    # World-related types
+    └── index.ts              # World types barrel export
 ```
 
 ## Type Categories

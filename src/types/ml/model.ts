@@ -96,7 +96,7 @@ export interface NeuralNetworkConfig extends BaseModelConfig {
  * };
  * ```
  */
-export interface TrainingData {
+export interface ModelTrainingData {
   inputs: Array<Record<string, any>>;
   outputs: Array<Record<string, any>>;
 }
@@ -367,7 +367,7 @@ export interface Layer {
   parameters?: Record<string, any>;
 }
 
-export interface ValidationMetrics {
+export interface ModelValidationMetrics {
   accuracy: number;
   precision: number;
   recall: number;
@@ -389,6 +389,6 @@ export interface ModelUpdates {
   type: string;
   changes: Record<string, any>;
   timestamp: number;
-  metrics: ValidationMetrics;
+  metrics: ModelValidationMetrics;
   metadata?: Record<string, any>;
 } 

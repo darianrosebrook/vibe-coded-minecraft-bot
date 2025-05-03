@@ -87,12 +87,11 @@ export class RedstoneOptimizer {
       const connectedDevices = connections
         .filter(conn => conn.from === devices.indexOf(device) || conn.to === devices.indexOf(device))
         .map(conn => devices[conn.from === devices.indexOf(device) ? conn.to : conn.from]);
-
       // Move device closer to connected devices
       if (connectedDevices.length > 0) {
-        const avgX = connectedDevices.reduce((sum, d) => sum + d.position.x, 0) / connectedDevices.length;
-        const avgY = connectedDevices.reduce((sum, d) => sum + d.position.y, 0) / connectedDevices.length;
-        const avgZ = connectedDevices.reduce((sum, d) => sum + d.position.z, 0) / connectedDevices.length;
+        const avgX = connectedDevices.reduce((sum, d) => sum + (d?.position.x ?? 0), 0) / connectedDevices.length;
+        const avgY = connectedDevices.reduce((sum, d) => sum + (d?.position.y ?? 0), 0) / connectedDevices.length;
+        const avgZ = connectedDevices.reduce((sum, d) => sum + (d?.position.z ?? 0), 0) / connectedDevices.length;
 
         return {
           ...device,

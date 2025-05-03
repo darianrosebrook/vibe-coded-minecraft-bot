@@ -70,16 +70,24 @@ export abstract class BaseModel implements Model {
         const batchLabels = trainData.labels.slice(i, i + batchSize);
 
         for (let j = 0; j < batchFeatures.length; j++) {
-          const prediction = await this.predict([batchFeatures[j]]);
-          const error = batchLabels[j] - prediction;
+          const featureValue = batchFeatures[j];
+          const labelValue = batchLabels[j];
+          
+          // Skip undefined values
+          if (featureValue === undefined || labelValue === undefined) {
+            continue;
+          }
+          
+          const prediction = await this.predict([featureValue]);
+          const error = labelValue - prediction;
 
           // Update weights
           this.weights = this.weights.map((weight, k) =>
-            weight + this.learningRate * error * batchFeatures[j]);
+            weight + this.learningRate * error * featureValue);
           this.bias += this.learningRate * error;
 
           totalLoss += Math.pow(error, 2);
-          correctPredictions += Math.abs(prediction - batchLabels[j]) < 0.5 ? 1 : 0;
+          correctPredictions += Math.abs(prediction - labelValue) < 0.5 ? 1 : 0;
         }
       }
 
@@ -91,10 +99,18 @@ export abstract class BaseModel implements Model {
       let valCorrect = 0;
 
       for (let i = 0; i < valData.features.length; i++) {
-        const prediction = await this.predict([valData.features[i]]);
-        const error = valData.labels[i] - prediction;
+        const featureValue = valData.features[i];
+        const labelValue = valData.labels[i];
+        
+        // Skip undefined values
+        if (featureValue === undefined || labelValue === undefined) {
+          continue;
+        }
+        
+        const prediction = await this.predict([featureValue]);
+        const error = labelValue - prediction;
         valLoss += Math.pow(error, 2);
-        valCorrect += Math.abs(prediction - valData.labels[i]) < 0.5 ? 1 : 0;
+        valCorrect += Math.abs(prediction - labelValue) < 0.5 ? 1 : 0;
       }
 
       finalValLoss = valLoss / valData.features.length;
@@ -162,8 +178,12 @@ export class ResourceNeedModel extends BaseModel {
       this.initializeWeights(features.length);
     }
 
-    const prediction = this.weights.reduce((sum, weight, i) =>
-      sum + weight * features[i], this.bias);
+    const prediction = this.weights.reduce((sum, weight, i) => {
+      // Handle cases where features[i] might be undefined
+      const featureValue = features[i] !== undefined ? features[i] : 0;
+      return sum + weight * featureValue;
+    }, this.bias);
+    
     return this.sigmoid(prediction);
   }
 }
@@ -174,8 +194,12 @@ export class PlayerRequestModel extends BaseModel {
       this.initializeWeights(features.length);
     }
 
-    const prediction = this.weights.reduce((sum, weight, i) =>
-      sum + weight * features[i], this.bias);
+    const prediction = this.weights.reduce((sum, weight, i) => {
+      // Handle cases where features[i] might be undefined
+      const featureValue = features[i] !== undefined ? features[i] : 0;
+      return sum + weight * featureValue;
+    }, this.bias);
+    
     return this.sigmoid(prediction);
   }
 }
@@ -186,8 +210,12 @@ export class TaskDurationModel extends BaseModel {
       this.initializeWeights(features.length);
     }
 
-    const prediction = this.weights.reduce((sum, weight, i) =>
-      sum + weight * features[i], this.bias);
+    const prediction = this.weights.reduce((sum, weight, i) => {
+      // Handle cases where features[i] might be undefined
+      const featureValue = features[i] !== undefined ? features[i] : 0;
+      return sum + weight * featureValue;
+    }, this.bias);
+    
     return this.sigmoid(prediction);
   }
 }

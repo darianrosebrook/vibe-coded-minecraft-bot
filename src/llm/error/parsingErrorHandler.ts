@@ -70,22 +70,24 @@ export class ParsingErrorHandler {
   }
 
   public getUserFriendlyMessage(context: ParsingErrorContext): string {
+    const { command, parsedTask, validationErrors, llmResponse } = context;
     return ErrorMessageFormatter.formatMessage(context.parsingErrorType, {
-      command: context.command,
-      task: context.parsedTask,
-      validationErrors: context.validationErrors,
-      llmResponse: context.llmResponse,
+      command: command ?? '',
+      task: parsedTask ?? {},
+      validationErrors: validationErrors ?? [],
+      llmResponse: llmResponse ?? '',
     });
   }
 
   public getDetailedExplanation(context: ParsingErrorContext): string {
+    const { command, parsedTask, validationErrors, llmResponse } = context;
     return ErrorMessageFormatter.getDetailedExplanation(
       context.parsingErrorType,
       {
-        command: context.command,
-        task: context.parsedTask,
-        validationErrors: context.validationErrors,
-        llmResponse: context.llmResponse,
+        command: command ?? '',
+        task: parsedTask ?? {},
+        validationErrors: validationErrors ?? [],
+        llmResponse: llmResponse ?? '',
       }
     );
   }

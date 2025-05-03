@@ -1,7 +1,7 @@
-import { EnhancedGameState } from '@/types';
-import { TaskHistory } from '@/types';
-import { CommandPattern } from '@/types';
-import { PerformanceMetrics } from '@/types';
+import { EnhancedGameState } from '@/types/ml/state';
+import { TaskHistory } from '@/types/ml/state';
+import { CommandPattern } from '@/types/ml/command';
+import { PerformanceMetrics } from '@/types/ml/performance';
 
 export interface FeedbackData {
   taskId: string;
@@ -192,8 +192,8 @@ export class MLFeedbackSystem {
     };
     
     const normalizedMetrics = metrics.map(m => ({
-      cpuUsage: m.cpuUsage / 100,
-      memoryUsage: m.memoryUsage / 100,
+      cpuUsage: m.resourceUsage.cpu / 100,
+      memoryUsage: m.resourceUsage.memory / 100,
       networkLatency: Math.min(m.networkLatency / 1000, 1),
       inferenceTime: Math.min(m.inferenceTime / 1000, 1),
       throughput: m.throughput / 1000,

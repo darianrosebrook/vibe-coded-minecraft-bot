@@ -1,5 +1,6 @@
+import { ExecutionState, ValidationStatus, TaskNode as TaskNodeInterface } from '@/tasks/dependency/types';
 import { Task } from '@/types';
-import { TaskNode as TaskNodeInterface, ValidationStatus, ExecutionState } from '@/types';
+
 
 export class TaskNode implements TaskNodeInterface {
   public readonly id: string;

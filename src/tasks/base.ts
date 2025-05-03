@@ -1,18 +1,22 @@
 import { Bot as MineflayerBot } from 'mineflayer';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';
-import { Task, BaseTaskInterface, TaskProgress, TaskResult, TaskParameters, TaskStatus } from '@/types/task';
 import { CommandHandler } from '../commands';
-import { TaskStorage, StorageConfig } from '../storage/taskStorage';
+import { TaskStorage, StorageConfig, TaskResult } from '../storage/taskStorage';
 import { ErrorHandler, ErrorContext } from '../error/errorHandler';
 import { MinecraftBot } from '../bot/bot';
-import { Position } from '@/types/common';
 import { MLStateManager } from '../ml/state/manager';
 import { WorldTracker } from '../bot/worldTracking';
 import { CentralizedDataCollector } from '../ml/state/centralized_data_collector';
 import { TrainingDataStorage } from '../ml/state/training_data_storage';
 import { Vec3 } from 'vec3';
 import { goals } from 'mineflayer-pathfinder';
+import { Task, TaskStatus, TaskType } from '@/types/task';
+import { TaskProgress } from '@/types/task';
+import { BaseTaskInterface, TaskParameters } from '@/types/task';
+import { Position } from '@/types/core';
+import { PerformanceTracker } from '@/utils/observability/performance';
+import { IDataCollector } from '@/types/ml/interfaces';
 
 export interface BaseTaskOptions {
   maxRetries?: number;
@@ -26,9 +30,7 @@ export interface BaseTaskOptions {
 export type TaskOptions = TaskParameters & BaseTaskOptions;
 
 export abstract class BaseTask implements BaseTaskInterface {
-  protected bot: MinecraftBot;
   protected mineflayerBot: MineflayerBot;
-  protected commandHandler: CommandHandler;
   protected taskId: string | null = null;
   protected totalProgress: number = 0;
   protected currentProgress: number = 0;
@@ -51,19 +53,24 @@ export abstract class BaseTask implements BaseTaskInterface {
   protected stopRequested: boolean = false;
 
   // ML and State Management
-  protected readonly stateManager: MLStateManager;
-  protected readonly worldTracker: WorldTracker;
-  protected readonly dataCollector: CentralizedDataCollector;
-  protected readonly trainingStorage: TrainingDataStorage;
+  protected stateManager: MLStateManager;
+  protected worldTracker: WorldTracker;
+  protected dataCollector: IDataCollector;
+  protected trainingStorage: TrainingDataStorage;
   protected useML: boolean = false;
   protected radius: number = 10;
   protected isStopped: boolean = false;
   protected progress: number = 0;
 
-  constructor(bot: MinecraftBot, commandHandler: CommandHandler, options: TaskOptions) {
-    this.bot = bot;
+  // Performance Tracking
+  protected performanceTracker: PerformanceTracker;
+
+  constructor(
+    protected bot: MinecraftBot,
+    protected commandHandler: CommandHandler,
+    options: TaskOptions
+  ) {
     this.mineflayerBot = bot.getMineflayerBot();
-    this.commandHandler = commandHandler;
     this.storage = new TaskStorage('./data');
     this.errorHandler = new ErrorHandler(bot);
     this.options = {
@@ -78,9 +85,25 @@ export abstract class BaseTask implements BaseTaskInterface {
     // Initialize ML and state management
     this.stateManager = new MLStateManager(bot);
     this.worldTracker = new WorldTracker(bot);
-    this.dataCollector = new CentralizedDataCollector(this.mineflayerBot);
+    this.dataCollector = bot.getMLManager().getDataCollector();
     this.trainingStorage = new TrainingDataStorage();
     this.useML = this.options.useML || false;
+
+    // Initialize performance tracker
+    this.performanceTracker = new PerformanceTracker();
+  }
+
+  public async initialize(): Promise<void> {
+    this.performanceTracker.startTracking(`${this.constructor.name}_initialization`);
+    
+    // Initialize storage
+    this.storage = new TaskStorage('task_data');
+    this.trainingStorage = new TrainingDataStorage();
+    
+    // Initialize world tracker
+    this.worldTracker = new WorldTracker(this.bot);
+    
+    this.performanceTracker.endTracking(`${this.constructor.name}_initialization`);
   }
 
   public async execute(task: Task | null, taskId: string): Promise<TaskResult> {
@@ -88,12 +111,24 @@ export abstract class BaseTask implements BaseTaskInterface {
     this.startTime = Date.now();
     this.retryCount = 0;
 
+    // Set active task in the MinecraftBot for ML tracking
+    const taskType = task?.type || 'unknown';
+    const taskInfo = {
+      ...task?.parameters,
+      taskId: taskId
+    };
+    this.bot.setActiveTask(taskType, taskInfo);
+
     try {
       await this.validateTask();
       await this.initializeProgress();
       await this.performTask();
       this.endTime = Date.now();
       metrics.tasksCompleted.inc({ task_type: task?.type || 'unknown' });
+      
+      // Clear active task when complete
+      this.bot.clearActiveTask();
+      
       return {
         success: true,
         task: task!,
@@ -106,6 +141,10 @@ export abstract class BaseTask implements BaseTaskInterface {
         task_type: task?.type || 'unknown',
         error_type: this.error.message,
       });
+      
+      // Clear active task on failure
+      this.bot.clearActiveTask();
+      
       return {
         success: false,
         task: task!,
@@ -141,13 +180,16 @@ export abstract class BaseTask implements BaseTaskInterface {
   public async updateProgress(progress: number): Promise<void> {
     this.currentProgress = Math.min(Math.max(progress, 0), this.totalProgress);
     const now = Date.now();
-    
+
+    // Update task progress in the MinecraftBot for ML tracking
+    this.bot.updateTaskProgress(this.currentProgress);
+
     // Calculate estimated time remaining
     if (this.progressHistory.length > 0) {
       const timeElapsed = now - this.startTime;
       const progressPerMs = this.currentProgress / timeElapsed;
-      this.estimatedTimeRemaining = progressPerMs > 0 
-        ? (100 - this.currentProgress) / progressPerMs 
+      this.estimatedTimeRemaining = progressPerMs > 0
+        ? (100 - this.currentProgress) / progressPerMs
         : 0;
     }
 
@@ -169,8 +211,8 @@ export abstract class BaseTask implements BaseTaskInterface {
 
     const taskProgress: TaskProgress = {
       taskId: this.taskId!,
-      currentProgress: this.currentProgress,
-      totalProgress: this.totalProgress,
+      current: this.currentProgress,
+      total: this.totalProgress,
       status: this.status,
       estimatedTimeRemaining: Math.round(this.estimatedTimeRemaining / 1000), // Convert to seconds
       currentLocation: this.currentLocation,
@@ -178,7 +220,9 @@ export abstract class BaseTask implements BaseTaskInterface {
       retryCount: this.retryCount,
       progressHistory: this.progressHistory,
       lastUpdated: now,
-      created: this.startTime
+      created: this.startTime,
+      currentProgress: this.currentProgress,
+      totalProgress: this.totalProgress,
     };
 
     // Save progress to storage
@@ -253,13 +297,17 @@ export abstract class BaseTask implements BaseTaskInterface {
       x: this.currentLocation.x,
       y: this.currentLocation.y,
       z: this.currentLocation.z,
-      yaw: this.currentLocation.yaw,
-      pitch: this.currentLocation.pitch
     };
   }
 
   public stop(): void {
     this.stopRequested = true;
+    this.mineflayerBot.pathfinder?.stop();
+    
+    // Clear active task when stopped
+    this.bot.clearActiveTask();
+    
+    logger.info('Task stopped', { taskId: this.taskId });
   }
 
   protected async navigateTo(position: Vec3): Promise<void> {
@@ -270,21 +318,21 @@ export abstract class BaseTask implements BaseTaskInterface {
     if (this.options.usePathfinding) {
       const goal = new goals.GoalBlock(position.x, position.y, position.z);
       const movements = this.mineflayerBot.pathfinder.movements;
-      
+
       if (this.options.avoidWater) {
         movements.allowSprinting = true;
         movements.allowParkour = true;
       }
-      
+
       await this.mineflayerBot.pathfinder.goto(goal);
     } else {
       await this.mineflayerBot.lookAt(position);
       await this.mineflayerBot.setControlState('forward', true);
-      
+
       while (this.mineflayerBot.entity.position.distanceTo(position) > 1) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
+
       await this.mineflayerBot.setControlState('forward', false);
     }
   }
@@ -298,16 +346,16 @@ export abstract class BaseTask implements BaseTaskInterface {
 
   protected async updateMLState(): Promise<void> {
     if (!this.useML) return;
-    
+
     const baseState = {
       position: this.mineflayerBot.entity.position,
       inventory: this.mineflayerBot.inventory.items(),
       biome: this.mineflayerBot.world.getBiome(this.mineflayerBot.entity.position)
     };
-    
+
     const taskState = await this.getTaskSpecificState();
     const state = { ...baseState, ...taskState };
-    
+
     await this.collectTrainingData({
       type: this.constructor.name.toLowerCase(),
       state,
@@ -320,7 +368,7 @@ export abstract class BaseTask implements BaseTaskInterface {
 
   protected async initializeMLState(): Promise<void> {
     if (!this.useML) return;
-    
+
     try {
       await this.stateManager.updateStateAsync();
       await this.dataCollector.recordPrediction(
@@ -343,7 +391,7 @@ export abstract class BaseTask implements BaseTaskInterface {
 
   protected async collectTrainingData(data: any): Promise<void> {
     if (!this.useML) return;
-    
+
     try {
       await this.dataCollector.recordPrediction(
         'training_data',
@@ -356,5 +404,21 @@ export abstract class BaseTask implements BaseTaskInterface {
     } catch (error) {
       logger.error('Failed to collect training data', { error });
     }
+  }
+
+  protected getDataCollector(): IDataCollector {
+    return this.dataCollector;
+  }
+
+  protected getStorage(): TaskStorage {
+    return this.storage;
+  }
+
+  protected getTrainingStorage(): TrainingDataStorage {
+    return this.trainingStorage;
+  }
+
+  protected getWorldTracker(): WorldTracker {
+    return this.worldTracker;
   }
 } 

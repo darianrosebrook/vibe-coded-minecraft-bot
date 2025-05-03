@@ -1,110 +1,147 @@
-import { EnhancedGameState } from '@/types';
-import { MLError } from '../error/MLErrorSystem';
-import { FeedbackData } from '../feedback/MLFeedbackSystem';
-import { InteractionLog, StateChangeLog, ResourceChangeLog } from '../data/MLDataCollector';
+import logger from '@/utils/observability/logger';
+import { ITrainingDataStorage } from '@/types/ml/interfaces';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { Stats } from 'fs';
 
-export interface DataVersion {
-  version: number;
-  timestamp: number;
-  description: string;
-  dataType: string;
+interface FileStats {
+  file: string;
+  stats: Stats;
 }
 
-export class MLDataManager {
-  private dataVersions: Map<string, DataVersion[]> = new Map();
-  private currentVersion: Map<string, number> = new Map();
-  private dataStore: Map<string, any[]> = new Map();
+export class MLDataManager implements ITrainingDataStorage {
+  private dataPath: string;
+  private isInitialized: boolean = false;
+  private writeQueue: Promise<void> = Promise.resolve();
+  private lock: boolean = false;
 
-  constructor() {
-    // Initialize data manager
+  constructor(dataPath: string) {
+    this.dataPath = path.resolve(dataPath);
   }
 
-  public async storeData(type: string, data: any): Promise<void> {
-    const version = this.getNextVersion(type);
-    const dataVersion: DataVersion = {
-      version,
-      timestamp: Date.now(),
-      description: `Version ${version} of ${type}`,
-      dataType: type
-    };
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
 
-    const versions = this.dataVersions.get(type) || [];
-    versions.push(dataVersion);
-    this.dataVersions.set(type, versions);
-    this.currentVersion.set(type, version);
-
-    // Store the actual data
-    const dataArray = this.dataStore.get(type) || [];
-    dataArray.push(data);
-    this.dataStore.set(type, dataArray);
-  }
-
-  public async storeGameState(state: EnhancedGameState): Promise<void> {
-    await this.storeData('gameState', state);
-  }
-
-  public async storeError(error: MLError): Promise<void> {
-    await this.storeData('errors', error);
-  }
-
-  public async storeFeedback(feedback: FeedbackData): Promise<void> {
-    await this.storeData('feedback', feedback);
-  }
-
-  private getNextVersion(type: string): number {
-    return (this.currentVersion.get(type) || 0) + 1;
-  }
-
-  public async getData(type: string, version?: number): Promise<any> {
-    if (!version) {
-      version = this.currentVersion.get(type);
-    }
-    const dataArray = this.dataStore.get(type) || [];
-    return dataArray[version! - 1] || null;
-  }
-
-  public async getAllData(type: string): Promise<any[]> {
-    return this.dataStore.get(type) || [];
-  }
-
-  public async rollback(type: string, version: number): Promise<boolean> {
     try {
-      const dataArray = this.dataStore.get(type) || [];
-      if (version > dataArray.length) {
-        throw new Error(`Version ${version} does not exist for type ${type}`);
-      }
-      
-      this.currentVersion.set(type, version);
-      return true;
+      await this.ensureDataDirectory();
+      this.isInitialized = true;
+      logger.info('MLDataManager initialized successfully');
     } catch (error) {
-      console.error(`Failed to rollback ${type} to version ${version}:`, error);
-      return false;
+      logger.error('Failed to initialize MLDataManager', { error });
+      throw error;
     }
   }
 
-  public getVersionHistory(type: string): DataVersion[] {
-    return this.dataVersions.get(type) || [];
+  private async ensureDataDirectory(): Promise<void> {
+    try {
+      await fs.mkdir(this.dataPath, { recursive: true });
+    } catch (error) {
+      logger.error('Failed to create data directory', { error, path: this.dataPath });
+      throw error;
+    }
   }
 
-  public async clearData(type: string): Promise<void> {
-    this.dataStore.delete(type);
-    this.dataVersions.delete(type);
-    this.currentVersion.delete(type);
+  private async acquireLock(): Promise<void> {
+    while (this.lock) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    this.lock = true;
   }
 
-  public async getInteractionLogs(): Promise<InteractionLog[]> {
-    return this.getAllData('interactions');
+  private releaseLock(): void {
+    this.lock = false;
   }
 
-  public async getStateChangeLogs(): Promise<StateChangeLog[]> {
-    return this.getAllData('stateChanges');
+  public async storeTrainingData(type: string, data: any, version: number): Promise<void> {
+    if (!this.isInitialized) {
+      throw new Error('MLDataManager not initialized');
+    }
+
+    try {
+      await this.acquireLock();
+      this.writeQueue = this.writeQueue.then(async () => {
+        try {
+          const filePath = path.join(this.dataPath, `${type}_v${version}.json`);
+          await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+        } catch (error) {
+          logger.error(`Failed to store ${type} data`, { error, data });
+          throw error;
+        }
+      });
+    } finally {
+      this.releaseLock();
+    }
   }
 
-  public async getResourceChangeLogs(): Promise<ResourceChangeLog[]> {
-    return this.getAllData('resourceChanges');
+  public async getTrainingData(type: string, version?: number): Promise<any> {
+    if (!this.isInitialized) {
+      throw new Error('MLDataManager not initialized');
+    }
+
+    try {
+      if (version) {
+        const filePath = path.join(this.dataPath, `${type}_v${version}.json`);
+        const fileData = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(fileData);
+      } else {
+        // Get latest version
+        const files = await fs.readdir(this.dataPath);
+        const typeFiles = files.filter(f => f.startsWith(`${type}_v`));
+        if (typeFiles.length === 0) return null;
+        
+        const latestFile = typeFiles.sort().pop()!;
+        const filePath = path.join(this.dataPath, latestFile);
+        const fileData = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(fileData);
+      }
+    } catch (error) {
+      logger.error(`Failed to get ${type} data`, { error });
+      return null;
+    }
   }
 
-  public async getFeatures(type: string): Promise<any[]> {
-    return this.getAllData(`${type}Features`);
+  public async cleanup(maxSize: number): Promise<void> {
+    if (!this.isInitialized) {
+      throw new Error('MLDataManager not initialized');
+    }
+
+    try {
+      await this.acquireLock();
+      const files = await fs.readdir(this.dataPath);
+      
+      // Sort files by modification time
+      const fileStats: FileStats[] = await Promise.all(
+        files.map(async file => {
+          const stats = await fs.stat(path.join(this.dataPath, file));
+          return { file, stats };
+        })
+      );
+      
+      fileStats.sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs);
+      
+      // Remove oldest files if total size exceeds maxSize
+      let totalSize = 0;
+      for (const { file, stats } of fileStats) {
+        totalSize += stats.size;
+        if (totalSize > maxSize) {
+          await fs.unlink(path.join(this.dataPath, file));
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to cleanup data', { error });
+      throw error;
+    } finally {
+      this.releaseLock();
+    }
+  }
+
+  public async shutdown(): Promise<void> {
+    try {
+      await this.writeQueue;
+      this.isInitialized = false;
+    } catch (error) {
+      logger.error('Failed to shutdown MLDataManager', { error });
+      throw error;
+    }
   }
 } 

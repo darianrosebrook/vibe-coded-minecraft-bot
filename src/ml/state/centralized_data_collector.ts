@@ -2,6 +2,7 @@ import { mlMetrics } from '../../utils/observability/metrics';
 import { Bot } from 'mineflayer';
 import { DataPreprocessor, ProcessedData } from './data_preprocessor';
 import { z } from 'zod';
+import { IDataCollector } from '@/types/ml/interfaces';
 
 // Schema definitions for data validation
 const PredictionRecordSchema = z.object({
@@ -48,7 +49,7 @@ export interface TrainingData {
   processedData?: ProcessedData;
 }
 
-export class CentralizedDataCollector {
+export class CentralizedDataCollector implements IDataCollector {
   private bot: Bot;
   private predictionHistory: Map<string, PredictionRecord[]>;
   private currentBatch: Map<string, PredictionRecord[]>;
@@ -57,6 +58,7 @@ export class CentralizedDataCollector {
   private batchTimer: NodeJS.Timeout | null;
   private preprocessor: DataPreprocessor;
   private validationErrors: Map<string, Error[]>;
+  private isInitialized: boolean = false;
 
   constructor(
     bot: Bot,
@@ -73,58 +75,90 @@ export class CentralizedDataCollector {
     this.validationErrors = new Map();
   }
 
-  public start() {
-    this.batchTimer = setInterval(() => this.processBatch(), this.batchInterval);
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+
+    try {
+      this.isInitialized = true;
+      mlMetrics.stateUpdates.inc({ type: 'collector_initialized' });
+    } catch (error) {
+      mlMetrics.stateUpdates.inc({ type: 'collector_initialization_failed' });
+      throw error;
+    }
   }
 
-  public stop() {
+  public async shutdown(): Promise<void> {
+    try {
+      this.stop();
+      await this.processBatch(); // Process any remaining data
+      this.isInitialized = false;
+      mlMetrics.stateUpdates.inc({ type: 'collector_shutdown' });
+    } catch (error) {
+      mlMetrics.stateUpdates.inc({ type: 'collector_shutdown_failed' });
+      throw error;
+    }
+  }
+
+  public start(): void {
+    if (!this.isInitialized) {
+      throw new Error('CentralizedDataCollector not initialized');
+    }
+    this.batchTimer = setInterval(() => this.processBatch(), this.batchInterval);
+    mlMetrics.stateUpdates.inc({ type: 'collector_started' });
+  }
+
+  public stop(): void {
     if (this.batchTimer) {
       clearInterval(this.batchTimer);
       this.batchTimer = null;
     }
-    this.processBatch(); // Process any remaining data
+    mlMetrics.stateUpdates.inc({ type: 'collector_stopped' });
   }
 
   public async recordPrediction(
-    predictionType: string,
+    type: string,
     input: any,
     output: any,
     success: boolean,
     confidence: number,
-    executionTime: number,
-    metadata?: Record<string, any>
-  ) {
-    const record: PredictionRecord = {
+    latency: number,
+    metadata?: any
+  ): Promise<void> {
+    if (!this.isInitialized) {
+      throw new Error('CentralizedDataCollector not initialized');
+    }
+
+    const record = {
       timestamp: Date.now(),
-      predictionType,
+      predictionType: type,
       input,
       output,
       success,
       confidence,
-      executionTime,
+      executionTime: latency,
       metadata
-    };
+    } as PredictionRecord;
 
     // Validate record
     try {
       PredictionRecordSchema.parse(record);
     } catch (error) {
-      this.logValidationError(predictionType, error);
+      this.logValidationError(type, error);
       return;
     }
 
     // Add to current batch
-    if (!this.currentBatch.has(predictionType)) {
-      this.currentBatch.set(predictionType, []);
+    if (!this.currentBatch.has(type)) {
+      this.currentBatch.set(type, []);
     }
-    this.currentBatch.get(predictionType)!.push(record);
+    this.currentBatch.get(type)!.push(record);
 
     // Update metrics
     mlMetrics.stateUpdates.inc({ type: 'prediction_recorded' });
-    mlMetrics.predictionLatency.observe({ type: predictionType }, executionTime);
+    mlMetrics.predictionLatency.observe({ type }, latency);
 
     // Process batch if size limit reached
-    if (this.currentBatch.get(predictionType)!.length >= this.batchSize) {
+    if (this.currentBatch.get(type)!.length >= this.batchSize) {
       await this.processBatch();
     }
   }
@@ -216,8 +250,12 @@ export class CentralizedDataCollector {
     console.log(`Processed data for ${predictionType}:`, processedData);
   }
 
-  public getTrainingData(predictionType: string): TrainingData | null {
-    const predictions = this.predictionHistory.get(predictionType);
+  public getTrainingData(type: string): any {
+    if (!this.isInitialized) {
+      throw new Error('CentralizedDataCollector not initialized');
+    }
+
+    const predictions = this.predictionHistory.get(type);
     if (!predictions) return null;
 
     const metrics = this.calculateMetrics(predictions);

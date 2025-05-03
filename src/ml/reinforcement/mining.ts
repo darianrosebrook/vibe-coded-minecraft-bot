@@ -87,6 +87,19 @@ export class MiningStrategyAgent extends BaseQLearningAgent {
         
         if (valuableBlocks.length > 0) {
             const randomBlock = valuableBlocks[Math.floor(Math.random() * valuableBlocks.length)];
+            if (!randomBlock) {
+                return {
+                    type: 'move',
+                    parameters: {
+                        target: new Vec3(
+                            state.position.x + (Math.random() * 10 - 5),
+                            state.position.y,
+                            state.position.z + (Math.random() * 10 - 5)
+                        )
+                    }
+                };
+            }
+            
             return {
                 type: 'mine',
                 parameters: {
@@ -125,10 +138,17 @@ export class MiningStrategyAgent extends BaseQLearningAgent {
                 bestQValue = qValue;
                 // Convert action key back to action object
                 const [type, params] = actionKey.split(':');
-                bestAction = {
-                    type: type as any,
-                    parameters: JSON.parse(params)
-                };
+                if (params) {
+                    bestAction = {
+                        type: type as any,
+                        parameters: JSON.parse(params)
+                    };
+                } else {
+                    bestAction = {
+                        type: type as any,
+                        parameters: {}
+                    };
+                }
             }
         }
 

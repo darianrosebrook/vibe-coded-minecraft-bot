@@ -1,4 +1,3 @@
-import { TaskContext, TaskParseResult, SystemMetrics, DebugInfo, TaskParserConfig } from '@/types';
 import { ParsingErrorHandler } from './error/handler';
 import { TaskResolutionSystem } from './resolution/system';
 
@@ -13,6 +12,8 @@ import { OllamaClient } from '../utils/llmClient';
 import { ZodSchemaValidator } from '../utils/taskValidator';
 import { configManager } from '../config/configManager';
 import { ParsingError } from './error/handler';
+import { DebugInfo, TaskContext, TaskParserConfig, TaskParseResult } from './types';
+import { SystemMetrics } from './types';
 
 export class TaskParsingSystem {
   private parser: TaskParser;
@@ -27,13 +28,67 @@ export class TaskParsingSystem {
     const schemaValidator = new ZodSchemaValidator();
     const typeResolver = new TaskTypeResolver();
     const config = configManager.getConfig();
-    const bot = new MinecraftBot({
+    const botConfig = {
       host: config.MINECRAFT_HOST,
       port: config.MINECRAFT_PORT,
       username: config.MINECRAFT_USERNAME,
+      version: config.MINECRAFT_VERSION,
       password: config.MINECRAFT_PASSWORD,
-      version: config.MINECRAFT_VERSION
-    });
+      checkTimeoutInterval: 60000,
+      hideErrors: false,
+      repairThreshold: 20,
+      repairQueue: {
+        maxQueueSize: 10,
+        processInterval: 1000,
+        priorityWeights: {
+          durability: 0.7,
+          material: 0.3
+        }
+      },
+      commandQueue: {
+        maxSize: 100,
+        processInterval: 100,
+        retryConfig: {
+          maxRetries: 3,
+          initialDelay: 1000,
+          maxDelay: 5000,
+          backoffFactor: 2
+        }
+      },
+      toolSelection: {
+        efficiencyWeight: 0.2,
+        durabilityWeight: 0.3,
+        materialWeight: 0.3,
+        enchantmentWeight: 0.2
+      },
+      crafting: {
+        allowTierDowngrade: true,
+        maxDowngradeAttempts: 2,
+        preferExistingTools: true
+      },
+      preferredEnchantments: {
+        pickaxe: ['efficiency', 'unbreaking', 'fortune'],
+        axe: ['efficiency', 'unbreaking', 'fortune'],
+        shovel: ['efficiency', 'unbreaking', 'fortune'],
+        sword: ['sharpness', 'unbreaking', 'looting'],
+        hoe: ['efficiency', 'unbreaking']
+      },
+      repairMaterials: {
+        wooden: 'planks',
+        stone: 'cobblestone',
+        iron: 'iron_ingot',
+        golden: 'gold_ingot',
+        diamond: 'diamond',
+        netherite: 'netherite_ingot'
+      },
+      cache: {
+        ttl: 60000,
+        maxSize: 1000,
+        scanDebounceMs: 1000,
+        cleanupInterval: 300000
+      }
+    };
+    const bot = new MinecraftBot(botConfig);
     const contextManager = new ContextManager(bot.getMineflayerBot());
     const promptOptimizer = new PromptOptimizer();
     const errorHandler = new ErrorHandler(bot);
@@ -99,21 +154,22 @@ export class TaskParsingSystem {
       // Update metrics
       const endTime = Date.now();
       this.metrics.parsing.successfulParses++;
-      this.metrics.parsing.averageConfidence = 
-        (this.metrics.parsing.averageConfidence * (this.metrics.parsing.successfulParses - 1) + result.confidence) / 
+      this.metrics.parsing.averageConfidence =
+        (this.metrics.parsing.averageConfidence * (this.metrics.parsing.successfulParses - 1) + result.confidence) /
         this.metrics.parsing.successfulParses;
-      this.metrics.parsing.averageTime = 
-        (this.metrics.parsing.averageTime * (this.metrics.parsing.successfulParses - 1) + (endTime - startTime)) / 
+      this.metrics.parsing.averageTime =
+        (this.metrics.parsing.averageTime * (this.metrics.parsing.successfulParses - 1) + (endTime - startTime)) /
         this.metrics.parsing.successfulParses;
 
       return {
         type: result.task.type,
         parameters: result.task.parameters,
         confidence: result.confidence,
-        alternatives: result.alternatives.map(alt => ({
+        alternatives: result.alternatives.map((alt: any) => ({
           type: alt.type,
           parameters: alt.parameters,
-          confidence: alt.confidence
+          confidence: alt.confidence,
+          reasons: alt.reasons
         })),
         context: result.task.context,
         pluginRequirements: []
@@ -129,7 +185,7 @@ export class TaskParsingSystem {
       const recoveryStrategy = await this.errorHandler.handleError(error);
       return {
         type: 'error',
-        parameters: { message: error.message },
+        parameters: { message: error.message, chatType: 'system' },
         confidence: recoveryStrategy.confidence,
         alternatives: recoveryStrategy.steps.map(step => ({
           type: 'error',
@@ -142,7 +198,7 @@ export class TaskParsingSystem {
     } catch (recoveryError) {
       return {
         type: 'error',
-        parameters: { message: error.message },
+        parameters: { message: error.message, chatType: 'system' },
         confidence: 0,
         alternatives: [],
         context,
@@ -155,20 +211,12 @@ export class TaskParsingSystem {
     return {
       parsing: {
         input: command,
-        context,
-        result: undefined,
-        error: undefined
+        context
       },
       resolution: {
-        strategy: this.resolutionSystem.getResolutionStatistics().toString(),
-        result: undefined,
-        error: undefined
+        strategy: this.resolutionSystem.getResolutionStatistics().toString()
       },
-      errorHandling: {
-        error: undefined,
-        strategy: undefined,
-        result: undefined
-      },
+      errorHandling: {},
       metrics: this.metrics
     };
   }

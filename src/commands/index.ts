@@ -8,7 +8,7 @@ import {
   NavigationTaskParameters,
   InventoryTaskParameters,
   TaskType,
-} from "@/types";
+} from "@/types/task";
 import { BaseTask } from "../tasks/base";
 import { NavTask } from "../tasks/nav";
 import { ChatTask } from "../tasks/chat";
@@ -17,58 +17,9 @@ import { InventoryTask } from '../tasks/inventory';
 import { QueryTask } from '../tasks/query';
 import { GatheringTask } from '../tasks/gathering';
 import { GatheringTaskParameters } from '@/types/task';
-
-interface BotState {
-  position: { x: number; y: number; z: number };
-  health: number;
-  food: number;
-  inventory: Array<{ name: string; count: number; slot: number; type: string }>;
-  blockAtFeet: { name: string } | null;
-  blockAtHead: { name: string } | null;
-  timeOfDay: number;
-  isDay: boolean;
-  isRaining: boolean;
-  biome: string;
-  nearbyEntities: Array<{
-    type: string;
-    name: string;
-    distance: number;
-    position: { x: number; y: number; z: number };
-    isHostile: boolean;
-    isPassive: boolean;
-  }>;
-  equipment: {
-    mainHand: string | null;
-    offHand: string | null;
-    armor: {
-      helmet: string | null;
-      chestplate: string | null;
-      leggings: string | null;
-      boots: string | null;
-    };
-  };
-  experience: {
-    level: number;
-    points: number;
-    progress: number;
-  };
-  environment: {
-    blockAtFeet: string;
-    blockAtHead: string;
-    lightLevel: number;
-    isInWater: boolean;
-    onGround: boolean;
-  };
-  movement: {
-    velocity: { x: number; y: number; z: number };
-    yaw: number;
-    pitch: number;
-    control: {
-      sprint: boolean;
-      sneak: boolean;
-    };
-  };
-}
+import logger from "@/utils/observability/logger";
+import { MiningTask } from "@/tasks/mining";
+ 
 
 export class CommandHandler {
   private bot: MinecraftBot;
@@ -229,6 +180,7 @@ export class CommandHandler {
         if (task.type === TaskType.CHAT) {
           const chatTask = new ChatTask(this.bot, this, {
             message: command,
+            chatType: "normal",
             context: {
               botState,
               playerName: username
@@ -285,6 +237,21 @@ export class CommandHandler {
 
   public updateProgress(taskId: string, progress: number): void {
     this.taskProgress.set(taskId, progress);
+    
+    // Get active task from bot if it's being tracked
+    const activeTask = this.bot.getActiveTask();
+    if (activeTask && activeTask.name) {
+      // Update the ML manager to track this progress for reinforcement learning
+      const mlManager = this.bot.getMLManager();
+      if (mlManager) {
+        // Log progress update for ML data collection if needed
+        logger.debug('Task progress update', {
+          taskId,
+          progress,
+          activeTask: activeTask.name
+        });
+      }
+    }
   }
 
   public getCurrentTaskProgress(): number | null {
@@ -371,7 +338,7 @@ export class CommandHandler {
         case 'inventory':
           taskHandler = new InventoryTask(this.bot, this, {
             operation: (task.parameters as InventoryTaskParameters).operation || 'store',
-            itemType: (task.parameters as InventoryTaskParameters).itemType,
+            itemType: (task.parameters as InventoryTaskParameters).itemType || '',
             quantity: (task.parameters as InventoryTaskParameters).quantity || 1
           });
           break;
@@ -379,7 +346,7 @@ export class CommandHandler {
           const queryParams = task.parameters as QueryTaskParameters;
           taskHandler = new QueryTask(this.bot, this, {
             queryType: queryParams.queryType,
-            filters: queryParams.filters
+            filters: queryParams.filters || {}
           });
           break;
         case 'gathering':

@@ -18,6 +18,11 @@ export const metrics = {
     help: "Total number of failed tasks",
     labelNames: ["task_type", "error_type"],
   }),
+  pluginInitFailures: new Counter({
+    name: 'bot_plugin_init_failures',
+    help: 'Number of plugin initialization failures',
+    labelNames: ['plugin_name'] as const,
+  }),
   taskDuration: new Histogram({
     name: "task_duration_seconds",
     help: "Duration of tasks in seconds",
@@ -27,10 +32,10 @@ export const metrics = {
 
   // Command metrics
   commandLatency: new Histogram({
-    name: "bot_command_latency_ms",
-    help: "Latency in ms for command parsing",
-    labelNames: ["command_type", "status"] as const,
-    buckets: [50, 100, 200, 500, 1000, 2000],
+    name: 'bot_command_latency_ms',
+    help: 'LLM parsing latency in ms',
+    labelNames: ['command_type', 'status'] as const,
+    buckets: [50, 100, 200, 500, 1000, 2000]
   }),
   commandRetries: new Counter({
     name: "bot_command_retries",
@@ -62,6 +67,12 @@ export const metrics = {
     help: "Time spent processing queue items",
     labelNames: ["status"] as const,
     buckets: [10, 50, 100, 500, 1000, 5000],
+  }),
+  queueLatency: new Histogram({
+    name: 'bot_queue_latency_ms',
+    help: 'Command queue processing latency in ms',
+    labelNames: ['operation', 'status'] as const,
+    buckets: [10, 50, 100, 250, 500, 1000]
   }),
 
   // Minecraft-specific metrics
@@ -100,6 +111,33 @@ export const metrics = {
     help: "Duration of LLM requests in seconds",
     labelNames: ["model"],
     buckets: [0.1, 0.5, 1, 2, 5, 10],
+  }),
+
+  // Bot metrics
+  botInitializations: new Counter({
+    name: "bot_initializations_total",
+    help: "Total number of bot initializations",
+  }),
+  botInitializationFailures: new Counter({
+    name: "bot_initialization_failures_total",
+    help: "Total number of bot initialization failures",
+  }),
+  botErrors: new Counter({
+    name: "bot_errors_total",
+    help: "Total number of errors",
+    labelNames: ["type"] as const,
+  }),
+  botKicks: new Counter({
+    name: "bot_kicks_total",
+    help: "Total number of times bot was kicked",
+  }),
+  botDisconnections: new Counter({
+    name: "bot_disconnections_total",
+    help: "Total number of bot disconnections",
+  }),
+  botSpawns: new Counter({
+    name: "bot_spawns_total",
+    help: "Total number of bot spawns",
   }),
 };
 

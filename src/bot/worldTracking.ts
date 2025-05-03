@@ -3,137 +3,194 @@ import { Vec3 } from 'vec3';
 import logger from '../utils/observability/logger';
 import { metrics } from '../utils/observability/metrics';
 import { MinecraftBot } from './bot';
-import prismarineBiome from 'prismarine-biome';
+import { BiomeData, BlockState, ChunkColumn } from '../types/world';
+import type { Block } from 'prismarine-block';
+import { default as createBiome } from 'prismarine-biome';
+import { LRUCache } from 'lru-cache';
+import { MLStateFactory } from '../ml/state/factory';
+import type { PCChunk } from 'prismarine-chunk';
+import { Registry } from 'prismarine-registry';
+
+// types
 
 export class WorldTracker {
   private bot: MinecraftBot;
-  private mineflayerBot: MineflayerBot;
+  private mineflayerBot: MineflayerBot | null = null;
   private knownBlocks: Map<string, Set<string>>; // biome -> block types
   private resourceLocations: Map<string, Vec3[]>; // block type -> positions
   private lastScanTime: number = 0;
   private scanInterval: number = 5000; // 5 seconds
-  private Biome: any;
+  private biome: any | null = null; // prismarine-biome instance
+  private registry: Registry | null = null;
+  private resourceCache: LRUCache<string, Vec3>;
+  private biomeCache: LRUCache<string, string>;
+  private blockCache: LRUCache<string, string[]>;
+  private scanDebounces: Map<string, NodeJS.Timeout> = new Map();
+  private isInitialized: boolean = false;
 
   constructor(bot: MinecraftBot) {
     this.bot = bot;
-    this.mineflayerBot = bot.getMineflayerBot();
-    this.knownBlocks = new Map();
-    this.resourceLocations = new Map();
-    this.Biome = prismarineBiome(this.mineflayerBot.version);
-    this.setupEventListeners();
+    this.knownBlocks = MLStateFactory.createBiomeBlocksMap();
+    this.resourceLocations = MLStateFactory.createResourceMap([
+      'diamond_ore',
+      'emerald_ore',
+      'gold_ore',
+      'iron_ore',
+      'coal_ore',
+      'lapis_ore',
+      'redstone_ore',
+      'ancient_debris'
+    ]);
+    
+    // Initialize caches
+    const cacheOptions = {
+      max: 1000,
+      ttl: 60000, // 1 minute
+      updateAgeOnGet: true,
+      updateAgeOnHas: true
+    };
+    this.resourceCache = new LRUCache(cacheOptions);
+    this.biomeCache = new LRUCache(cacheOptions);
+    this.blockCache = new LRUCache(cacheOptions);
   }
 
-  private setupEventListeners() {
-    // Track block updates
-    this.mineflayerBot.on('blockUpdate', (oldBlock, newBlock) => {
-      if (!oldBlock) {
-        logger.warn('Received block update with null oldBlock');
-        return;
+  public initialize(mineflayerBot: MineflayerBot): void {
+    this.mineflayerBot = mineflayerBot;
+    try {
+      // Initialize registry with the bot's version
+      const registry = require('prismarine-registry')(mineflayerBot.version);
+      this.registry = registry;
+      this.biome = createBiome(registry);
+      
+      if (!this.biome) {
+        throw new Error('Failed to create biome instance');
       }
-      const position = oldBlock.position;
-      this.updateBlockTracking(position, newBlock);
-    });
-
-    // Track chunk loads
-    this.mineflayerBot.on('chunkColumnLoad', (chunk) => {
-      this.scanChunk(chunk);
-    });
-
-    // Periodic resource scan
-    setInterval(() => {
-      this.scanNearbyResources();
-    }, this.scanInterval);
-  }
-
-  private updateBlockTracking(position: Vec3, block: any) {
-    const biomeId = this.mineflayerBot.world.getBiome(position);
-    const biome = new this.Biome(biomeId);
-    const biomeName = biome.name;
-    const blockType = block.name;
-
-    // Update known blocks for this biome
-    if (!this.knownBlocks.has(biomeName)) {
-      this.knownBlocks.set(biomeName, new Set());
-    }
-    this.knownBlocks.get(biomeName)?.add(blockType);
-
-    // Update resource locations
-    if (this.isResourceBlock(blockType)) {
-      if (!this.resourceLocations.has(blockType)) {
-        this.resourceLocations.set(blockType, []);
-      }
-      const locations = this.resourceLocations.get(blockType)!;
-      locations.push(position.clone());
-
-      // Update metrics
-      metrics.blocksMined.inc({ block_type: blockType });
+      this.setupEventListeners();
+      this.isInitialized = true;
+      logger.info('WorldTracker initialized');
+    } catch (error) {
+      logger.error('Failed to initialize WorldTracker:', error);
+      throw error;
     }
   }
 
-  private scanChunk(chunk: any) {
-    const now = Date.now();
-    if (now - this.lastScanTime < this.scanInterval) return;
-    this.lastScanTime = now;
+  private setupEventListeners(): void {
+    if (!this.mineflayerBot) return;
 
+    this.mineflayerBot.on('chunkColumnLoad', (position: Vec3) => {
+      const chunkX = position.x >> 4;
+      const chunkZ = position.z >> 4;
+      logger.info(`Chunk loaded at (${chunkX}, ${chunkZ})`);
+      this.processChunkData(chunkX, chunkZ);
+    });
+  }
+
+  private processChunkData(chunkX: number, chunkZ: number): Vec3[] {
+    if (!this.mineflayerBot || !this.isInitialized) {
+      logger.warn('Attempted to process chunk data before initialization');
+      return [];
+    }
+
+    const blockPositions: Vec3[] = [];
+    const worldChunkX = chunkX * 16;
+    const worldChunkZ = chunkZ * 16;
+    let processedBlocks = 0;
+    const totalBlocks = 16 * 16 * 256; // Total blocks in a chunk
+
+    logger.info(`Starting to process chunk at (${worldChunkX}, ${worldChunkZ})`);
+    
+    // Process each block in the chunk
     for (let x = 0; x < 16; x++) {
       for (let z = 0; z < 16; z++) {
         for (let y = 0; y < 256; y++) {
-          const position = new Vec3(
-            chunk.x * 16 + x,
-            y,
-            chunk.z * 16 + z
-          );
-          const block = this.mineflayerBot.world.getBlock(position);
-          if (block && this.isResourceBlock(block.name)) {
-            this.updateBlockTracking(position, block);
+          processedBlocks++;
+          if (processedBlocks % 10000 === 0) {
+            logger.debug(`Processed ${processedBlocks}/${totalBlocks} blocks (${Math.round((processedBlocks / totalBlocks) * 100)}%)`);
+          }
+          
+          const block = this.mineflayerBot.world.getBlock(new Vec3(worldChunkX + x, y, worldChunkZ + z));
+          if (block) {
+            this.processBlock(block, new Vec3(worldChunkX + x, y, worldChunkZ + z));
+            blockPositions.push(new Vec3(worldChunkX + x, y, worldChunkZ + z));
           }
         }
       }
     }
+    
+    return blockPositions;
   }
 
-  private scanNearbyResources() {
-    if (!this.mineflayerBot.entity) {
-      logger.warn('Bot not fully connected, skipping resource scan');
+  private processBlock(block: Block, position: Vec3): void {
+    if (!this.mineflayerBot || !this.biome || !this.registry) {
+      logger.warn('Attempted to process block before initialization');
       return;
     }
 
-    const radius = 32; // Scan radius in blocks
-    const center = this.mineflayerBot.entity.position;
-
-    for (let x = -radius; x <= radius; x++) {
-      for (let y = -radius; y <= radius; y++) {
-        for (let z = -radius; z <= radius; z++) {
-          const position = center.offset(x, y, z);
-          const block = this.bot.getMineflayerBot().world.getBlock(position);
-          if (block && this.isResourceBlock(block.name)) {
-            this.updateBlockTracking(position, block);
-          }
-        }
+    try {
+      const biomeId = this.mineflayerBot.world.getBiome(position);
+      if (biomeId === undefined) {
+        logger.warn(`Could not get biome ID at position ${position}`);
+        return;
       }
+
+      // Get biome name from the biome registry
+      let biomeName = 'unknown';
+      try {
+        const biomeData = this.registry.biomesByName[biomeId];
+        biomeName = biomeData?.name || `biome_${biomeId}`;
+      } catch (error) {
+        logger.warn(`Could not get biome name for ID ${biomeId}, using fallback name`);
+        biomeName = `biome_${biomeId}`;
+      }
+      
+      // Update known blocks for this biome
+      if (!this.knownBlocks.has(biomeName)) {
+        this.knownBlocks.set(biomeName, new Set());
+      }
+      this.knownBlocks.get(biomeName)?.add(block.name);
+
+      // Track resource locations for valuable blocks
+      if (this.isValuableBlock(block.name)) {
+        if (!this.resourceLocations.has(block.name)) {
+          this.resourceLocations.set(block.name, []);
+        }
+        this.resourceLocations.get(block.name)?.push(position);
+        
+        // Update metrics and logging
+        metrics.blocksMined.inc({
+          block_type: block.name
+        });
+        logger.debug(`Found valuable block: ${block.name} at ${position} in biome ${biomeName}`);
+      }
+    } catch (error) {
+      logger.error('Error processing block:', error);
+      metrics.botErrors.inc({ type: 'block_processing' });
     }
   }
 
-  private isResourceBlock(blockType: string): boolean {
-    // Define what counts as a resource block
-    const resourceBlocks = new Set([
-      'coal_ore',
-      'iron_ore',
-      'gold_ore',
+  private isValuableBlock(blockName: string): boolean {
+    return [
       'diamond_ore',
       'emerald_ore',
-      'redstone_ore',
+      'gold_ore',
+      'iron_ore',
+      'coal_ore',
       'lapis_ore',
-      'ancient_debris',
-      'nether_gold_ore',
-      'nether_quartz_ore',
-    ]);
-    return resourceBlocks.has(blockType);
+      'redstone_ore',
+      'ancient_debris'
+    ].includes(blockName);
   }
 
-  // Public API
   public getKnownBlocks(biome: string): string[] {
-    return Array.from(this.knownBlocks.get(biome) || []);
+    const cacheKey = `blocks:${biome}`;
+    const cached = this.blockCache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = Array.from(this.knownBlocks.get(biome) || new Set()) as string[];
+    if (result.length > 0) {
+      this.blockCache.set(cacheKey, result);
+    }
+    return result;
   }
 
   public getResourceLocations(blockType: string): Vec3[] {
@@ -141,31 +198,66 @@ export class WorldTracker {
   }
 
   public findNearestResource(blockType: string): Vec3 | null {
+    if (!this.mineflayerBot || !this.mineflayerBot.entity) return null;
+
     const locations = this.getResourceLocations(blockType);
     if (locations.length === 0) return null;
 
-    let nearest = locations[0];
-    let minDistance = this.bot.getMineflayerBot().entity.position.distanceTo(nearest);
+    const botPosition = this.mineflayerBot.entity.position;
+    return locations.reduce((nearest, current) => {
+      const nearestDist = nearest ? nearest.distanceTo(botPosition) : Infinity;
+      const currentDist = current.distanceTo(botPosition);
+      return currentDist < nearestDist ? current : nearest;
+    });
+  }
 
-    for (const location of locations) {
-      const distance = this.bot.getMineflayerBot().entity.position.distanceTo(location);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = location;
-      }
+  public getBiomeAt(position: Vec3): string | null {
+    if (!this.mineflayerBot || !this.biome) return null;
+
+    const cacheKey = `biome:${position.x},${position.y},${position.z}`;
+    const cached = this.biomeCache.get(cacheKey);
+    if (cached) return cached;
+
+    const biomeId = this.mineflayerBot.world.getBiome(position);
+    const result = this.biome.biomes[biomeId]?.name || null;
+    if (result) {
+      this.biomeCache.set(cacheKey, result);
+    }
+    return result;
+  }
+
+  public async findResource(blockType: string): Promise<Vec3 | null> {
+    const cacheKey = `resource:${blockType}`;
+    const cached = this.resourceCache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
-    return nearest;
+    const key = `scan:${blockType}`;
+    if (!this.scanDebounces.has(key)) {
+      const result = await this.findNearestResource(blockType);
+      if (result) {
+        this.resourceCache.set(cacheKey, result);
+      }
+      return result;
+    }
+
+    return new Promise<Vec3 | null>(resolve => {
+      this.scanDebounces.set(key, setTimeout(async () => {
+        this.scanDebounces.delete(key);
+        const result = await this.findNearestResource(blockType);
+        if (result) {
+          this.resourceCache.set(cacheKey, result);
+        }
+        resolve(result);
+      }, 1000)); // 1 second debounce
+    });
   }
 
-  public getBiomeAt(position: Vec3): string {
-    const biomeId = this.mineflayerBot.world.getBiome(position);
-    const biome = new this.Biome(biomeId);
-    return biome.name;
+  public clearCaches(): void {
+    this.resourceCache.clear();
+    this.biomeCache.clear();
+    this.blockCache.clear();
+    this.scanDebounces.clear();
   }
-
-  public getBiomeData(position: Vec3): any {
-    const biomeId = this.mineflayerBot.world.getBiome(position);
-    return new this.Biome(biomeId);
-  }
-} 
+}

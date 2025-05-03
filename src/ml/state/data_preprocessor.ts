@@ -1,5 +1,6 @@
 import { PredictionRecord, TrainingData } from './training_data_collector';
 import { mlMetrics } from '../../utils/observability/metrics';
+import logger from '../../utils/observability/logger';
 
 export interface ProcessedData {
   features: number[];
@@ -23,18 +24,29 @@ export class DataPreprocessor {
 
   public async preprocessData(data: TrainingData): Promise<ProcessedData> {
     try {
+      logger.info('Starting data preprocessing...');
+      
       // Clean the data
+      logger.info('Cleaning data...');
       const cleanedData = this.cleanData(data.predictions);
+      logger.info(`Cleaned data: ${cleanedData.length} records remaining`);
       
       // Extract features
+      logger.info('Extracting features...');
       const features = this.extractFeatures(cleanedData);
+      logger.info(`Extracted ${features.length} feature vectors`);
       
       // Normalize features
+      logger.info('Normalizing features...');
       const normalizedFeatures = this.normalizeFeatures(features);
+      logger.info('Feature normalization completed');
       
       // Extract labels
+      logger.info('Extracting labels...');
       const labels = this.extractLabels(cleanedData);
+      logger.info(`Extracted ${labels.length} labels`);
       
+      logger.info('Data preprocessing completed successfully');
       return {
         features: normalizedFeatures,
         labels,
@@ -47,12 +59,14 @@ export class DataPreprocessor {
       };
     } catch (error) {
       mlMetrics.stateUpdates.inc({ type: 'preprocessing_error' });
+      logger.error('Error during data preprocessing:', error);
       throw error;
     }
   }
 
   private cleanData(records: PredictionRecord[]): PredictionRecord[] {
-    return records.filter(record => {
+    logger.info(`Starting data cleaning with ${records.length} records`);
+    const cleanedRecords = records.filter(record => {
       // Remove records with missing or invalid data
       if (!record.input || !record.output) return false;
       
@@ -67,38 +81,47 @@ export class DataPreprocessor {
       
       return true;
     });
+    logger.info(`Data cleaning completed. Removed ${records.length - cleanedRecords.length} invalid records`);
+    return cleanedRecords;
   }
 
   private extractFeatures(records: PredictionRecord[]): number[][] {
-    return records.map(record => {
-      const features: number[] = [];
+    logger.info(`Starting feature extraction for ${records.length} records`);
+    const features = records.map((record, index) => {
+      if (index % 1000 === 0) {
+        logger.info(`Processing record ${index + 1}/${records.length}`);
+      }
+      
+      const featureVector: number[] = [];
       
       // Extract timestamp features
       const date = new Date(record.timestamp);
-      features.push(
+      featureVector.push(
         date.getHours(), // Hour of day
         date.getDay(),   // Day of week
         date.getMonth()  // Month
       );
       
       // Extract confidence and execution time
-      features.push(record.confidence, record.executionTime);
+      featureVector.push(record.confidence, record.executionTime);
       
       // Extract input features based on prediction type
       switch (record.predictionType) {
         case 'resource_needs':
-          features.push(...this.extractResourceFeatures(record.input));
+          featureVector.push(...this.extractResourceFeatures(record.input));
           break;
         case 'player_requests':
-          features.push(...this.extractPlayerFeatures(record.input));
+          featureVector.push(...this.extractPlayerFeatures(record.input));
           break;
         case 'task_duration':
-          features.push(...this.extractTaskFeatures(record.input));
+          featureVector.push(...this.extractTaskFeatures(record.input));
           break;
       }
       
-      return features;
+      return featureVector;
     });
+    logger.info(`Feature extraction completed. Generated ${features.length} feature vectors`);
+    return features;
   }
 
   private extractResourceFeatures(input: any): number[] {
@@ -158,13 +181,16 @@ export class DataPreprocessor {
   }
 
   private normalizeFeatures(features: number[][]): number[] {
+    logger.info('Starting feature normalization...');
     // Flatten the 2D array
     const flatFeatures = features.flat();
+    logger.info(`Flattened ${features.length} feature vectors into ${flatFeatures.length} values`);
     
     // Calculate min and max for feature scaling
     const min = Math.min(...flatFeatures);
     const max = Math.max(...flatFeatures);
     this.featureScaling.set('features', { min, max });
+    logger.info(`Calculated feature scaling: min=${min}, max=${max}`);
     
     // Calculate mean and standard deviation for normalization
     const mean = flatFeatures.reduce((a, b) => a + b, 0) / flatFeatures.length;
@@ -172,14 +198,17 @@ export class DataPreprocessor {
       flatFeatures.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / flatFeatures.length
     );
     this.normalizationParams.set('features', { mean, std });
+    logger.info(`Calculated normalization params: mean=${mean}, std=${std}`);
     
     // Apply min-max scaling and standardization
-    return flatFeatures.map(x => {
+    const normalized = flatFeatures.map(x => {
       // Min-max scaling
       const scaled = (x - min) / (max - min);
       // Standardization
       return (scaled - mean) / std;
     });
+    logger.info('Feature normalization completed');
+    return normalized;
   }
 
   private extractLabels(records: PredictionRecord[]): number[] {

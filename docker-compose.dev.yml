@@ -7,6 +7,7 @@ services:
       - .:/app
       - /app/node_modules
       - /app/dist
+      - /app/src/web/node_modules
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
@@ -20,7 +21,8 @@ services:
       - NEXT_PUBLIC_WS_URL=ws://localhost:3000
     command: npm run dev:all
     ports:
-      - "3000:3000"
+      - "3002:3000"
+      - "3003:3001"
       - "9229:9229" # Node.js debug port
     depends_on:
       ollama:
@@ -44,13 +46,15 @@ services:
       - bot-network
 
   ollama:
-    image: ollama/ollama:latest
+    build:
+      context: .
+      dockerfile: docker/ollama/Dockerfile
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      test: ["CMD", "nc", "-z", "localhost", "11434"]
       interval: 30s
       timeout: 3s
       retries: 3

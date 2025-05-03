@@ -1,4 +1,6 @@
 import { TaskProgress, TaskResult as TaskResultType } from '@/types/task';
+import logger from '@/utils/observability/logger';
+import { Logger } from '@/utils/observability/logger';
 import fs from 'fs';
 import path from 'path';
 
@@ -17,19 +19,14 @@ export class TaskStorage {
   private resultsFile: string;
   private config: StorageConfig;
   private cleanupInterval: NodeJS.Timeout | null = null;
-  private logger?: {
-    info: (message: string, ...args: any[]) => void;
-    error: (message: string, ...args: any[]) => void;
-  };
 
-  constructor(storagePath: string = './data', config: Partial<StorageConfig> = {}, logger?: {
-    info: (message: string, ...args: any[]) => void;
-    error: (message: string, ...args: any[]) => void;
-  }) {
+  private logger?: Logger;
+
+  constructor(storagePath: string = './data', config: Partial<StorageConfig> = {}, logger?: Logger) {
     this.storagePath = storagePath;
     this.progressFile = path.join(storagePath, 'task_progress.json');
     this.resultsFile = path.join(storagePath, 'task_results.json');
-    
+
     // Default configuration
     this.config = {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -38,8 +35,9 @@ export class TaskStorage {
       maxProgressHistory: 1000,
       ...config
     };
-
-    this.logger = logger;
+    if (logger) {
+      this.logger = logger;
+    }
     this.ensureStorageExists();
     this.startCleanupInterval();
   }
@@ -54,7 +52,7 @@ export class TaskStorage {
   public async cleanup(): Promise<void> {
     console.log('Starting storage cleanup...');
     const now = Date.now();
-    
+
     // Clean up progress files
     const progressData = await this.readProgressFile();
     let cleanedProgress = 0;
@@ -87,17 +85,17 @@ export class TaskStorage {
 
   private shouldCleanupProgress(progress: TaskProgress, now: number): boolean {
     // Clean up if task is too old
-    if (now - progress.created > this.config.maxAge) {
+    if (now - (progress.created || 0) > this.config.maxAge) {
       return true;
     }
 
     // Clean up if task is completed and older than maxCompletedAge
-    if (progress.status === 'completed' && now - progress.lastUpdated > this.config.maxCompletedAge) {
+    if (progress.status === 'completed' && now - (progress.lastUpdated || 0) > this.config.maxCompletedAge) {
       return true;
     }
 
     // Clean up if task is failed and older than maxAge
-    if (progress.status === 'failed' && now - progress.lastUpdated > this.config.maxAge) {
+    if (progress.status === 'failed' && now - (progress.lastUpdated || 0) > this.config.maxAge) {
       return true;
     }
 
@@ -115,7 +113,7 @@ export class TaskStorage {
     if (!this.storagePath) {
       throw new Error('Storage path is not defined');
     }
-    
+
     if (!fs.existsSync(this.storagePath)) {
       fs.mkdirSync(this.storagePath, { recursive: true });
     }

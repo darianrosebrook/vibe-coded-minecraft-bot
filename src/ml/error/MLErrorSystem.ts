@@ -1,4 +1,4 @@
-import { EnhancedGameState } from '@/types';
+import { EnhancedGameState } from '@/types/ml/state';
 import { Vec3 } from 'vec3';
 
 export enum ErrorSeverity {
@@ -36,14 +36,18 @@ export class MLErrorSystem {
   public async detectError(state: EnhancedGameState): Promise<MLError | null> {
     // Implement error detection logic
     const errors = await this.analyzeState(state);
-    return errors.length > 0 ? errors[0] : null;
+    const error = errors.length > 0 ? errors[0] : null;
+    if (!error) {
+      return null;
+    }
+    return error;
   }
 
   private async analyzeState(state: EnhancedGameState): Promise<MLError[]> {
     const errors: MLError[] = [];
     
     // Check for movement issues
-    if (state.movement.velocity.equals(new Vec3(0, 0, 0)) && !state.environment.onGround) {
+    if (state.botState.velocity.x === 0 && state.botState.velocity.y === 0 && state.botState.velocity.z === 0 && !state.botState.onGround) {
       errors.push({
         id: `movement_${Date.now()}`,
         type: 'movement_blocked',
@@ -55,7 +59,7 @@ export class MLErrorSystem {
     }
 
     // Check for inventory issues
-    if (state.inventory.emptySlots() === 0) {
+    if (state.botState.inventory.items.length === 0) {
       errors.push({
         id: `inventory_${Date.now()}`,
         type: 'inventory_full',
@@ -86,16 +90,19 @@ export class MLErrorSystem {
 
   private async handleMovementBlocked(error: MLError): Promise<boolean> {
     // Implement movement recovery logic
+    error
     return true;
   }
 
   private async handleInventoryFull(error: MLError): Promise<boolean> {
     // Implement inventory management logic
+    error
     return true;
   }
 
   private async handleResourceUnavailable(error: MLError): Promise<boolean> {
     // Implement resource finding logic
+    error
     return true;
   }
 

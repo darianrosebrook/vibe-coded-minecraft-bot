@@ -1,109 +1,132 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { TaskResult } from '@/types/task';
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 interface BotStatus {
-  isConnected: boolean;
-  position: { x: number; y: number; z: number };
   health: number;
   food: number;
-  inventory: Array<{ name: string; count: number }>;
+  position: { x: number; y: number; z: number };
+  inventory: any[];
+  activeTask: { name: string; progress: number } | null;
 }
 
 export default function Home() {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [status, setStatus] = useState<string>('disconnected');
-  const [tasks, setTasks] = useState<TaskResult[]>([]);
-  const [message, setMessage] = useState<string>('');
-  const [botStatus, setBotStatus] = useState<BotStatus | null>(null);
+  const [status, setStatus] = useState<BotStatus | null>(null);
+  const [socket, setSocket] = useState<any>(null);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3000');
+    const newSocket = io();
     setSocket(newSocket);
 
-    newSocket.on('connect', () => {
-      setStatus('connected');
-      newSocket.emit('requestBotStatus');
+    newSocket.on('bot:status', (data: BotStatus) => {
+      setStatus(data);
     });
 
-    newSocket.on('disconnect', () => {
-      setStatus('disconnected');
-      setBotStatus(null);
-    });
+    // Request initial status
+    newSocket.emit('bot:requestStatus');
 
-    newSocket.on('botStatus', (status: BotStatus) => {
-      setBotStatus(status);
-    });
-
-    newSocket.on('taskResult', (result: TaskResult) => {
-      setTasks((prevTasks) => [...prevTasks, result]);
-    });
-
-    newSocket.on('error', (error: { message: string }) => {
-      console.error('Socket error:', error);
-    });
+    // Set up interval to request status updates
+    const interval = setInterval(() => {
+      newSocket.emit('bot:requestStatus');
+    }, 1000);
 
     return () => {
-      newSocket.disconnect();
+      clearInterval(interval);
+      newSocket.close();
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (socket && message.trim()) {
-      socket.emit('botCommand', message);
-      setMessage('');
-    }
-  };
-
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-8">Minecraft Bot Dashboard</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Status</h2>
-          <p>Connection: {status}</p>
-          {botStatus && (
-            <div className="mt-4">
-              <p>Position: X: {botStatus.position.x}, Y: {botStatus.position.y}, Z: {botStatus.position.z}</p>
-              <p>Health: {botStatus.health}</p>
-              <p>Food: {botStatus.food}</p>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Bot Status */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4">Bot Status</h2>
+        {status ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Health</h3>
+              <div className="mt-1 relative pt-1">
+                <div className="overflow-hidden h-2 text-xs flex rounded bg-red-200">
+                  <div
+                    style={{ width: `${(status.health / 20) * 100}%` }}
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
+                  />
+                </div>
+                <span className="text-sm text-gray-600 mt-1">{status.health}/20</span>
+              </div>
             </div>
-          )}
-        </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Food</h3>
+              <div className="mt-1 relative pt-1">
+                <div className="overflow-hidden h-2 text-xs flex rounded bg-yellow-200">
+                  <div
+                    style={{ width: `${(status.food / 20) * 100}%` }}
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yellow-500"
+                  />
+                </div>
+                <span className="text-sm text-gray-600 mt-1">{status.food}/20</span>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Position</h3>
+              <p className="text-sm text-gray-600">
+                X: {status.position.x.toFixed(2)}, Y: {status.position.y.toFixed(2)}, Z: {status.position.z.toFixed(2)}
+              </p>
+            </div>
+            {status.activeTask && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Active Task</h3>
+                <div className="mt-1">
+                  <p className="text-sm text-gray-600">{status.activeTask.name}</p>
+                  <div className="mt-1 relative pt-1">
+                    <div className="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
+                      <div
+                        style={{ width: `${status.activeTask.progress}%` }}
+                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600 mt-1">{status.activeTask.progress}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-500">Loading status...</p>
+        )}
+      </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-          <ul className="space-y-2">
-            {tasks.map((task, index) => (
-              <li key={index} className={`p-2 rounded ${task.success ? 'bg-green-100' : 'bg-red-100'}`}>
-                <p>Type: {task.task.type}</p>
-                <p>Status: {task.task.status}</p>
-                {task.error && <p className="text-red-600">Error: {task.error}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Command Input</h2>
-          <form onSubmit={handleSubmit} className="flex gap-4">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="flex-1 p-2 border rounded"
-              placeholder="Enter a command..."
-            />
-            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-              Send
-            </button>
-          </form>
+      {/* 3D Viewer */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-4">World View</h2>
+        <div id="viewer" className="w-full h-96 bg-gray-100 rounded">
+          {/* prismarine-viewer will be mounted here */}
         </div>
       </div>
-    </main>
+
+      {/* Inventory */}
+      <div className="bg-white shadow rounded-lg p-6 md:col-span-2">
+        <h2 className="text-lg font-semibold mb-4">Inventory</h2>
+        {status?.inventory ? (
+          <div className="grid grid-cols-9 gap-2">
+            {status.inventory.map((item, index) => (
+              <div key={index} className="bg-gray-100 p-2 rounded text-center">
+                {item ? (
+                  <>
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs text-gray-500">x{item.count}</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400">Empty</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">Loading inventory...</p>
+        )}
+      </div>
+    </div>
   );
 } 

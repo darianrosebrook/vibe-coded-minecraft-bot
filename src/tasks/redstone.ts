@@ -1,13 +1,11 @@
 import { BaseTask, TaskOptions } from './base';
 import { MinecraftBot } from '../bot/bot';
-import { CommandHandler } from '../commands';
-import { Task, TaskParameters } from '@/types/task';
-import logger from '../utils/observability/logger';
-import { metrics } from '../utils/observability/metrics';
-import { Bot as MineflayerBot } from 'mineflayer';
+import { CommandHandler } from '../commands'; 
+import logger from '../utils/observability/logger';  
 import { Vec3 } from 'vec3';
 import pathfinder from 'mineflayer-pathfinder';
 import { RedstoneOptimizer } from '../ml/reinforcement/redstoneOptimizer';
+import { BaseTaskOptions } from '@/types/task';
 
 interface RedstoneMLState {
   circuitState: {
@@ -31,7 +29,7 @@ interface RedstoneMLState {
   };
 }
 
-export interface RedstoneTaskParameters extends TaskOptions {
+export interface RedstoneTaskParameters extends BaseTaskOptions {
   circuitType: string;
   radius: number;
   area?: {
@@ -55,6 +53,7 @@ export class RedstoneTask extends BaseTask {
   }>;
   private optimizer: RedstoneOptimizer;
   protected mlState: RedstoneMLState | null = null;
+  private retryDelay: number;
 
   constructor(bot: MinecraftBot, commandHandler: CommandHandler, options: RedstoneTaskParameters) {
     super(bot, commandHandler, {
@@ -70,6 +69,7 @@ export class RedstoneTask extends BaseTask {
     this.circuitType = options.circuitType;
     this.area = options.area || { start: new Vec3(0, 0, 0), end: new Vec3(0, 0, 0) };
     this.devices = options.devices || [];
+    this.retryDelay = options.retryDelay ?? 5000;
     
     this.optimizer = new RedstoneOptimizer();
     this.initializeMLState();
@@ -160,7 +160,7 @@ export class RedstoneTask extends BaseTask {
     }
   }
 
-  async validateTask(): Promise<void> {
+  override async validateTask(): Promise<void> {
     await super.validateTask();
     
     if (!this.circuitType) {
@@ -172,11 +172,11 @@ export class RedstoneTask extends BaseTask {
     }
   }
 
-  async initializeProgress(): Promise<void> {
+  override async initializeProgress(): Promise<void> {
     await super.initializeProgress();
   }
 
-  async performTask(): Promise<void> {
+  override async performTask(): Promise<void> {
     await this.initializeMLState();
     
     // Place devices

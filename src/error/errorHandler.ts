@@ -1,6 +1,5 @@
-
-import { MinecraftBot } from "@/bot";
-
+import { MinecraftBot } from "../bot";
+import logger from "../utils/observability/logger";
 export type ErrorCategory =
   | "NETWORK"
   | "PATHFINDING"
@@ -75,11 +74,15 @@ export class ErrorHandler {
 
     // Inventory errors - try to manage inventory
     this.retryStrategies.set("INVENTORY", {
-      maxRetries: 2,
+      maxRetries: 3,
       baseDelay: 1000,
       maxDelay: 5000,
       backoffFactor: 1.5,
-      shouldRetry: (context) => context.retryCount < 2,
+      shouldRetry: (context) => {
+        // Don't retry if it's a critical inventory error
+        if (context.metadata?.isCritical) return false;
+        return context.retryCount < 3;
+      },
     });
 
     // Block interaction errors - try different approaches
@@ -114,12 +117,64 @@ export class ErrorHandler {
 
     this.fallbackStrategies.set("INVENTORY", [
       {
-        shouldFallback: (context) => context.retryCount >= 2,
+        shouldFallback: (context) => context.retryCount >= 3 && !context.metadata?.isCritical,
         execute: async (context) => {
-          // No fallback available for inventory errors
-          throw new Error("Inventory error: no fallback available");
+          try {
+            // Try to free up space by dropping non-essential items
+            const inventory = this.bot.getMineflayerBot().inventory;
+            const items = inventory.items();
+            
+            // Sort items by importance (you can customize this logic)
+            const sortedItems = items.sort((a, b) => {
+              const aIsEssential = this.isEssentialItem(a);
+              const bIsEssential = this.isEssentialItem(b);
+              if (aIsEssential && !bIsEssential) return 1;
+              if (!aIsEssential && bIsEssential) return -1;
+              return 0;
+            });
+
+            // Drop non-essential items until we have space
+            for (const item of sortedItems) {
+              if (!this.isEssentialItem(item)) {
+                try {
+                  await this.bot.getMineflayerBot().toss(item.type, null, item.count);
+                  return; // Successfully freed up space
+                } catch (error) {
+                  logger.warn(`Failed to drop item ${item.name}`, { error });
+                }
+              }
+            }
+
+            throw new Error("Could not free up inventory space");
+          } catch (error) {
+            throw new Error(`Inventory fallback failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
         },
       },
+      {
+        shouldFallback: (context) => context.metadata?.isCritical || context.retryCount >= 3,
+        execute: async (context) => {
+          // Critical error or all retries failed - try to save inventory state
+          try {
+            const inventory = this.bot.getMineflayerBot().inventory;
+            const items = inventory.items();
+            
+            // Log inventory state for debugging
+            logger.error("Critical inventory error - current state:", {
+              itemCount: items.length,
+              items: items.map(item => ({
+                name: item.name,
+                count: item.count,
+                slot: item.slot
+              }))
+            });
+
+            throw new Error("Critical inventory error - state logged");
+          } catch (error) {
+            throw new Error(`Inventory state logging failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        },
+      }
     ]);
   }
 
@@ -208,5 +263,27 @@ export class ErrorHandler {
       default:
         return "MEDIUM";
     }
+  }
+
+  private isEssentialItem(item: any): boolean {
+    // Define what items are essential (you can customize this logic)
+    const essentialTypes = [
+      'diamond_sword',
+      'diamond_pickaxe',
+      'diamond_axe',
+      'diamond_shovel',
+      'diamond_helmet',
+      'diamond_chestplate',
+      'diamond_leggings',
+      'diamond_boots',
+      'shield',
+      'bow',
+      'arrow',
+      'ender_pearl',
+      'water_bucket',
+      'food'
+    ];
+
+    return essentialTypes.some(type => item.name.includes(type));
   }
 }

@@ -1,10 +1,9 @@
 import { Task, TaskResult, TaskStatus, TaskType } from '@/types/task';
 import { MLTaskOptimizer } from './optimizer';
-import { MLStateManager } from '../state/manager';
-import { TaskHistory } from '@/types';
+import { MLStateManager } from '../state/manager'; 
 import { Logger } from '../../utils/observability/logger';
-import { metrics } from '../../utils/observability/metrics';
-import { EnhancedGameState } from '@/types';
+import { metrics } from '../../utils/observability/metrics'; 
+import { TaskHistory } from '@/types/ml/state';
 
 export class MLTaskExecutor {
   private optimizer: MLTaskOptimizer;
@@ -28,13 +27,16 @@ export class MLTaskExecutor {
 
     try {
       // Get current game state
+      this.logger.info('Fetching current game state...');
       const gameState = await this.stateManager.getState();
       const convertedGameState = this.stateManager.convertToGameState(gameState);
 
       // Optimize task execution
+      this.logger.info('Optimizing task execution...');
       const optimizationResult = await this.optimizer.optimizeTask(task, convertedGameState);
 
       // Update task with optimization results
+      this.logger.info('Updating task with optimization results...');
       task.priority = optimizationResult.priority;
       task.metadata = {
         ...task.metadata,
@@ -44,14 +46,22 @@ export class MLTaskExecutor {
       };
 
       // Execute the optimized plan
+      this.logger.info('Executing optimized plan...');
       await this.executeOptimizedPlan(task, optimizationResult.executionPlan);
 
       // Record successful execution
       const duration = Date.now() - startTime;
+      this.logger.info('Recording task execution...');
       this.recordTaskExecution(task, true);
 
       metrics.tasksCompleted.inc({ task_type: task.type });
       metrics.taskDuration.observe({ task_type: task.type }, duration);
+
+      this.logger.info('Task execution completed successfully', { 
+        taskId: task.id, 
+        duration: `${duration}ms`,
+        confidence: optimizationResult.confidence 
+      });
 
       return {
         success: true,
@@ -63,30 +73,11 @@ export class MLTaskExecutor {
         }
       };
     } catch (error) {
-      const duration = Date.now() - startTime;
-      this.recordTaskExecution(task, false);
-
-      metrics.tasksFailed.inc({ 
-        task_type: task.type,
-        error_type: error instanceof Error ? error.message : 'unknown'
-      });
-
-      this.logger.error('ML task execution failed', { 
+      this.logger.error('Task execution failed', { 
         taskId: task.id, 
-        error,
-        duration 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       });
-
-      return {
-        success: false,
-        task,
-        duration,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        data: {
-          executionPlan: task.metadata?.executionPlan || [],
-          confidence: task.metadata?.confidence || 0
-        }
-      };
+      throw error;
     }
   }
 
@@ -101,7 +92,7 @@ export class MLTaskExecutor {
       
       switch (action) {
         case 'resolve':
-          await this.executeDependencyResolution(params[0]);
+          await this.executeDependencyResolution(params[0] || '');
           break;
         case 'execute':
           await this.executeMainTask(task);
@@ -118,7 +109,9 @@ export class MLTaskExecutor {
 
   private async executeDependencyResolution(dependency: string): Promise<void> {
     const [type, value] = dependency.split(':');
-    
+    if (!type || !value) {
+      throw new Error('Invalid dependency format');
+    }
     switch (type) {
       case 'block':
         await this.resolveBlockDependency(value);
@@ -241,12 +234,12 @@ export class MLTaskExecutor {
   ): void {
     const history: TaskHistory = {
       taskId: task.id,
-      taskType: task.type,
       success,  
       startTime: Date.now() - 1,
       endTime: Date.now(),
-      resourcesUsed: new Map(),
-      executionTime: 1
+      resourcesUsed: {}, 
+      type: task.type,
+      status: success ? 'success' : 'failure'
     };
     
     this.taskHistory.set(task.id, history);

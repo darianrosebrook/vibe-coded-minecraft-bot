@@ -1,10 +1,30 @@
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
 import { Tool } from 'mineflayer-tool';
-import { PVP } from 'mineflayer-pvp';
+import { PVP as PVPType } from 'mineflayer-pvp/lib/PVP';
 import { CollectBlock } from 'mineflayer-collectblock';
-import { AutoEat } from 'mineflayer-auto-eat';
 import { Pathfinder } from 'mineflayer-pathfinder';
+
+// Define the correct AutoEat interface based on the error message
+interface AutoEat {
+  disabled: boolean;
+  isEating: boolean;
+  options: any; // Using any for options since we don't have the exact type
+  eat: (offhand?: boolean) => Promise<boolean>;
+  disable: () => void;
+  enable: () => void;
+}
+
+// Extend Bot type to include plugins
+declare module 'mineflayer' {
+  interface Bot {
+    pvp: PVPType;
+    tool: Tool;
+    collectBlock: CollectBlock;
+    autoEat: AutoEat;
+    pathfinder: Pathfinder;
+  }
+}
 
 export interface BotStateSource {
   /** Get current bot position */
@@ -88,7 +108,7 @@ export interface TaskStateSource {
 export class MLStateDataSources {
   private bot: Bot;
   private toolPlugin: Tool;
-  private pvpPlugin: PVP;
+  private pvpPlugin: PVPType;
   private collectBlockPlugin: CollectBlock;
   private autoEatPlugin: AutoEat;
   private pathfinderPlugin: Pathfinder;
@@ -112,7 +132,7 @@ export class MLStateDataSources {
           name: item.name,
           count: item.count
         })),
-        emptySlots: this.bot.inventory.emptySlots(),
+        emptySlots: this.bot.inventory.slots.filter(slot => slot === null).length,
         totalSlots: this.bot.inventory.slots.length
       }),
       getMovement: () => ({
@@ -130,11 +150,12 @@ export class MLStateDataSources {
   public getWorldState(): WorldStateSource {
     return {
       getBiome: (position: Vec3) => {
-        const biome = this.bot.biomeAt(position);
+        // Since biomeAt doesn't exist, we'll return a placeholder
+        // TODO: Find appropriate API to get biome information
         return {
-          name: biome.name,
-          temperature: biome.temperature,
-          rainfall: biome.rainfall
+          name: 'unknown',
+          temperature: 0,
+          rainfall: 0
         };
       },
       getTimeOfDay: () => this.bot.time.timeOfDay,
@@ -168,15 +189,17 @@ export class MLStateDataSources {
         if (!item) return null;
         return {
           type: item.name,
-          durability: item.durability
+          durability: item.maxDurability ? (item.maxDurability - item.durabilityUsed) : 0
         };
       },
       getBestTool: (blockType: string) => {
-        const tool = this.toolPlugin.bestTool(this.bot.blockAt(this.bot.entity.position));
-        if (!tool) return null;
+        // Since bestTool doesn't exist, we need to adapt
+        // TODO: Implement proper tool selection based on block type
+        const item = this.bot.heldItem;
+        if (!item) return null;
         return {
-          type: tool.name,
-          durability: tool.durability
+          type: item.name,
+          durability: item.maxDurability ? (item.maxDurability - item.durabilityUsed) : 0
         };
       },
       getToolEffectiveness: (toolType: string, blockType: string) => {

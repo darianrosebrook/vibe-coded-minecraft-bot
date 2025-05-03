@@ -1,22 +1,48 @@
-import { GameState } from '../../llm/context/manager';
 import { ResourceNeedPredictor, PlayerRequestPredictor, TaskDurationPredictor } from './models';
 import { mlMetrics } from '../../utils/observability/metrics';
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
-import { TrainingDataCollector } from './training_data_collector';
-import { RecipeItem } from 'prismarine-recipe';
+import { TrainingDataCollector } from './training_data_collector'; 
 import {
-  EnhancedGameState,
-  ResourceDependency,
-  CraftingRecipe,
-  PlayerBehavior,
-  EnvironmentalFactor,
-  TaskHistory,
-  ResourceImpact,
-  NearbyResource,
-  TerrainAnalysis,
-  MobPresence
-} from '@/types';
+  ResourceDependency, 
+  TaskHistory, 
+  PlayerBehavior,  
+  EnhancedGameState, 
+} from '@/types/ml/state'; 
+import { GameState } from '@/llm/context/manager';
+import { Recipe } from 'prismarine-recipe';
+
+interface CraftingRecipe extends Recipe {
+  inputs: Record<string, number>;
+  outputs: Record<string, number>;
+  tools: string[];
+  time: number;
+}
+
+interface EnvironmentalFactor {
+  type: string;
+  intensity: number;
+  impact: 'low' | 'moderate' | 'high';
+}
+
+interface TerrainAnalysis {
+  difficulty: number;
+  type: string;
+  features: string[];
+}
+
+interface MobPresence {
+  threatLevel: number;
+  mobs: string[];
+  distance: number;
+}
+
+interface ResourceImpact {
+  resource: string;
+  change: number;
+  source: string;
+  timestamp: number;
+}
 
 export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
   private resourceDependencies: Map<string, ResourceDependency>;
@@ -40,47 +66,50 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     try {
       // Convert EnhancedGameState to GameState for base class
       const baseGameState: GameState = {
-        position: gameState.position,
-        health: gameState.bot.health,
-        food: gameState.bot.food,
+        position: gameState.botState.position,
+        health: gameState.botState.health,
+        food: gameState.botState.food,
         inventory: {
-          items: gameState.inventory.items().map(item => ({
-            type: item.name,
-            quantity: item.count
+          items: gameState.botState.inventory.items.map(item => ({
+            type: item.type,
+            quantity: item.quantity
           })),
           totalSlots: 36,
-          usedSlots: 36 - gameState.inventory.emptySlots()
+          usedSlots: 36 - gameState.botState.inventory.size
         },
-        biome: 'unknown', // Will be updated by MLStateManager
-        timeOfDay: gameState.bot.time.timeOfDay,
-        isRaining: gameState.bot.isRaining,
-        nearbyBlocks: [],
-        nearbyEntities: Object.values(gameState.players).map(player => ({
-          type: 'player',
-          position: player.position,
-          distance: player.position.distanceTo(gameState.position)
+        biome: gameState.worldState.dimension,
+        timeOfDay: gameState.worldState.time,
+        isRaining: gameState.worldState.weather === 'rain',
+        nearbyBlocks: gameState.nearbyBlocks.map(block => ({
+          type: block.type,
+          position: block.position
+        })),
+        nearbyEntities: gameState.nearbyEntities.map(entity => ({
+          type: entity.type,
+          position: entity.position,
+          distance: entity.position.distanceTo(gameState.botState.position)
         })),
         movement: {
-          velocity: gameState.bot.entity.velocity,
-          yaw: gameState.bot.entity.yaw,
-          pitch: gameState.bot.entity.pitch,
+          velocity: gameState.botState.velocity || new Vec3(0, 0, 0),
+          yaw: 0,
+          pitch: 0,
           control: {
-            sprint: gameState.bot.controlState.sprint,
-            sneak: gameState.bot.controlState.sneak
+            sprint: false,
+            sneak: false
           }
         },
         environment: {
-          blockAtFeet: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, -1, 0))?.name || 'unknown',
-          blockAtHead: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, 1, 0))?.name || 'unknown',
-          lightLevel: gameState.bot.blockAt(gameState.bot.entity.position)?.light || 0,
-          isInWater: gameState.bot.entity.isInWater,
-          onGround: gameState.bot.entity.onGround
+          blockAtFeet: gameState.nearbyBlocks.find(b => b.position.equals(gameState.botState.position.offset(0, -1, 0)))?.type || 'unknown',
+          blockAtHead: gameState.nearbyBlocks.find(b => b.position.equals(gameState.botState.position.offset(0, 1, 0)))?.type || 'unknown',
+          lightLevel: 0,
+          isInWater: false,
+          onGround: gameState.botState.onGround || true
         },
-        recentTasks: gameState.tasks.map(task => ({
+        recentTasks: gameState.taskHistory.map(task => ({
           type: task.type,
           parameters: {},
           status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
-          timestamp: task.startTime
+          timestamp: Date.now()
         }))
       };
 
@@ -155,31 +184,30 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
 
   private async analyzeResourceDependencies(gameState: EnhancedGameState): Promise<ResourceDependency[]> {
     const dependencies: ResourceDependency[] = [];
-    const inventory = gameState.bot.inventory;
+    const inventory = gameState.botState.inventory;
     
     // Analyze current inventory items
-    for (const item of inventory.items()) {
-      if (!this.resourceDependencies.has(item.name)) {
-        const recipe = await this.getCraftingRecipe(item.name);
+    for (const item of inventory.items) {
+      console.log(item.type);
+      if (!this.resourceDependencies.has(item.type)) {
+        const registryItem = this.bot.registry.items[Number(item.type)];
+        if (!registryItem?.id) continue;
+        
+        const recipe = await this.getCraftingRecipe(registryItem.id);
         if (recipe) {
           const dependency: ResourceDependency = {
-            resourceType: item.name,
-            quantity: item.count,
-            dependencies: [],
-            craftingSteps: []
+            resource: item.type,
+            required: item.quantity,
+            available: item.quantity,
+            sources: []
           };
           
           // Add recipe ingredients as dependencies
-          for (const ingredient of recipe.ingredients) {
-            dependency.dependencies.push({
-              resourceType: ingredient.name,
-              quantity: ingredient.count,
-              dependencies: [],
-              craftingSteps: []
-            });
+          for (const [ingredientName, quantity] of Object.entries(recipe.inputs)) {
+            dependency.sources.push(ingredientName);
           }
           
-          this.resourceDependencies.set(item.name, dependency);
+          this.resourceDependencies.set(item.type, dependency);
           dependencies.push(dependency);
         }
       }
@@ -188,43 +216,104 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     return dependencies;
   }
 
-  private async getCraftingRecipe(itemName: string): Promise<CraftingRecipe | null> {
+  private async getCraftingRecipe(itemId: number): Promise<CraftingRecipe | null> {
+    const item = this.bot.registry.items[itemId];
+    if (!item?.id) return null;
+    
     try {
-      const recipes = await this.getAllCraftingRecipes();
-      return recipes.find(recipe => recipe.result === itemName) || null;
+      const recipes = Recipe.find(item.id, null);
+      if (!recipes || recipes.length === 0) return null;
+
+      const recipe = recipes[0];
+      if (!recipe) return null;
+
+      const inputs: Record<string, number> = {};
+      const outputs: Record<string, number> = {};
+      const tools: string[] = [];
+
+      // Process ingredients
+      if (recipe.ingredients) {
+        for (const ingredient of recipe.ingredients) {
+          const itemName = this.bot.registry.items[ingredient.id]?.name;
+          if (itemName) {
+            inputs[itemName] = (inputs[itemName] || 0) + ingredient.count;
+            
+            // Check if ingredient is a tool
+            if (this.isTool(itemName)) {
+              tools.push(itemName);
+            }
+          }
+        }
+      }
+
+      // Process result
+      if (recipe.result) {
+        const resultName = this.bot.registry.items[recipe.result.id]?.name;
+        if (resultName) {
+          outputs[resultName] = recipe.result.count;
+        }
+      }
+
+      // Calculate crafting time based on recipe complexity
+      const time = this.calculateCraftingTime(recipe, tools);
+
+      return {
+        result: recipe.result,
+        inShape: recipe.inShape,
+        outShape: recipe.outShape,
+        ingredients: recipe.ingredients,
+        delta: recipe.delta,
+        requiresTable: recipe.requiresTable,
+        inputs,
+        outputs,
+        tools,
+        time
+      };
     } catch (error) {
-      mlMetrics.errors.inc({ type: 'recipe_retrieval_error' });
+      console.error('Error getting crafting recipe:', error);
       return null;
     }
   }
 
-  private async getAllCraftingRecipes(): Promise<CraftingRecipe[]> {
-    try {
-      // Get all known recipes from the bot
-      const firstItem = this.bot.inventory.items()[0];
-      const recipeList = this.bot.recipesFor(firstItem?.type || 3, null, null, true); // 3 is dirt block ID
-      
-      const recipes: CraftingRecipe[] = [];
-      
-      for (const recipe of recipeList) {
-        if (recipe.result) {
-          recipes.push({
-            result: this.bot.registry.items[recipe.result.id].name,
-            ingredients: recipe.delta.map((ing: RecipeItem) => ({
-              name: this.bot.registry.items[ing.id].name,
-              count: Math.abs(ing.count || 1)
-            })),
-            craftingTime: 0,
-            difficulty: 1
-          });
-        }
-      }
-      
-      return recipes;
-    } catch (error) {
-      mlMetrics.errors.inc({ type: 'recipe_retrieval_error' });
-      return [];
+  private isTool(itemName: string): boolean {
+    const toolTypes = ['pickaxe', 'axe', 'shovel', 'hoe', 'sword', 'shears'];
+    return toolTypes.some(type => itemName.includes(type));
+  }
+
+  private calculateCraftingTime(recipe: Recipe, tools: string[]): number {
+    let baseTime = 100; // Base time in ticks (5 seconds)
+    
+    // Adjust time based on recipe complexity
+    if (recipe.requiresTable) baseTime += 50;
+    if (recipe.inShape?.length) baseTime += recipe.inShape.length * 20;
+    if (recipe.ingredients?.length) baseTime += recipe.ingredients.length * 10;
+    
+    // Adjust time based on required tools
+    if (tools.length > 0) {
+      baseTime += tools.length * 30;
     }
+    
+    // Adjust time based on output quantity
+    if (recipe.result) {
+      baseTime += recipe.result.count * 5;
+    }
+    
+    return baseTime;
+  }
+
+  private async getAllCraftingRecipes(): Promise<CraftingRecipe[]> {
+    const recipes: CraftingRecipe[] = [];
+    const items = Object.values(this.bot.registry.items);
+
+    for (const item of items) {
+      if (!item?.id) continue;
+      const recipe = await this.getCraftingRecipe(item.id);
+      if (recipe) {
+        recipes.push(recipe);
+      }
+    }
+
+    return recipes;
   }
 
   private async predictCraftingChains(gameState: EnhancedGameState): Promise<string[][]> {
@@ -250,11 +339,11 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     recipes: CraftingRecipe[]
   ): Promise<string[]> {
     const chain: string[] = [resourceType];
-    const recipe = recipes.find(r => r.result === resourceType);
+    const recipe = recipes.find(r => Object.keys(r.outputs).includes(resourceType));
     
     if (recipe) {
-      for (const ingredient of recipe.ingredients) {
-        const subChain = await this.buildCraftingChain(ingredient.name, recipes);
+      for (const [ingredientName] of Object.entries(recipe.inputs)) {
+        const subChain = await this.buildCraftingChain(ingredientName, recipes);
         chain.push(...subChain);
       }
     }
@@ -264,11 +353,11 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
 
   private async optimizeInventory(gameState: EnhancedGameState): Promise<Map<string, number>> {
     const optimization = new Map<string, number>();
-    const inventory = gameState.bot.inventory;
+    const inventory = gameState.botState.inventory;
     
     // Calculate optimal quantities based on usage patterns
     for (const [resourceType, dependency] of this.resourceDependencies) {
-      const currentQuantity = inventory.items().find(i => i.name === resourceType)?.count || 0;
+      const currentQuantity = inventory.items.find(i => i.type === resourceType)?.quantity || 0;
       const usagePattern = await this.analyzeUsagePattern(resourceType);
       
       // Calculate optimal quantity based on usage pattern and dependencies
@@ -294,19 +383,19 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
       
       // Calculate average usage per task
       const totalUsage = resourceHistory.reduce((sum: number, history: TaskHistory) => 
-        sum + (history.resourcesUsed?.get(resourceType) || 0), 0);
+        sum + (history.resourcesUsed?.[resourceType] || 0), 0);
       
       const averageUsage = totalUsage / resourceHistory.length;
       
       // Calculate trend (simple linear regression)
       const x = resourceHistory.map((_: TaskHistory, i: number) => i);
       const y = resourceHistory.map((history: TaskHistory) => 
-        history.resourcesUsed?.get(resourceType) || 0);
+        history.resourcesUsed?.[resourceType] || 0);
       
       const n = x.length;
       const sumX = x.reduce((a: number, b: number) => a + b, 0);
       const sumY = y.reduce((a: number, b: number) => a + b, 0);
-      const sumXY = x.reduce((sum: number, xi: number, i: number) => sum + xi * y[i], 0);
+      const sumXY = x.reduce((sum: number, xi: number, i: number) => sum + xi * (y[i] ?? 0), 0);
       const sumX2 = x.reduce((sum: number, xi: number) => sum + xi * xi, 0);
       
       const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
@@ -323,15 +412,15 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     dependency: ResourceDependency,
     usagePattern: number
   ): number {
-    let quantity = dependency.quantity;
+    let quantity = dependency.required;
     
     // Increase quantity based on dependencies
-    for (const subDependency of dependency.dependencies) {
-      quantity += subDependency.quantity * usagePattern;
+    for (const subDependency of dependency.sources) {
+      quantity += usagePattern;
     }
     
     // Add buffer for crafting chains
-    if (dependency.craftingSteps.length > 0) {
+    if (dependency.sources.length > 0) {
       quantity *= 1.2; // 20% buffer
     }
     
@@ -347,13 +436,13 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     
     // Combine resource dependencies with crafting chains
     for (const dependency of dependencies) {
-      const chain = chains.find(chain => chain[0] === dependency.resourceType);
-      const optimizedQuantity = optimization.get(dependency.resourceType) || dependency.quantity;
+      const chain = chains.find(chain => chain[0] === dependency.resource);
+      const optimizedQuantity = optimization.get(dependency.resource) || dependency.required;
       
       predictions.push({
-        resourceType: dependency.resourceType,
+        resource: dependency.resource,
         quantity: optimizedQuantity,
-        dependencies: dependency.dependencies,
+        sources: dependency.sources,
         craftingSteps: chain || [],
         confidence: this.calculateConfidence(dependency, chain, optimizedQuantity)
       });
@@ -373,20 +462,32 @@ export class EnhancedResourceNeedPredictor extends ResourceNeedPredictor {
     if (chain && chain.length > 0) confidence += 0.2;
     
     // Increase confidence if we have dependencies
-    if (dependency.dependencies.length > 0) confidence += 0.1;
+    if (dependency.sources.length > 0) confidence += 0.1;
     
     // Increase confidence if optimization suggests higher quantity
-    if (optimizedQuantity > dependency.quantity) confidence += 0.1;
+    if (optimizedQuantity > dependency.required) confidence += 0.1;
     
     // Decrease confidence if we have many dependencies
-    if (dependency.dependencies.length > 3) confidence -= 0.1;
+    if (dependency.sources.length > 3) confidence -= 0.1;
     
     return Math.min(Math.max(confidence, 0), 1);
   }
 
   private async getTaskHistory(): Promise<Map<string, TaskHistory[]>> {
-    // TODO: Implement actual task history retrieval
-    return new Map();
+    const history = new Map<string, TaskHistory[]>();
+    
+    const trainingData = this.dataCollector.getTrainingData('task_history');
+    if (trainingData) {
+      for (const prediction of trainingData.predictions) {
+        const task = prediction.input as TaskHistory;
+        if (!history.has(task.type)) {
+          history.set(task.type, []);
+        }
+        history.get(task.type)?.push(task);
+      }
+    }
+    
+    return history;
   }
 }
 
@@ -410,47 +511,50 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
     try {
       // Convert EnhancedGameState to GameState for base class
       const baseGameState: GameState = {
-        position: gameState.position,
-        health: gameState.bot.health,
-        food: gameState.bot.food,
+        position: gameState.botState.position,
+        health: gameState.botState.health,
+        food: gameState.botState.food,
         inventory: {
-          items: gameState.inventory.items().map(item => ({
-            type: item.name,
-            quantity: item.count
+          items: gameState.botState.inventory.items.map(item => ({
+            type: item.type,
+            quantity: item.quantity
           })),
           totalSlots: 36,
-          usedSlots: 36 - gameState.inventory.emptySlots()
+          usedSlots: 36 - gameState.botState.inventory.size
         },
-        biome: 'unknown', // Will be updated by MLStateManager
-        timeOfDay: gameState.bot.time.timeOfDay,
-        isRaining: gameState.bot.isRaining,
-        nearbyBlocks: [],
-        nearbyEntities: Object.values(gameState.players).map(player => ({
-          type: 'player',
-          position: player.position,
-          distance: player.position.distanceTo(gameState.position)
+        biome: gameState.worldState.dimension,
+        timeOfDay: gameState.worldState.time,
+        isRaining: gameState.worldState.weather === 'rain',
+        nearbyBlocks: gameState.nearbyBlocks.map(block => ({
+          type: block.type,
+          position: block.position
+        })),
+        nearbyEntities: gameState.nearbyEntities.map(entity => ({
+          type: entity.type,
+          position: entity.position,
+          distance: entity.position.distanceTo(gameState.botState.position)
         })),
         movement: {
-          velocity: gameState.bot.entity.velocity,
-          yaw: gameState.bot.entity.yaw,
-          pitch: gameState.bot.entity.pitch,
+          velocity: new Vec3(0, 0, 0),
+          yaw: 0,
+          pitch: 0,
           control: {
-            sprint: gameState.bot.controlState.sprint,
-            sneak: gameState.bot.controlState.sneak
+            sprint: false,
+            sneak: false
           }
         },
         environment: {
-          blockAtFeet: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, -1, 0))?.name || 'unknown',
-          blockAtHead: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, 1, 0))?.name || 'unknown',
-          lightLevel: gameState.bot.blockAt(gameState.bot.entity.position)?.light || 0,
-          isInWater: gameState.bot.entity.isInWater,
-          onGround: gameState.bot.entity.onGround
+          blockAtFeet: gameState.nearbyBlocks.find(b => b.position.equals(gameState.botState.position.offset(0, -1, 0)))?.type || 'unknown',
+          blockAtHead: gameState.nearbyBlocks.find(b => b.position.equals(gameState.botState.position.offset(0, 1, 0)))?.type || 'unknown',
+          lightLevel: 0,
+          isInWater: false,
+          onGround: true
         },
-        recentTasks: gameState.tasks.map(task => ({
+        recentTasks: gameState.taskHistory.map(task => ({
           type: task.type,
           parameters: {},
           status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
-          timestamp: task.startTime
+          timestamp: Date.now()
         }))
       };
 
@@ -505,18 +609,15 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
     // Analyze recent player requests
     for (const [playerName, requests] of this.playerBehaviors) {
       const recentRequests = requests.filter(r => 
-        currentTime - r.timestamp < 24 * 60 * 60 * 1000 // Last 24 hours
+        r.lastAction !== undefined
       );
       
       if (recentRequests.length > 0) {
         const behavior: PlayerBehavior = {
-          requestType: recentRequests[0].requestType,
-          frequency: recentRequests.length,
-          timeOfDay: this.getTimeOfDay(currentTime),
-          context: this.getCurrentContext(gameState),
-          successRate: this.calculateSuccessRate(recentRequests),
-          timestamp: currentTime,
-          success: recentRequests[recentRequests.length - 1].success
+          lastAction: recentRequests[0]?.lastAction ?? '',
+          actionHistory: recentRequests.map(r => r.lastAction),
+          preferences: {},
+          skillLevel: this.calculateSkillLevel(recentRequests)
         };
         
         behaviors.push(behavior);
@@ -526,18 +627,8 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
     return behaviors;
   }
 
-  private getTimeOfDay(timestamp: number): number {
-    const date = new Date(timestamp);
-    return date.getHours() + date.getMinutes() / 60;
-  }
-
-  private getCurrentContext(gameState: EnhancedGameState): string {
-    // TODO: Implement actual context analysis
-    return 'default';
-  }
-
-  private calculateSuccessRate(requests: PlayerBehavior[]): number {
-    const successful = requests.filter(r => r.success).length;
+  private calculateSkillLevel(requests: PlayerBehavior[]): number {
+    const successful = requests.filter(r => r.lastAction.includes('success')).length;
     return requests.length > 0 ? successful / requests.length : 0;
   }
 
@@ -564,12 +655,12 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
     for (const request of requests) {
       if (currentSequence.length === 0 || 
           this.isSequenceContinuation(currentSequence, request)) {
-        currentSequence.push(request.requestType);
+        currentSequence.push(request.lastAction);
       } else {
         if (currentSequence.length > 1) {
           sequences.push([...currentSequence]);
         }
-        currentSequence = [request.requestType];
+        currentSequence = [request.lastAction];
       }
     }
     
@@ -600,14 +691,14 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
     // Combine behaviors and patterns with context
     for (const behavior of behaviors) {
       const matchingPatterns = patterns.filter(p => 
-        p.includes(behavior.requestType)
+        p.includes(behavior.lastAction)
       );
       
       const prediction = {
-        requestType: behavior.requestType,
-        confidence: this.calculatePredictionConfidence(behavior, matchingPatterns),
+        requestType: behavior.lastAction,
+        confidence: this.calculatePredictionConfidence(behavior, matchingPatterns, gameState),
         expectedTime: this.calculateExpectedTime(behavior, matchingPatterns),
-        context: behavior.context
+        context: behavior.preferences
       };
       
       predictions.push(prediction);
@@ -618,15 +709,16 @@ export class EnhancedPlayerRequestPredictor extends PlayerRequestPredictor {
 
   private calculatePredictionConfidence(
     behavior: PlayerBehavior,
-    patterns: string[][]
+    patterns: string[][],
+    gameState: EnhancedGameState
   ): number {
-    let confidence = behavior.successRate;
+    let confidence = behavior.skillLevel;
     
     // Increase confidence if we have matching patterns
     if (patterns.length > 0) confidence += 0.2;
     
     // Adjust confidence based on time of day
-    const timeFactor = this.getTimeFactor(behavior.timeOfDay);
+    const timeFactor = this.getTimeFactor(gameState.worldState.time);
     confidence *= timeFactor;
     
     return Math.min(Math.max(confidence, 0), 1);
@@ -677,47 +769,50 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
     try {
       // Convert EnhancedGameState to GameState for base class
       const baseGameState: GameState = {
-        position: gameState.position,
-        health: gameState.bot.health,
-        food: gameState.bot.food,
+        position: gameState.botState.position,
+        health: gameState.botState.health,
+        food: gameState.botState.food,
         inventory: {
-          items: gameState.inventory.items().map(item => ({
-            type: item.name,
-            quantity: item.count
+          items: gameState.botState.inventory.items.map(item => ({
+            type: item.type,
+            quantity: item.quantity
           })),
           totalSlots: 36,
-          usedSlots: 36 - gameState.inventory.emptySlots()
+          usedSlots: 36 - gameState.botState.inventory.size
         },
-        biome: 'unknown', // Will be updated by MLStateManager
-        timeOfDay: gameState.bot.time.timeOfDay,
-        isRaining: gameState.bot.isRaining,
-        nearbyBlocks: [],
-        nearbyEntities: Object.values(gameState.players).map(player => ({
-          type: 'player',
-          position: player.position,
-          distance: player.position.distanceTo(gameState.position)
+        biome: gameState.worldState.dimension,
+        timeOfDay: gameState.worldState.time,
+        isRaining: gameState.worldState.weather === 'rain',
+        nearbyBlocks: gameState.nearbyBlocks.map(block => ({
+          type: block.type,
+          position: block.position
+        })),
+        nearbyEntities: gameState.nearbyEntities.map(entity => ({
+          type: entity.type,
+          position: entity.position,
+          distance: entity.position.distanceTo(gameState.botState.position)
         })),
         movement: {
-          velocity: gameState.bot.entity.velocity,
-          yaw: gameState.bot.entity.yaw,
-          pitch: gameState.bot.entity.pitch,
+          velocity: new Vec3(0, 0, 0),
+          yaw: 0,
+          pitch: 0,
           control: {
-            sprint: gameState.bot.controlState.sprint,
-            sneak: gameState.bot.controlState.sneak
+            sprint: false,
+            sneak: false
           }
         },
         environment: {
-          blockAtFeet: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, -1, 0))?.name || 'unknown',
-          blockAtHead: gameState.bot.blockAt(gameState.bot.entity.position.offset(0, 1, 0))?.name || 'unknown',
-          lightLevel: gameState.bot.blockAt(gameState.bot.entity.position)?.light || 0,
-          isInWater: gameState.bot.entity.isInWater,
-          onGround: gameState.bot.entity.onGround
+          blockAtFeet: gameState.nearbyBlocks.find(b => b.position.equals(gameState.botState.position.offset(0, -1, 0)))?.type || 'unknown',
+          blockAtHead: gameState.nearbyBlocks.find(b => b.position.equals(gameState.botState.position.offset(0, 1, 0)))?.type || 'unknown',
+          lightLevel: 0,
+          isInWater: false,
+          onGround: true
         },
-        recentTasks: gameState.tasks.map(task => ({
+        recentTasks: gameState.taskHistory.map(task => ({
           type: task.type,
           parameters: {},
           status: task.status === 'completed' ? 'success' : task.status === 'failed' ? 'failure' : 'in_progress',
-          timestamp: task.startTime
+          timestamp: Date.now()
         }))
       };
 
@@ -768,42 +863,42 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
 
   private async analyzeEnvironmentalFactors(gameState: EnhancedGameState): Promise<EnvironmentalFactor[]> {
     const factors: EnvironmentalFactor[] = [];
-    const bot = gameState.bot;
+    const bot = gameState.botState;
     
     // Time of day factor
     const timeFactor: EnvironmentalFactor = {
       type: 'time',
-      impact: this.calculateTimeImpact(bot.time.timeOfDay),
-      weight: 0.3
+      intensity: this.calculateTimeImpact(gameState.worldState.time),
+      impact: 'moderate'
     };
     factors.push(timeFactor);
     
     // Weather factor
-    if (bot.isRaining) {
+    if (gameState.worldState.weather === 'rain') {
       factors.push({
         type: 'weather',
-        impact: 0.2, // Tasks take 20% longer in rain
-        weight: 0.2
+        intensity: 0.2,
+        impact: 'moderate'
       });
     }
     
     // Terrain factor
-    const terrainFactor = await this.analyzeTerrain(bot.entity.position);
+    const terrainFactor = await this.analyzeTerrain(gameState.botState.position);
     if (terrainFactor) {
       factors.push({
         type: 'terrain',
-        impact: terrainFactor.difficulty,
-        weight: 0.3
+        intensity: terrainFactor.difficulty,
+        impact: 'high'
       });
     }
     
     // Mob presence factor
-    const mobFactor = await this.analyzeMobPresence(bot);
+    const mobFactor = await this.analyzeMobPresence(gameState);
     if (mobFactor) {
       factors.push({
         type: 'mobs',
-        impact: mobFactor.threatLevel * 0.1, // 10% impact per threat level
-        weight: 0.2
+        intensity: mobFactor.threatLevel * 0.1,
+        impact: 'high'
       });
     }
     
@@ -820,7 +915,7 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
     return null;
   }
 
-  private async analyzeMobPresence(bot: Bot): Promise<MobPresence | null> {
+  private async analyzeMobPresence(gameState: EnhancedGameState): Promise<MobPresence | null> {
     // TODO: Implement actual mob presence analysis
     return null;
   }
@@ -840,8 +935,20 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
   }
 
   private async getTaskHistory(): Promise<Map<string, TaskHistory[]>> {
-    // TODO: Implement actual task history retrieval
-    return new Map();
+    const history = new Map<string, TaskHistory[]>();
+    
+    const trainingData = this.dataCollector.getTrainingData('task_history');
+    if (trainingData) {
+      for (const prediction of trainingData.predictions) {
+        const task = prediction.input as TaskHistory;
+        if (!history.has(task.type)) {
+          history.set(task.type, []);
+        }
+        history.get(task.type)?.push(task);
+      }
+    }
+    
+    return history;
   }
 
   private calculateDifficulty(history: TaskHistory[]): number {
@@ -851,27 +958,26 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
 
   private async analyzeResourceAvailability(gameState: EnhancedGameState): Promise<Map<string, number>> {
     const availability = new Map<string, number>();
-    const bot = gameState.bot;
+    const bot = gameState.botState;
     
     // Analyze inventory
-    for (const item of bot.inventory.items()) {
+    for (const item of bot.inventory.items) {
       const impact = this.calculateResourceImpact(item);
-      availability.set(item.name, impact.impact * impact.availability);
+      availability.set(item.type, impact.change);
     }
     
     // Analyze nearby resources
-    const nearbyResources = await this.findNearbyResources(bot);
-    for (const resource of nearbyResources) {
+    for (const resource of gameState.nearbyResources) {
       const impact = this.calculateResourceImpact(resource);
-      availability.set(resource.type, impact.impact * impact.availability);
+      availability.set(resource.type, impact.change);
     }
     
     return availability;
   }
 
   private calculateResourceImpact(item: any): ResourceImpact {
-    const type = item.name || item.type;
-    const quantity = item.count || 1;
+    const type = item.type || item.name;
+    const quantity = item.quantity || 1;
     const distance = item.distance || 0;
     
     // Calculate base impact based on item type
@@ -884,10 +990,10 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
     const impact = this.calculateFinalImpact(baseImpact, availability);
     
     return {
-      type,
-      impact,
-      availability,
-      distance
+      resource: type,
+      change: impact,
+      source: 'inventory',
+      timestamp: Date.now()
     };
   }
 
@@ -947,11 +1053,6 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
     return Math.min(Math.max(impact * randomFactor, 0), 1);
   }
 
-  private async findNearbyResources(bot: Bot): Promise<NearbyResource[]> {
-    // TODO: Implement actual nearby resource finding
-    return [];
-  }
-
   private async combinePredictions(
     factors: EnvironmentalFactor[],
     scaling: Map<string, number>,
@@ -963,7 +1064,7 @@ export class EnhancedTaskDurationPredictor extends TaskDurationPredictor {
     for (const [taskType, difficulty] of this.difficultyScaling) {
       const environmentalImpact = factors
         .filter(f => f.type === taskType)
-        .reduce((sum, f) => sum + f.impact * f.weight, 0);
+        .reduce((sum, f) => sum + f.intensity * (f.impact === 'high' ? 1.5 : f.impact === 'moderate' ? 1.0 : 0.5), 0);
       
       const resourceImpact = availability.get(taskType) || 1;
       

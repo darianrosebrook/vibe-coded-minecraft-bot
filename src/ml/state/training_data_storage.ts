@@ -116,6 +116,9 @@ export class TrainingDataStorage {
       }
 
       const targetVersion = version ?? versions[0]; // Use latest if no version specified
+      if (!targetVersion) {
+        return null;
+      }
       const filePath = this.getFilePath(predictionType, targetVersion);
 
       const data = await fs.readFile(filePath, 'utf-8');

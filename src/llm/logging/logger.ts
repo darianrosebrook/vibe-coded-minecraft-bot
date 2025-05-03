@@ -1,6 +1,6 @@
 import { Task } from "@/types/task";
 import { Logger } from "../../utils/observability/logger";
-import { TaskContext, TaskParseResult } from "@/types";
+import { TaskContext, TaskParseResult } from "../types";
 
 export class TaskParsingLogger {
   private readonly logger: Logger;

@@ -112,11 +112,13 @@ export class HotspotTracker {
    * Group resource data by type
    */
   private groupDataByResourceType(): Record<string, ResourceData[]> {
-    return this.resourceData.reduce((groups, data) => {
-      if (!groups[data.blockType]) {
-        groups[data.blockType] = [];
+    return this.resourceData.reduce((groups, data) => { 
+      const blockGroup = groups[data.blockType];
+      if (blockGroup) {
+        blockGroup.push(data);
+      } else {
+        groups[data.blockType] = [data];
       }
-      groups[data.blockType].push(data);
       return groups;
     }, {} as Record<string, ResourceData[]>);
   }

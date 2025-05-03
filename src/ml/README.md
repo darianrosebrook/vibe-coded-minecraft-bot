@@ -177,4 +177,67 @@ const metrics = await monitor.getMetrics();
 - `tensorflow.js` - Machine learning framework
 - `ml-matrix` - Matrix operations
 - `winston` - Logging system
-- `mineflayer` - Minecraft bot framework 
+- `mineflayer` - Minecraft bot framework
+
+## State Management
+
+### Game State Factory Pattern
+
+The Minecraft bot implementation now uses a factory pattern for managing game state objects. This approach provides several benefits:
+
+1. **Consistency**: All state objects are created with consistent structure and default values
+2. **Maintainability**: Changes to the state structure only need to be made in one place
+3. **Extensibility**: The factory pattern allows easy extension for specialized state objects
+
+### Implementation
+
+The state factory system consists of two main components:
+
+1. **`GameStateFactory`**: Base factory for creating standard game state objects (in `src/types/ml/gameState.ts`)
+2. **`MLStateFactory`**: Extended factory with ML-specific state creation methods (in `src/ml/state/factory.ts`)
+
+### Usage Examples
+
+#### Creating Default State Objects
+
+```typescript
+// Get a default game state
+const defaultState = GameStateFactory.createDefaultGameState();
+
+// Get a command context with all defaults
+const defaultContext = GameStateFactory.createCommandContext();
+
+// Create ML-specific objects
+const mlInventory = MLStateFactory.createDefaultMLInventory();
+const resourceMap = MLStateFactory.createResourceMap(['iron_ore', 'coal_ore']);
+const biomeBlocksMap = MLStateFactory.createBiomeBlocksMap(['plains', 'forest']);
+```
+
+#### Creating ML Input Vectors
+
+```typescript
+// Create a flat input vector for ML models
+const mlInput = MLStateFactory.createMLModelInput(botState, worldState);
+```
+
+#### Using in Components
+
+The state factories can be used in various components:
+
+```typescript
+// In a component constructor
+constructor() {
+  this.knownBlocks = MLStateFactory.createBiomeBlocksMap();
+  this.resourceLocations = MLStateFactory.createResourceMap(['diamond_ore', 'iron_ore']);
+}
+
+// When handling ML processing
+async processCommand(command) {
+  // Use default context if none provided
+  const context = commandContext || GameStateFactory.createCommandContext();
+  
+  // Process with context...
+}
+```
+
+This pattern is particularly useful for ensuring consistent state objects throughout the codebase. 

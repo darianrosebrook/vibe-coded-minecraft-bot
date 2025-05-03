@@ -1,5 +1,6 @@
 export interface Item {
   name: string;
+  type: string;
   count: number;
   metadata?: number;
   nbt?: Record<string, any>;

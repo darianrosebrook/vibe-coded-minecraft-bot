@@ -1,5 +1,5 @@
 import { configManager } from "./configManager";
-import { Config } from "@/types";
+import { Config } from "@/types/modules/config";
 
 // Export the configuration type
 export type { Config };

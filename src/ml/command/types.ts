@@ -1,4 +1,5 @@
-import { TaskContext } from '@/types';
+import { TaskContext } from  '@/llm/types';
+import { CommandContext, CommandPattern } from '@/types/command';
 
 export interface IntentClassification {
   intent: string;
@@ -37,14 +38,6 @@ export interface ResponseQuality {
     relevance: number;
   };
   suggestions: string[];
-}
-
-export interface CommandPattern {
-  pattern: string;
-  intent: string;
-  parameters: Record<string, string>;
-  examples: string[];
-  confidence: number;
 }
 
 export interface MLCommandParser {

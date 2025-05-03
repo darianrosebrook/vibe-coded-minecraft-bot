@@ -1,4 +1,4 @@
-import { TaskContext } from '@/types';
+import { TaskContext } from '../types';
 
 export class MLIntentClassifier {
   private readonly intents = [
@@ -82,7 +82,7 @@ export class MLIntentClassifier {
   }
 
   public async train(commands: string[], intents: string[]): Promise<void> {
-    // Implement training logic here
+    // TODO: Implement training logic here
     // This would typically involve:
     // 1. Feature extraction
     // 2. Model training

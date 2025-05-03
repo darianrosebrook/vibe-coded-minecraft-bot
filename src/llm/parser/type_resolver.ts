@@ -1,5 +1,5 @@
 import { Task, TaskParameters, TaskType } from '@/types/task';
-import { TaskContext } from '@/types';
+import { TaskContext } from  '../types';
 import { Logger } from '../../utils/observability/logger';
 import { TaskParsingLogger } from '../logging/logger';
 import { 
@@ -78,7 +78,7 @@ export class TaskTypeResolver {
     );
 
     if (similarTasks.length > 0) {
-      return similarTasks[0].type as TaskType;
+      return similarTasks[0]?.type as TaskType;
     }
 
     // Check for specific command patterns using the task type hierarchy

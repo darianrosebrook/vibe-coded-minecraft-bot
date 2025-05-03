@@ -13,8 +13,7 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
   fakeTimers: {
     enableGlobally: true,
-  },
-  setupFilesAfterEnv: ["<rootDir>/src/ml/tests/setup.ts"],
+  }, 
   testTimeout: 30000, // Increase timeout for TensorFlow.js operations
   verbose: true,
   detectOpenHandles: true,

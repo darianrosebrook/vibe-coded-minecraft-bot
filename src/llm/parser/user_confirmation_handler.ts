@@ -1,5 +1,5 @@
 import { TaskType } from '@/types/task';
-import { TaskContext } from '@/types';
+import { TaskContext } from  '../types';
 
 import { ContextDisambiguator, DisambiguationResult } from './context_disambiguator';
 
@@ -140,8 +140,10 @@ export class UserConfirmationHandler {
     // If we're at the limit, remove the oldest confirmation
     if (this.pendingConfirmations.size >= this.maxPendingConfirmations) {
       const oldestCommand = Array.from(this.pendingConfirmations.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0];
-      this.pendingConfirmations.delete(oldestCommand);
+        .sort((a, b) => a[1].timestamp - b[1].timestamp)[0]?.[0];
+      if (oldestCommand) {
+        this.pendingConfirmations.delete(oldestCommand);
+      }
     }
 
     this.pendingConfirmations.set(prompt.command, prompt);

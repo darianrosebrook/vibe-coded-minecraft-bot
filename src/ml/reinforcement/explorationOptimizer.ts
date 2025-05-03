@@ -1,7 +1,7 @@
 import { ExplorationMLState, ResourceDistribution, BiomeTransition, ExplorationPath } from '../state/explorationState';
 import { Vec3 } from 'vec3';
 import logger from '../../utils/observability/logger';
-import { metrics } from '../../utils/observability/metrics';
+import { Gauge } from 'prom-client';
 
 export class ExplorationOptimizer {
   private stateHistory: ExplorationMLState[] = [];
@@ -9,17 +9,19 @@ export class ExplorationOptimizer {
   private readonly learningRate = 0.01;
   private readonly resourcePatterns: Map<string, number[][]> = new Map();
   private readonly biomePatterns: Map<string, number[][]> = new Map();
+  private explorationEfficiencyMetric!: Gauge<string>;
+  private resourceDiscoveryRateMetric!: Gauge<string>;
 
   constructor() {
     this.initializeMetrics();
   }
 
   private initializeMetrics() {
-    metrics.explorationEfficiency = new metrics.Gauge({
+    this.explorationEfficiencyMetric = new Gauge({
       name: 'exploration_efficiency',
       help: 'Current efficiency of exploration',
     });
-    metrics.resourceDiscoveryRate = new metrics.Gauge({
+    this.resourceDiscoveryRateMetric = new Gauge({
       name: 'resource_discovery_rate',
       help: 'Current rate of resource discovery',
     });
@@ -35,8 +37,8 @@ export class ExplorationOptimizer {
   }
 
   private updateMetrics(state: ExplorationMLState): void {
-    metrics.explorationEfficiency.set(state.performanceMetrics.explorationEfficiency);
-    metrics.resourceDiscoveryRate.set(state.performanceMetrics.resourceDiscoveryRate);
+    this.explorationEfficiencyMetric.set(state.performanceMetrics.explorationEfficiency);
+    this.resourceDiscoveryRateMetric.set(state.performanceMetrics.resourceDiscoveryRate);
   }
 
   private updatePatterns(state: ExplorationMLState): void {
@@ -70,10 +72,10 @@ export class ExplorationOptimizer {
     // Use pattern to predict likely resource locations
     return pattern.map(([x, z, depth]) => ({
       type: resourceType,
-      position: new Vec3(x, depth, z),
+      position: new Vec3(x ?? 0, depth ?? 0, z ?? 0),
       quantity: 1, // Default quantity
       biome: 'unknown', // Would be filled in during actual exploration
-      depth,
+      depth: depth ?? 0,
       timestamp: Date.now(),
     }));
   }
@@ -89,11 +91,13 @@ export class ExplorationOptimizer {
       const [fromBiome, toBiome] = key.split('-');
       if (fromBiome === currentBiome) {
         pattern.forEach(([x, z, distance]) => {
+          if (x === undefined || z === undefined || distance === undefined) return;
+          if (fromBiome === undefined || toBiome === undefined) return;
           transitions.push({
             fromBiome,
             toBiome,
             position: new Vec3(x, currentPosition.y, z),
-            distance,
+            distance: distance ?? 0,
             timestamp: Date.now(),
           });
         });
@@ -151,6 +155,7 @@ export class ExplorationOptimizer {
     const sortedWaypoints = [...waypoints].sort((a, b) => {
       const distA = a.distanceTo(start);
       const distB = b.distanceTo(start);
+      if (!a || !b) return 0;
       return distA - distB;
     });
 
@@ -160,7 +165,11 @@ export class ExplorationOptimizer {
   private calculatePathDistance(path: Vec3[]): number {
     let distance = 0;
     for (let i = 1; i < path.length; i++) {
-      distance += path[i].distanceTo(path[i - 1]);
+      const current = path[i];
+      const previous = path[i - 1];
+      if (current && previous) {
+        distance += current.distanceTo(previous);
+      }
     }
     return distance;
   }
@@ -179,6 +188,7 @@ export class ExplorationOptimizer {
   private getBiomeAt(position: Vec3): string {
     // This would be implemented to get the actual biome at the position
     // For now, return a placeholder
+    position
     return 'unknown';
   }
 

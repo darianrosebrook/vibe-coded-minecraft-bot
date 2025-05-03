@@ -5,7 +5,7 @@ import { CommandHandler } from '../commands';
 
 // Import all task modules
 import { MiningTask } from './mining';
-import { NavigationTask } from './nav';
+import { NavTask } from './nav';
 import { FarmingTask } from './farming';
 import { InventoryTask } from './inventory';
 import { GatheringTask } from './gathering';
@@ -22,7 +22,7 @@ interface TaskRegistry {
 
 const taskRegistry: TaskRegistry = {
   mining: MiningTask,
-  navigation: NavigationTask,
+  navigation: NavTask,
   farming: FarmingTask,
   inventory: InventoryTask,
   gathering: GatheringTask
@@ -58,7 +58,7 @@ function listTasks(): string[] {
 
 // Register built-in tasks
 registerTask('mining', MiningTask);
-registerTask('navigation', NavigationTask);
+registerTask('navigation', NavTask);
 registerTask('farming', FarmingTask);
 registerTask('inventory', InventoryTask);
 

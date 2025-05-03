@@ -1,4 +1,4 @@
-import { Vec3 } from '../common';
+import { Vec3 } from 'vec3';
 
 /**
  * Represents a single resource location with its properties

@@ -1,5 +1,5 @@
-import { Bot } from 'mineflayer';
-import { CommandExecutionResult, ResourceUsage, SuccessMetrics, FailureAnalysis, ModelUpdates } from '@/types';
+import { CommandExecutionResult, FailureAnalysis, ModelUpdates, ResourceUsage } from '@/ml/reinforcement/types';
+import { Bot } from 'mineflayer'; 
 
 export class MLFeedbackSystem {
     private bot: Bot;

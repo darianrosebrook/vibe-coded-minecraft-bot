@@ -1,7 +1,7 @@
-import { MiningMLState } from '../state/miningState';
 import { Vec3 } from 'vec3';
 import logger from '../../utils/observability/logger';
 import { mlMetrics } from '../../utils/observability/metrics';
+import { MiningMLState } from '@/types/ml/mining';
 
 export class MiningOptimizer {
   private stateHistory: MiningMLState[] = [];
@@ -25,8 +25,11 @@ export class MiningOptimizer {
   }
 
   private updateMetrics(state: MiningMLState): void {
-    mlMetrics.predictionAccuracy.set({ type: 'mining' }, state.performance.miningEfficiency);
-    mlMetrics.predictionConfidence.set({ type: 'mining' }, state.performance.resourceDiscoveryRate);
+    const performance = state.performance;
+    if (!performance) return;
+
+    mlMetrics.predictionAccuracy.set({ type: 'mining' }, performance.miningEfficiency);
+    mlMetrics.predictionConfidence.set({ type: 'mining' }, performance.resourceDiscoveryRate);
     mlMetrics.stateUpdates.inc({ type: 'mining' });
   }
 
@@ -44,7 +47,9 @@ export class MiningOptimizer {
   }
 
   public calculateEfficiency(state: MiningMLState): number {
-    const { miningEfficiency, resourceDiscoveryRate, toolDurability } = state.performance;
+    const performance = state.performance;
+    if (!performance) return 0;
+    const { miningEfficiency, resourceDiscoveryRate, toolDurability } = performance;
     return (miningEfficiency * 0.5 + resourceDiscoveryRate * 0.3 + toolDurability * 0.2);
   }
 

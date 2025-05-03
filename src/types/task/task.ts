@@ -1,39 +1,9 @@
-/**
- * Type Organization
- * 
- * This project uses a modular type system organized as follows:
- * 
- *src/types/
-├── core/
-│   ├── position.ts
-│   └── error.ts
-├── bot/
-│   └── config.ts
-├── inventory/
-│   └── inventory.ts
-├── ml/
-│   ├── performance.ts
-│   ├── model.ts
-│   ├── state.ts
-│   ├── command.ts
-│   ├── mining.ts
-│   ├── redstone.ts
-│   └── chat.ts
-├── index.ts
-└── task.ts
- * 
- * When adding new types, please place them in the appropriate directory
- * based on their domain and usage.
- */
-
-import { MinecraftBot } from '../bot/bot';
-import { CommandHandler } from '../commands';
+import { MinecraftBot } from '@/bot/bot';
+import { CommandHandler } from '@/commands';
 import { Vec3 } from 'vec3';
+import { IDataCollector } from '@/types/ml/interfaces';
 
 // Import ML state types
-import { MiningMLState } from './ml/mining';
-import { RedstoneMLState } from './ml/redstone';
-import { ChatMLState } from './ml/chat';
 
 /**
  * Task System Documentation
@@ -114,12 +84,6 @@ export enum TaskType {
  * };
  * ```
  */
-export type TaskPriority = 20 | 50 | 80;
-export const TaskPriority = {
-  HIGH: 80,
-  MEDIUM: 50,
-  LOW: 20
-} as const;
 
 /**
  * Current state of a task in the execution lifecycle.
@@ -129,13 +93,6 @@ export const TaskPriority = {
  * const taskStatus: TaskStatus = TaskStatus.IN_PROGRESS;
  * ```
  */
-export enum TaskStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled'
-}
 
 /**
  * Requirements for task execution, including items, tools, blocks, and entities.
@@ -255,56 +212,57 @@ export interface MiningTaskParameters extends BaseTaskOptions {
 }
 
 export interface FarmingTaskParameters extends BaseTaskOptions {
-  cropType: 'wheat' | 'carrots' | 'potatoes' | 'beetroot';
   action: 'harvest' | 'plant' | 'replant';
   area: {
     start: { x: number; y: number; z: number };
     end: { x: number; y: number; z: number };
   };
+  checkInterval?: number;
+  cropType: 'wheat' | 'carrots' | 'potatoes' | 'beetroot';
+  maxRetries?: number;
+  minWaterBlocks?: number;
   quantity?: number;
   radius?: number;
-  checkInterval?: number;
   requiresWater?: boolean;
-  minWaterBlocks?: number;
-  usePathfinding?: boolean;
-  waterSources?: Vec3[];
-  useML?: boolean;
-  maxRetries?: number;
   retryDelay?: number;
   timeout?: number;
+  useML?: boolean;
+  usePathfinding?: boolean;
+  waterSources?: Vec3[];
 }
 
 export interface NavigationTaskParameters extends BaseTaskOptions {
+  avoidWater?: boolean;
   location: {
     x: number;
     y: number;
     z: number;
   };
-  mode?: 'walk' | 'sprint' | 'jump';
-  avoidWater?: boolean;
   maxDistance?: number;
+  mode?: 'walk' | 'sprint' | 'jump';
   usePathfinding?: boolean;
+  radius?: number;
 }
 
 export interface InventoryTaskParameters extends BaseTaskOptions {
-  operation: 'check' | 'count' | 'sort';
   itemType?: string;
+  operation: 'check' | 'count' | 'sort';
   quantity?: number;
 }
 
 export interface GatheringTaskParameters extends BaseTaskOptions {
+  avoidWater?: boolean;
   itemType: string;
   quantity?: number;
   radius?: number;
-  usePathfinding?: boolean;
-  avoidWater?: boolean;
   spacing?: number;
+  usePathfinding?: boolean;
 }
 
 export interface ProcessingTaskParameters extends BaseTaskOptions {
   itemType: string;
-  quantity: number;
   processType: 'smelt' | 'craft' | 'brew';
+  quantity: number;
 }
 
 export interface ConstructionTaskParameters extends BaseTaskOptions {
@@ -318,25 +276,25 @@ export interface ConstructionTaskParameters extends BaseTaskOptions {
 }
 
 export interface ExplorationTaskParameters extends BaseTaskOptions {
-  resourceType?: string;
+  avoidWater?: boolean;
   biomeName?: string;
   radius: number;
+  resourceType?: string;
   spacing?: number;
-  avoidWater?: boolean;
   usePathfinding?: boolean;
 }
 
 export interface StorageTaskParameters {
+  action: 'store' | 'retrieve' | 'organize';
   itemType: string;
   quantity: number;
-  action: 'store' | 'retrieve' | 'organize';
 }
 
 export interface CombatTaskParameters {
-  targetType: 'player' | 'mob';
-  targetName?: string;
-  weaponSlot?: number;
   followDistance?: number;
+  targetName?: string;
+  targetType: 'player' | 'mob';
+  weaponSlot?: number;
 }
 
 export interface RedstoneTaskParameters extends BaseTaskOptions {
@@ -388,6 +346,7 @@ export interface QueryTaskParameters extends BaseTaskOptions {
 
 export interface ChatTaskParameters extends BaseTaskOptions {
   message: string;
+  chatType: "whisper" | "normal" | "system" | "action";
   context?: {
     lastMessage?: string;
     playerName?: string;
@@ -407,48 +366,63 @@ export interface ChatTaskParameters extends BaseTaskOptions {
       }>;
     };
   };
-  useML?: boolean;
   maxRetries?: number;
   retryDelay?: number;
   timeout?: number;
+  useML?: boolean;
 }
 
 /**
  * Base task options interface
  */
 export interface BaseTaskOptions {
+  avoidWater?: boolean;
+  dependencies?: TaskDependency[];
   maxRetries?: number;
+  priority?: number;
+  requirements?: TaskRequirements;
   retryDelay?: number;
   timeout?: number;
   useML?: boolean;
-  avoidWater?: boolean;
   usePathfinding?: boolean;
-  priority?: number;
-  requirements?: TaskRequirements;
   validation?: TaskValidation;
-  dependencies?: TaskDependency[];
+  dataCollector?: IDataCollector;
 }
 
 /**
  * Union type for all possible task parameters
  */
-export type TaskParameters = 
-  | MiningTaskParameters
-  | FarmingTaskParameters
-  | NavigationTaskParameters
-  | InventoryTaskParameters
-  | GatheringTaskParameters
-  | ProcessingTaskParameters
+export type TaskParameters =
+  | ChatTaskParameters
+  | CombatTaskParameters
   | ConstructionTaskParameters
   | ExplorationTaskParameters
-  | StorageTaskParameters
-  | CombatTaskParameters
-  | RedstoneTaskParameters
+  | FarmingTaskParameters
+  | GatheringTaskParameters
+  | InventoryTaskParameters
+  | MiningTaskParameters
+  | NavigationTaskParameters
+  | ProcessingTaskParameters
   | QueryTaskParameters
-  | ChatTaskParameters;
+  | RedstoneTaskParameters
+  | StorageTaskParameters
 
 /**
- * Main task interface
+ * Main task interface that represents a unit of work for the Minecraft bot
+ * @interface Task
+ * @property {string} id - Unique identifier for the task
+ * @property {TaskType} type - The type of task to be performed
+ * @property {TaskParameters} parameters - Task-specific parameters and configuration
+ * @property {TaskPriority} priority - Priority level of the task (lower numbers = higher priority)
+ * @property {TaskStatus} status - Current status of the task
+ * @property {Date} [createdAt] - Timestamp when the task was created
+ * @property {Date} [updatedAt] - Timestamp when the task was last updated
+ * @property {string[]} [dependencies] - List of task IDs that must complete before this task can start
+ * @property {number} [timeout] - Maximum time in milliseconds before the task is considered failed
+ * @property {number} [retryCount] - Number of times the task has been retried
+ * @property {number} [maxRetries] - Maximum number of retry attempts allowed
+ * @property {string} [error] - Error message if the task failed
+ * @property {Record<string, any>} [metadata] - Additional metadata about the task
  */
 export interface Task {
   id: string;
@@ -456,8 +430,8 @@ export interface Task {
   parameters: TaskParameters;
   priority: TaskPriority;
   status: TaskStatus;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   dependencies?: string[];
   timeout?: number;
   retryCount?: number;
@@ -470,7 +444,7 @@ export interface Task {
  * Task progress tracking interface
  */
 export interface TaskProgress {
-  taskId: string;
+  taskId?: string;
   currentProgress: number;
   totalProgress: number;
   status: TaskStatus;
@@ -479,41 +453,8 @@ export interface TaskProgress {
   errorCount?: number;
   retryCount?: number;
   progressHistory?: Array<{ timestamp: number; progress: number }>;
-  lastUpdated: number;
-  created: number;
-}
-
-/**
- * Task result interface
- */
-export interface TaskResult {
-  success: boolean;
-  task: Task;
-  error?: string;
-  data?: any;
-  duration?: number;
-}
-
-/**
- * Inventory management types
- */
-export interface InventorySlot {
-  slot: number;
-  item: {
-    name: string;
-    count: number;
-    metadata?: number;
-  };
-}
-
-export interface InventoryCategory {
-  name: string;
-  slots: number[];
-  priority: number;
-  filter?: {
-    items: string[];
-    maxQuantity?: number;
-  };
+  lastUpdated?: number;
+  created?: number;
 }
 
 /**
@@ -546,4 +487,59 @@ export interface TaskHandler {
   handle(task: Task): Promise<void>;
   validate(task: Task): boolean;
   cleanup(task: Task): void;
-} 
+}
+
+export interface Task {
+  id: string;
+  type: TaskType;
+  status: TaskStatus;
+  priority: TaskPriority;
+  parameters: TaskParameters;
+  result?: TaskResult;
+  progress?: TaskProgress;
+  createdAt?: Date;
+  updatedAt?: Date;
+  dependencies?: string[];
+  timeout?: number;
+  retryCount?: number;
+  maxRetries?: number;
+  error?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface TaskResult {
+  success: boolean;
+  error?: string;
+  data?: any;
+  duration?: number;
+  task?: Task;
+}
+
+export interface TaskProgress {
+  current: number;
+  total: number;
+  status: TaskStatus;
+  message?: string;
+  taskId?: string;
+  estimatedTimeRemaining?: number;
+  currentLocation?: { x: number; y: number; z: number } | null;
+  errorCount?: number;
+  retryCount?: number;
+  progressHistory?: Array<{ timestamp: number; progress: number }>;
+  lastUpdated?: number;
+  created?: number;
+}
+
+export enum TaskStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled'
+}
+
+export enum TaskPriority {
+  LOW = 20,
+  MEDIUM = 50,
+  HIGH = 80
+}

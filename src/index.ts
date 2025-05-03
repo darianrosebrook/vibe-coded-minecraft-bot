@@ -1,3 +1,4 @@
+import logger from './utils/observability/logger'; 
 import { MinecraftBot } from "./bot/bot";
 import { MiningTask } from "./tasks/mining";
 import { FarmingTask } from "./tasks/farming";
@@ -13,7 +14,6 @@ import { Vec3 } from "vec3";
 import { configManager } from "./config/configManager";
 import { Config } from "./config/config";
 import { initializeParser } from "./llm/parse";
-import logger from "./utils/observability/logger";
 import { initializeWebServer } from "./web/server";
 
 // Ensure buildLogs directory exists
@@ -57,11 +57,20 @@ let worldTracker: WorldTracker | null = null;
 async function initializeBot(): Promise<void> {
   let config: Config | null = null;
   try {
+    logger.info('Starting bot initialization...');
+    
     // Initialize config manager first
+    logger.info('Initializing config manager...');
     await configManager.initialize();
     config = configManager.getConfig();
+    
+    if (!config) {
+      throw new Error('Failed to load configuration');
+    }
+    logger.info('Config loaded successfully');
 
     // Create new bot instance with current config
+    logger.info('Creating new bot instance...');
     bot = new MinecraftBot({
       host: config.MINECRAFT_HOST,
       port: config.MINECRAFT_PORT,
@@ -123,85 +132,92 @@ async function initializeBot(): Promise<void> {
       }
     });
 
+    // Initialize the bot first
+    logger.info('Initializing bot...');
+    await bot.initialize();
+    logger.info('Bot initialized successfully');
+
+    // Initialize web server
+    logger.info('Initializing web server...');
+    await initializeWebServer(bot);
+    logger.info('Web server initialized successfully');
+
     // Initialize world tracker
+    logger.info('Initializing world tracker...');
     worldTracker = new WorldTracker(bot);
+    logger.info('World tracker initialized');
 
     // Initialize parser
+    logger.info('Initializing parser...');
     initializeParser(bot);
+    logger.info('Parser initialized');
 
     // Initialize command handler
+    logger.info('Initializing command handler...');
     commandHandler = new CommandHandler(bot);
+    logger.info('Command handler initialized');
 
-    // Register tasks with required options
-    commandHandler.registerTask(
-      "mining",
-      new MiningTask(bot, commandHandler, {
-        targetBlock: "stone",
-        quantity: 64,
-        radius: 32,
-        usePathfinding: true,
-      })
-    );
+    // Create and initialize tasks
+    logger.info('Initializing tasks...');
+    const miningTask = new MiningTask(bot, commandHandler, {
+      targetBlock: "stone",
+      quantity: 64,
+      radius: 32,
+      usePathfinding: true,
+    }, bot.getMLManager().getDataCollector());
+    await miningTask.initialize();
 
-    commandHandler.registerTask(
-      "farming",
-      new FarmingTask(bot, commandHandler, {
-        cropType: "wheat",
-        action: "harvest",
-        quantity: 64,
-        radius: 32,
-        checkInterval: 5000,
-        requiresWater: true,
-        minWaterBlocks: 4,
-        usePathfinding: true,
-        area: {
-          start: new Vec3(0, 64, 0),
-          end: new Vec3(32, 64, 32)
-        }
-      })
-    );
+    const farmingTask = new FarmingTask(bot, commandHandler, {
+      cropType: "wheat",
+      action: "harvest",
+      quantity: 64,
+      radius: 32,
+      checkInterval: 5000,
+      requiresWater: true,
+      minWaterBlocks: 4,
+      usePathfinding: true,
+      area: {
+        start: new Vec3(0, 64, 0),
+        end: new Vec3(32, 64, 32)
+      },
+      dataCollector: bot.getMLManager().getDataCollector()
+    });
+    await farmingTask.initialize();
 
-    commandHandler.registerTask(
-      "navigation",
-      new NavTask(bot, commandHandler, {
-        destination: new Vec3(100, 64, -200),
-        usePathfinding: true,
-        maxDistance: 32,
-      })
-    );
+    const navTask = new NavTask(bot, commandHandler, {
+      location: new Vec3(100, 64, -200),
+      usePathfinding: true,
+      maxDistance: 32,
+      dataCollector: bot.getMLManager().getDataCollector()
+    });
+    await navTask.initialize();
 
-    commandHandler.registerTask(
-      "inventory",
-      new InventoryTask(bot, commandHandler, {
-        operation: "sort",
-        targetItems: ["diamond"],
-        priorityItems: ["diamond"]
-      })
-    );
+    const inventoryTask = new InventoryTask(bot, commandHandler, {
+      operation: "sort",
+      dataCollector: bot.getMLManager().getDataCollector()
+    });
+    await inventoryTask.initialize();
 
-    commandHandler.registerTask(
-      "query",
-      new QueryTask(bot, commandHandler, {
-        queryType: "block",
-        target: "diamond_ore",
-        radius: 32,
-      })
-    );
+    const queryTask = new QueryTask(bot, commandHandler, {
+      queryType: "block",
+      dataCollector: bot.getMLManager().getDataCollector()
+    });
+    await queryTask.initialize();
 
-    commandHandler.registerTask(
-      "redstone",
-      new RedstoneTask(bot, commandHandler, {
-        circuitType: "analyze",
-        area: {
-          start: new Vec3(0, 64, 0),
-          end: new Vec3(16, 80, 16),
-        },
-        devices: [
-          { type: "repeater", position: new Vec3(8, 64, 8) },
-          { type: "comparator", position: new Vec3(8, 64, 12) }
-        ]
-      })
-    );
+    const redstoneTask = new RedstoneTask(bot, commandHandler, {
+      circuitType: "basic",
+      radius: 5,
+      dataCollector: bot.getMLManager().getDataCollector()
+    });
+    await redstoneTask.initialize();
+
+    // Register tasks
+    commandHandler.registerTask("mining", miningTask);
+    commandHandler.registerTask("farming", farmingTask);
+    commandHandler.registerTask("navigation", navTask);
+    commandHandler.registerTask("inventory", inventoryTask);
+    commandHandler.registerTask("query", queryTask);
+    commandHandler.registerTask("redstone", redstoneTask);
 
     // Handle chat commands
     const mineflayerBot = bot.getMineflayerBot();
@@ -251,7 +267,7 @@ async function initializeBot(): Promise<void> {
 
 // Initialize web server
 if (bot) {
-  initializeWebServer(bot);
+  // initializeWebServer(bot);
 }
 
 // Subscribe to configuration changes

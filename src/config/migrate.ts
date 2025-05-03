@@ -1,6 +1,6 @@
 import fs from "fs";
 import { configManager } from "./configManager";
-import { ConfigVersion } from "@/types";
+import { ConfigVersion } from "@/types/modules/config";
 import logger from "../utils/observability/logger";
 
 export async function migrateConfigFile(configPath: string): Promise<void> {
@@ -21,7 +21,7 @@ export async function migrateConfigFile(configPath: string): Promise<void> {
     });
 
     // Get current version
-    const currentVersion = existingConfig.CONFIG_VERSION || ConfigVersion.V1_0_0;
+    const currentVersion = existingConfig['CONFIG_VERSION'] || ConfigVersion.V1_0_0;
 
     if (currentVersion === ConfigVersion.CURRENT) {
       logger.info('Config file is already at the latest version', { version: currentVersion });

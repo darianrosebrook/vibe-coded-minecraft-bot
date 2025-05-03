@@ -1,11 +1,10 @@
 import { Bot as MineflayerBot, BotOptions, BotEvents } from 'mineflayer';
-import { Counter, Histogram } from 'prom-client';
 import { ErrorHandler } from '../error/errorHandler';
-import { LRUCache } from 'lru-cache';
 import { metrics } from '../utils/observability/metrics';
 import { OllamaClient } from '../utils/llmClient';
-import { PerformanceTracker, PerformanceEvent } from '../ml/performance/tracker';
-import { Task } from '@/types/task';
+import { PerformanceTracker } from '../utils/observability/performance';
+import { PerformanceEvent } from '../ml/performance/tracker';
+import { TaskType } from '@/types/task';
 import { TaskParser } from '../llm/parse';
 import { TaskParsingLogger } from '../llm/logging/logger';
 import { ToolManager } from '../bot/toolManager';
@@ -17,48 +16,11 @@ import { ZodSchemaValidator } from '../utils/taskValidator';
 import * as collectBlockPlugin from 'mineflayer-collectblock';
 import * as prismarineBiome from 'prismarine-biome';
 import * as toolPlugin from 'mineflayer-tool';
+import * as pathfinderPlugin from 'mineflayer-pathfinder';
 import logger from '../utils/observability/logger';
 import mineflayer from 'mineflayer';
-
-// Extend metrics with new counters and histograms
-const pluginInitFailures = new Counter({
-  name: 'bot_plugin_init_failures',
-  help: 'Number of plugin initialization failures',
-  labelNames: ['plugin_name'] as const,
-});
-
-const commandExecutions = new Counter({
-  name: 'bot_command_executions',
-  help: 'Number of command executions',
-  labelNames: ['command_type', 'status'] as const,
-});
-
-const commandRetries = new Counter({
-  name: 'bot_command_retries',
-  help: 'Number of command retries',
-  labelNames: ['command_type'] as const,
-});
-
-const commandLatency = new Histogram({
-  name: 'bot_command_latency_ms',
-  help: 'LLM parsing latency in ms',
-  labelNames: ['command_type', 'status'] as const,
-  buckets: [50, 100, 200, 500, 1000, 2000]
-});
-
-const cacheLatency = new Histogram({
-  name: 'bot_cache_latency_ms',
-  help: 'Cache operation latency in ms',
-  labelNames: ['operation', 'status'] as const,
-  buckets: [1, 5, 10, 25, 50, 100]
-});
-
-const queueLatency = new Histogram({
-  name: 'bot_queue_latency_ms',
-  help: 'Command queue processing latency in ms',
-  labelNames: ['operation', 'status'] as const,
-  buckets: [10, 50, 100, 250, 500, 1000]
-});
+import { MLManager } from '../ml/manager';
+import { MLConfig } from '../ml/config';
 
 // Default configuration values
 const DEFAULT_CONFIG = {
@@ -177,6 +139,7 @@ export interface BotPlugin {
 const defaultPlugins: BotPlugin[] = [
   { apply: (bot) => toolPlugin.plugin(bot) },
   { apply: (bot) => collectBlockPlugin.plugin(bot) },
+  { apply: (bot) => pathfinderPlugin.pathfinder(bot) },
 ];
 
 export class MinecraftBot {
@@ -189,12 +152,11 @@ export class MinecraftBot {
   private eventListeners: Map<keyof BotEvents, BotEvents[keyof BotEvents]> = new Map();
   private commandQueue: Array<{ command: string; resolve: (value: void) => void; reject: (error: Error) => void }> = [];
   private isProcessingQueue: boolean = false;
-  private resourceCache: LRUCache<string, Vec3>;
-  private biomeCache: LRUCache<string, string>;
-  private blockCache: LRUCache<string, string[]>;
-  private scanDebounces: Map<string, NodeJS.Timeout> = new Map();
   private performanceTracker: PerformanceTracker;
   private currentCorrelationId: string | null = null;
+  private mlManager: MLManager;
+  private _activeTask: { name: string; [key: string]: any } | undefined;
+  private _activeTaskProgress: number = 0;
 
   constructor(
     config: BotConfig,
@@ -202,45 +164,65 @@ export class MinecraftBot {
     private readonly botFactory: (opts: BotOptions) => MineflayerBot = mineflayer.createBot,
     private readonly llmClient: OllamaClient = new OllamaClient(),
     private readonly taskValidator: ZodSchemaValidator = new ZodSchemaValidator(),
-    private readonly errorHandler: ErrorHandler = new ErrorHandler(this)
+    private readonly errorHandler: ErrorHandler = new ErrorHandler(this),
+    mlConfig?: Partial<MLConfig>
   ) {
-    // Validate and store config
     this.config = BotConfigSchema.parse(config);
     this.biomeData = prismarineBiome;
     this.performanceTracker = new PerformanceTracker();
+    this.mlManager = new MLManager(this, mlConfig, this.performanceTracker);
+  }
 
-    // Initialize typed LRU caches
-    const cacheOptions = {
-      max: this.config.cache.maxSize,
-      ttl: this.config.cache.ttl,
-      updateAgeOnGet: true,
-      updateAgeOnHas: true
-    };
-    this.resourceCache = new LRUCache(cacheOptions);
-    this.biomeCache = new LRUCache(cacheOptions);
-    this.blockCache = new LRUCache(cacheOptions);
-
+  public async initialize(): Promise<void> {
     try {
+      // Initialize mineflayer bot
+      this.performanceTracker.startTracking('bot_initialization');
       this.initializeBot();
+
+      // Wait for spawn event before initializing other components
+      await new Promise<void>((resolve) => {
+        this.bot.once('spawn', () => {
+          // Wait a short time for the bot to fully initialize
+          setTimeout(() => {
+            resolve();
+          }, 1000);
+        });
+      });
+
+      // Initialize managers
+      this.performanceTracker.startTracking('managers_initialization');
+      this.initializeManagers();
+      this.performanceTracker.endTracking('managers_initialization');
+
+      // Initialize ML components
+      this.performanceTracker.startTracking('ml_initialization');
+      await this.mlManager.initialize();
+      this.performanceTracker.endTracking('ml_initialization');
+
+      // Initialize parser
+      this.performanceTracker.startTracking('parser_initialization');
+      this.initializeParser();
+      this.performanceTracker.endTracking('parser_initialization');
+
+      this.performanceTracker.endTracking('bot_initialization');
+      logger.info('Bot initialized successfully', {
+        username: this.bot.username,
+        version: this.config.version
+      });
     } catch (error) {
-      logger.error('Failed to create Minecraft bot', {
+      this.performanceTracker.endTracking('bot_initialization');
+      logger.error('Failed to initialize Minecraft bot', {
         error: error instanceof Error ? {
           message: error.message,
           stack: error.stack,
           name: error.name
-        } : error,
-        config: {
-          host: this.config.host,
-          port: this.config.port,
-          username: this.config.username,
-          version: this.config.version
-        }
+        } : error
       });
       throw error;
     }
   }
 
-  private initializeBot() {
+  private initializeBot(): void {
     const botOptions: BotOptions = {
       host: this.config.host,
       port: this.config.port,
@@ -253,17 +235,18 @@ export class MinecraftBot {
 
     this.bot = this.botFactory(botOptions);
     this.initializePlugins();
-    this.initializeToolManager();
-    this.initializeParser();
-    this.wireSpawnLogic();
+
+    // Setup basic error handling
+    this.bot.on('error', (err) => {
+      logger.error('Bot error', { error: err });
+    });
   }
 
-  private initializePlugins() {
+  private initializePlugins(): void {
     for (const plugin of this.plugins) {
       try {
         plugin.apply(this.bot);
       } catch (error) {
-        pluginInitFailures.inc({ plugin_name: plugin.constructor.name });
         logger.error('Failed to initialize plugin', {
           error: error instanceof Error ? {
             message: error.message,
@@ -276,7 +259,7 @@ export class MinecraftBot {
     }
   }
 
-  private initializeToolManager() {
+  private initializeManagers(): void {
     this.toolManager = new ToolManager(this, {
       repairThreshold: this.config.repairThreshold,
       preferredEnchantments: this.config.preferredEnchantments,
@@ -285,9 +268,12 @@ export class MinecraftBot {
       toolSelection: this.config.toolSelection,
       crafting: this.config.crafting
     });
+
+    this.worldTracker = new WorldTracker(this);
+    this.worldTracker.initialize(this.bot);
   }
 
-  private initializeParser() {
+  private initializeParser(): void {
     this.taskParser = new TaskParser(
       this.llmClient,
       new TaskParsingLogger(),
@@ -296,19 +282,7 @@ export class MinecraftBot {
     );
   }
 
-  private wireSpawnLogic() {
-    // Add error handler before any other events
-    this.bot.once('error', (err) => {
-      logger.error('Initial bot connection error', {
-        error: err instanceof Error ? {
-          message: err.message,
-          stack: err.stack,
-          name: err.name
-        } : err
-      });
-    });
-
-    // Wait for spawn before initializing world tracker and event listeners
+  private wireSpawnLogic(): void {
     this.bot.once('spawn', () => {
       logger.info('Bot spawned in world');
       metrics.botUptime.set(0);
@@ -316,10 +290,7 @@ export class MinecraftBot {
     });
   }
 
-  private setupEventListeners() {
-    // Initialize world tracker after spawn
-    this.worldTracker = new WorldTracker(this);
-
+  private setupEventListeners(): void {
     const deathHandler = () => {
       logger.warn('Bot died');
     };
@@ -372,10 +343,10 @@ export class MinecraftBot {
         const { command, resolve, reject } = this.commandQueue.shift()!;
         try {
           await this.executeCommand(command);
-          queueLatency.observe({ operation: 'process', status: 'success' }, Date.now() - startTime);
+          metrics.queueLatency.observe({ operation: 'process', status: 'success' }, Date.now() - startTime);
           resolve();
         } catch (error) {
-          queueLatency.observe({ operation: 'process', status: 'error' }, Date.now() - startTime);
+          metrics.queueLatency.observe({ operation: 'process', status: 'error' }, Date.now() - startTime);
           reject(error as Error);
         }
 
@@ -425,101 +396,27 @@ export class MinecraftBot {
       name,
       duration,
       success,
-      errorType: metadata.errorType,
-      correlationId: metadata.correlationId || this.currentCorrelationId,
+      errorType: metadata['errorType'],
+      correlationId: metadata['correlationId'] || this.currentCorrelationId,
       metadata,
       timestamp: Date.now()
     });
   }
-
-  private getCached<T extends {}>(key: string, cache: LRUCache<string, T>): T | null {
-    const startTime = Date.now();
-    const cached = cache.get(key);
-    if (!cached) {
-      cacheLatency.observe({ operation: 'get', status: 'miss' }, Date.now() - startTime);
-      this.trackPerformance('cache', 'miss', Date.now() - startTime, true, {
-        key,
-        correlationId: this.currentCorrelationId
-      });
-      return null;
-    }
-
-    cacheLatency.observe({ operation: 'get', status: 'hit' }, Date.now() - startTime);
-    this.trackPerformance('cache', 'hit', Date.now() - startTime, true, {
-      key,
-      correlationId: this.currentCorrelationId
-    });
-    return cached;
-  }
-
-  private setCached<T extends {}>(key: string, value: T, cache: LRUCache<string, T>): void {
-    const startTime = Date.now();
-    cache.set(key, value);
-    metrics.cacheSize.set(cache.size);
-    cacheLatency.observe({ operation: 'set', status: 'success' }, Date.now() - startTime);
-    this.trackPerformance('cache', 'set', Date.now() - startTime, true, {
-      key,
-      correlationId: this.currentCorrelationId
-    });
-  }
+ 
 
   public async findResource(blockType: string): Promise<Vec3 | null> {
     const startTime = Date.now();
-    const cacheKey = `resource:${blockType}`;
-    const cached = this.getCached(cacheKey, this.resourceCache);
-    if (cached) {
-      this.trackPerformance('scan', 'cache_hit', Date.now() - startTime, true, { blockType });
-      return cached;
-    }
-
-    const key = `scan:${blockType}`;
-    if (!this.scanDebounces.has(key)) {
-      // No debounce entry → go straight
-      const result = await this.worldTracker.findNearestResource(blockType);
-      if (result) {
-        this.setCached(cacheKey, result, this.resourceCache);
-      }
-      this.trackPerformance('scan', 'immediate', Date.now() - startTime, true, { blockType });
-      return result;
-    }
-
-    // Otherwise debounce as before
-    clearTimeout(this.scanDebounces.get(key)!);
-    return new Promise<Vec3 | null>(resolve => {
-      this.scanDebounces.set(key, setTimeout(async () => {
-        this.scanDebounces.delete(key);
-        const result = await this.worldTracker.findNearestResource(blockType);
-        if (result) {
-          this.setCached(cacheKey, result, this.resourceCache);
-        }
-        this.trackPerformance('scan', 'debounced', Date.now() - startTime, true, { blockType });
-        resolve(result);
-      }, this.config.cache.scanDebounceMs));
-    });
+    const result = await this.worldTracker.findResource(blockType);
+    this.trackPerformance('scan', 'resource', Date.now() - startTime, true, { blockType });
+    return result;
   }
 
   public getBiomeAt(position: Vec3): string | null {
-    const cacheKey = `biome:${position.x},${position.y},${position.z}`;
-    const cached = this.getCached(cacheKey, this.biomeCache);
-    if (cached) return cached;
-
-    const result = this.worldTracker.getBiomeAt(position);
-    if (result) {
-      this.setCached(cacheKey, result, this.biomeCache);
-    }
-    return result;
+    return this.worldTracker.getBiomeAt(position);
   }
 
-  public getKnownBlocks(biome: string): string[] | null {
-    const cacheKey = `blocks:${biome}`;
-    const cached = this.getCached(cacheKey, this.blockCache);
-    if (cached) return cached;
-
-    const result = this.worldTracker.getKnownBlocks(biome);
-    if (result) {
-      this.setCached(cacheKey, result, this.blockCache);
-    }
-    return result;
+  public getKnownBlocks(biome: string): string[] {
+    return this.worldTracker.getKnownBlocks(biome);
   }
 
   public getMineflayerBot(): MineflayerBot {
@@ -530,26 +427,26 @@ export class MinecraftBot {
     return this.toolManager;
   }
 
-  public async executeCommand(command: string): Promise<Task> {
+  public async executeCommand(command: string): Promise<TaskType> {
     const startTime = Date.now();
     let retryCount = 0;
     let delay = this.config.commandQueue.retryConfig.initialDelay;
     const { maxRetries, maxDelay, backoffFactor } = this.config.commandQueue.retryConfig;
-    const commandType = command.split(' ')[0];
+    const commandType = command.split(' ')[0] || 'unknown';
     const correlationId = uuidv4();
 
     while (retryCount <= maxRetries) {
       try {
         const result = await this.taskParser.parse(command);
-        commandLatency.observe({ command_type: commandType, status: 'success' }, Date.now() - startTime);
+        metrics.commandLatency.observe({ command_type: commandType || 'unknown', status: 'success' }, Date.now() - startTime);
         this.trackPerformance('command', commandType, Date.now() - startTime, true, {
           correlationId,
           retryCount
         });
-        return result;
+        return result.type as TaskType;
       } catch (error) {
         if (retryCount < maxRetries) {
-          commandLatency.observe({ command_type: commandType, status: 'retry' }, Date.now() - startTime);
+          metrics.commandLatency.observe({ command_type: commandType, status: 'retry' }, Date.now() - startTime);
           this.trackPerformance('command', commandType, Date.now() - startTime, false, {
             correlationId,
             retryCount,
@@ -560,7 +457,7 @@ export class MinecraftBot {
           delay = Math.min(delay * backoffFactor, maxDelay);
           retryCount++;
         } else {
-          commandLatency.observe({ command_type: commandType, status: 'error' }, Date.now() - startTime);
+          metrics.commandLatency.observe({ command_type: commandType, status: 'error' }, Date.now() - startTime);
           this.trackPerformance('command', commandType, Date.now() - startTime, false, {
             correlationId,
             retryCount,
@@ -593,11 +490,16 @@ export class MinecraftBot {
   public async disconnect(): Promise<void> {
     // Remove all event listeners
     for (const [event, listener] of this.eventListeners) {
-      this.bot.off(event, listener);
+      this.bot?.off(event, listener);
     }
     this.eventListeners.clear();
 
-    await this.bot.quit();
+    // Shutdown ML components
+    await this.mlManager.shutdown();
+
+    if (this.bot) {
+      await this.bot.quit();
+    }
   }
 
   private resetEventLoop(): void {
@@ -607,20 +509,12 @@ export class MinecraftBot {
     }
     this.eventListeners.clear();
 
-    // Clear any pending timeouts
-    for (const timeout of this.scanDebounces.values()) {
-      clearTimeout(timeout);
-    }
-    this.scanDebounces.clear();
+    // Clear world tracker caches
+    this.worldTracker.clearCaches();
 
     // Reset command queue
     this.commandQueue = [];
     this.isProcessingQueue = false;
-
-    // Reset caches
-    this.resourceCache.clear();
-    this.biomeCache.clear();
-    this.blockCache.clear();
 
     // Reset performance tracker
     this.performanceTracker = new PerformanceTracker();
@@ -635,7 +529,7 @@ export class MinecraftBot {
   public async reconnect(): Promise<void> {
     try {
       await this.disconnect();
-      this.initializeBot();
+      this.initialize();
       this.resetEventLoop();
       logger.info('Bot reconnected successfully');
     } catch (error) {
@@ -699,5 +593,41 @@ export class MinecraftBot {
 
   public getPerformanceDataForML() {
     return this.performanceTracker.getPerformanceDataForML();
+  }
+
+  public getMLManager(): MLManager {
+    return this.mlManager;
+  }
+
+  // Task tracking methods for ML data collection
+  public setActiveTask(taskName: string, taskData: any = {}): void {
+    this._activeTask = {
+      name: taskName,
+      ...taskData
+    };
+    this._activeTaskProgress = 0;
+    logger.info(`Started task: ${taskName}`);
+  }
+
+  public updateTaskProgress(progress: number): void {
+    this._activeTaskProgress = progress;
+  }
+
+  public clearActiveTask(): void {
+    const taskName = this._activeTask?.name || 'Unknown';
+    this._activeTask = undefined;
+    this._activeTaskProgress = 0;
+    logger.info(`Completed task: ${taskName}`);
+  }
+
+  public getActiveTask(): { name: string; progress: number } | null {
+    if (!this._activeTask) {
+      return null;
+    }
+    
+    return {
+      name: this._activeTask.name,
+      progress: this._activeTaskProgress || 0
+    };
   }
 } 

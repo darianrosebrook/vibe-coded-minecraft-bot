@@ -1,5 +1,5 @@
 // Re-export all module types
-export * from './world';
+export * from '../world/world';
 export * from './hotspot';
 export * from './plugin';
 export * from './tool';

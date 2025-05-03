@@ -1,16 +1,20 @@
-import { MLErrorHandler, ErrorPrediction } from '@/types';
-import { TaskContext } from '@/types';
+import { MLErrorHandler, ErrorPrediction } from '@/types/ml/command';
 import { LLMClient } from '../../utils/llmClient';
+import { TaskContext } from '@/llm/types';
 
 export class MLErrorHandlerImpl implements MLErrorHandler {
   private llmClient: LLMClient;
   private errorPatterns: Map<string, string[]> = new Map();
   private recoveryStrategies: Map<string, string[]> = new Map();
+  private enablePrediction: boolean = false;
+  private enableSuggestion: boolean = false;
 
   constructor(llmClient: LLMClient) {
     this.llmClient = llmClient;
     this.initializeErrorPatterns();
     this.initializeRecoveryStrategies();
+    this.enablePrediction = true;
+    this.enableSuggestion = true;
   }
 
   private initializeErrorPatterns() {
@@ -148,5 +152,13 @@ Return a JSON object with:
 
   private getRecoveryStrategies(errorType: string): string[] {
     return this.recoveryStrategies.get(errorType) || [];
+  }
+
+  predict(input: string, context: any): Promise<ErrorPrediction[]> {
+    return this.predictErrors(input, context);
+  }
+
+  suggest(error: any): Promise<string[]> {
+    return this.suggestCorrections(error);
   }
 } 

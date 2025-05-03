@@ -17,24 +17,25 @@ interface ChatMLState {
   };
   message: {
     content: string;
-    chatType: string;
+    chatType: string
     success: boolean;
     timeTaken: number;
   };
 }
 
 export class ChatTask extends BaseTask {
-  protected readonly bot: MinecraftBot;
-  protected readonly commandHandler: CommandHandler;
-  protected readonly options: ChatTaskParameters;
-  protected mineflayerBot: MineflayerBot;
-  protected stopRequested: boolean = false;
+  protected override readonly bot: MinecraftBot;
+  protected override readonly commandHandler: CommandHandler;
+  protected override readonly options: ChatTaskParameters;
+  protected override mineflayerBot: MineflayerBot;
+  protected override stopRequested: boolean = false;
   protected messages: Array<{ sender: string; content: string; timestamp: number }> = [];
-  protected dataCollector: CentralizedDataCollector;
-  protected storage: TaskStorage;
-  protected trainingStorage: TrainingDataStorage;
-  protected startTime: number = 0;
+  protected override dataCollector: CentralizedDataCollector;
+  protected override storage: TaskStorage;
+  protected override trainingStorage: TrainingDataStorage;
+  protected override startTime: number = 0;
   protected mlState: ChatMLState | null = null;
+  protected retryDelay: number;
 
   constructor(bot: MinecraftBot, commandHandler: CommandHandler, options: ChatTaskParameters) {
     super(bot, commandHandler, {
@@ -47,7 +48,8 @@ export class ChatTask extends BaseTask {
     this.bot = bot;
     this.commandHandler = commandHandler;
     this.mineflayerBot = bot.getMineflayerBot();
-    this.options =   options;
+    this.options = options;
+    this.retryDelay = options.retryDelay ?? 5000;
     // Initialize data collection
     this.dataCollector = new CentralizedDataCollector(this.mineflayerBot);
     this.storage = new TaskStorage('./data');
@@ -87,26 +89,26 @@ export class ChatTask extends BaseTask {
     }
   }
 
-  async validateTask(): Promise<void> {
+  public override async validateTask(): Promise<void> {
     await super.validateTask();
-    
+
     if (!this.options.message) {
       throw new Error('Message is required');
     }
-    
+
     if (!this.options.chatType) {
       throw new Error('Chat type is required');
     }
   }
 
-  async initializeProgress(): Promise<void> {
+  public override async initializeProgress(): Promise<void> {
     await super.initializeProgress();
     this.messages = [];
   }
 
-  async performTask(): Promise<void> {
+  public override async performTask(): Promise<void> {
     await this.initializeMLState();
-    
+
     const success = await this.sendMessage();
     if (!success) {
       this.retryCount++;
@@ -116,11 +118,11 @@ export class ChatTask extends BaseTask {
       await new Promise(resolve => setTimeout(resolve, this.retryDelay));
       return this.performTask();
     }
-    
+
     await this.updateProgress(100);
   }
 
-  public stop(): void {
+  public override stop(): void {
     this.stopRequested = true;
   }
 } 

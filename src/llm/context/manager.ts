@@ -1,11 +1,11 @@
 import { Bot } from 'mineflayer';
 import { Vec3 } from 'vec3';
-import { PluginState, StateChange, StateValidation } from '@/types/context';
+import { MLStateValidation, ContextWeight } from '@/types/ml/state';
+import { PluginState, StateChange } from '@/types/modules/context';
 import { MinecraftBot } from '../../bot/bot';
-import { MLStateManager } from '../../ml/state/manager';
+import { MLStateManager, MLStatePrediction } from '../../ml/state/manager';
 import { mlMetrics } from '../../utils/observability/metrics';
 
-export { StateChange };
 
 export interface GameState {
   position: Vec3;
@@ -59,7 +59,7 @@ export interface ContextVersion {
   version: number;
   timestamp: number;
   changes: StateChange[];
-  validation: StateValidation;
+  validation: MLStateValidation;
 }
 
 export interface ContextManagerConfig {
@@ -119,8 +119,8 @@ export class ContextManager {
   private compressedContext: Map<string, ContextCompression>;
   private compressionThreshold: number;
   private lastCompressionTime: number;
-  private minecraftBot: MinecraftBot;
-  private mlStateManager: MLStateManager;
+  private minecraftBot: MinecraftBot | null = null;
+  private mlStateManager: MLStateManager | null = null;
 
   constructor(
     private bot: Bot,
@@ -138,53 +138,6 @@ export class ContextManager {
       ...config
     };
 
-    this.minecraftBot = new MinecraftBot({
-      host: 'localhost',
-      port: 25565,
-      username: bot.username,
-      version: bot.version,
-      preferredEnchantments: {},
-      repairMaterials: {},
-      checkTimeoutInterval: 60000,
-      hideErrors: false,
-      repairThreshold: 20,
-      repairQueue: {
-        maxQueueSize: 10,
-        processInterval: 1000,
-        priorityWeights: {
-          durability: 0.7,
-          material: 0.3
-        }
-      },
-      commandQueue: {
-        maxSize: 100,
-        processInterval: 100,
-        retryConfig: {
-          maxRetries: 3,
-          initialDelay: 1000,
-          maxDelay: 5000,
-          backoffFactor: 2
-        }
-      },
-      toolSelection: {
-        efficiencyWeight: 0.2,
-        durabilityWeight: 0.3,
-        materialWeight: 0.3,
-        enchantmentWeight: 0.2
-      },
-      crafting: {
-        allowTierDowngrade: true,
-        maxDowngradeAttempts: 2,
-        preferExistingTools: true
-      },
-      cache: {
-        ttl: 60000,
-        maxSize: 1000,
-        scanDebounceMs: 1000,
-        cleanupInterval: 300000
-      }
-    });
-
     this.gameState = this.initializeGameState();
     this.conversationHistory = [];
     this.recentTasks = [];
@@ -200,51 +153,54 @@ export class ContextManager {
     this.lastCompressionTime = Date.now();
 
     this.initializeContextWeights();
+  }
 
-    // Initialize ML State Manager
-    this.mlStateManager = new MLStateManager(this.minecraftBot);
+  public initialize(minecraftBot: MinecraftBot, mlStateManager: MLStateManager): void {
+    this.minecraftBot = minecraftBot;
+    this.mlStateManager = mlStateManager;
   }
 
   public async getGameState(): Promise<GameState> {
-    // Update ML state predictions before returning game state
+    if (!this.mlStateManager) {
+      return this.gameState;
+    }
     const enhancedState = await this.mlStateManager.getState();
-    this.gameState = this.mlStateManager.convertToGameState(enhancedState);
+    const convertedState = this.mlStateManager.convertToGameState(enhancedState);
+    if (convertedState) {
+      this.gameState = convertedState;
+    }
     return this.gameState;
   }
 
   public async updateContext(update: Partial<GameState>): Promise<void> {
-    // Update ML state predictions before applying context updates
+    if (!this.mlStateManager) {
+      return;
+    }
     const enhancedState = await this.mlStateManager.getState();
-    this.gameState = this.mlStateManager.convertToGameState(enhancedState);
-    
-    // Apply context updates with ML-weighted importance
+    const convertedState = this.mlStateManager.convertToGameState(enhancedState);
+    if (convertedState) {
+      this.gameState = convertedState;
+    }
+
     const mlWeights = this.mlStateManager.getContextWeights();
-    
-    // Apply weighted updates to game state
-    const weightedUpdate: Partial<GameState> = {};
-    
-    // Apply weights to each category of update
+
     for (const [key, value] of Object.entries(update)) {
       const category = this.getCategoryFromKey(key);
       const weight = mlWeights.get(category)?.relevance ?? 1.0;
-      
+
       if (typeof value === 'object' && value !== null) {
-        // Handle nested objects (like position, inventory, etc.)
-        weightedUpdate[key as keyof GameState] = this.applyWeightToObject(value, weight);
+        (this.gameState as any)[key] = this.applyWeightToObject(value, weight);
       } else {
-        // Handle primitive values
-        weightedUpdate[key as keyof GameState] = this.applyWeightToValue(value, weight);
+        (this.gameState as any)[key] = this.applyWeightToValue(value, weight);
       }
     }
-    
-    // Update the game state with weighted values
-    this.updateGameState(weightedUpdate);
-    
+
     // Update context relevance scores
-    for (const category of Object.keys(update)) {
+    for (const key of Object.keys(update)) {
+      const category = this.getCategoryFromKey(key);
       this.updateContextRelevance(category);
     }
-    
+
     mlMetrics.stateUpdates.inc({ type: 'context' });
   }
 
@@ -263,7 +219,7 @@ export class ContextManager {
       movement: 'movement',
       environment: 'environment'
     };
-    
+
     return categoryMap[key] || 'general';
   }
 
@@ -271,7 +227,7 @@ export class ContextManager {
     if (Array.isArray(obj)) {
       return obj.map(item => this.applyWeightToObject(item, weight));
     }
-    
+
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === 'object' && value !== null) {
@@ -290,12 +246,29 @@ export class ContextManager {
     return value;
   }
 
-  public getMLPredictions() {
+  public getMLPredictions(): MLStatePrediction {
+    if (!this.mlStateManager) {
+      throw new Error('MLStateManager not initialized');
+    }
     return this.mlStateManager.getPredictions();
   }
 
-  public getMLContextWeights() {
-    return this.mlStateManager.getContextWeights();
+  public getMLContextWeights(): Map<string, ContextWeighting> {
+    if (!this.mlStateManager) {
+      return new Map();
+    }
+    const weights = this.mlStateManager.getContextWeights();
+    return new Map(
+      Array.from(weights.entries()).map(([key, value]) => [
+        key,
+        {
+          category: key,
+          baseWeight: value.relevance || 1.0,
+          decayRate: 0.1,
+          maxWeight: 2.0
+        }
+      ])
+    );
   }
 
   public updateGameState(newState: Partial<GameState>): void {
@@ -461,15 +434,15 @@ export class ContextManager {
 
   private detectStateChanges(oldState: GameState, newState: GameState): StateChange[] {
     const changes: StateChange[] = [];
-
+    console.log(oldState, newState);
     // Check position changes
     if (this.detectPositionChange()) {
       changes.push({
         plugin: 'movement',
-        changes: { position: newState.position },
-        previousState: { position: oldState.position },
+        changes: this.gameState.movement,
+        previousState: {},
         timestamp: Date.now(),
-        cause: 'movement'
+        cause: 'position_change'
       });
     }
 
@@ -477,23 +450,20 @@ export class ContextManager {
     if (this.detectInventoryChanges()) {
       changes.push({
         plugin: 'inventory',
-        changes: { inventory: newState.inventory },
-        previousState: { inventory: oldState.inventory },
+        changes: this.gameState.inventory,
+        previousState: {},
         timestamp: Date.now(),
-        cause: 'inventory_update'
+        cause: 'inventory_change'
       });
     }
 
     return changes;
   }
 
-  private validateState(): StateValidation {
+  private validateState(): MLStateValidation {
     return {
-      plugin: 'context_manager',
-      isValid: true,
-      errors: [],
-      warnings: [],
-      timestamp: Date.now()
+      checks: [],
+      dependencies: []
     };
   }
 
@@ -572,7 +542,7 @@ export class ContextManager {
     });
   }
 
-  public getBot(): MinecraftBot {
+  public getBot(): MinecraftBot | null {
     return this.minecraftBot;
   }
 }
