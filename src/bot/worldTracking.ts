@@ -11,6 +11,55 @@ import { MLStateFactory } from '../ml/state/factory';
 import type { PCChunk } from 'prismarine-chunk';
 import { Registry } from 'prismarine-registry';
 
+// Chunk processing configuration
+const CHUNK_PROCESSING_CONFIG = {
+  logLevel: 'debug' as 'debug' | 'info',
+  batchSize: 10000, // Number of blocks to process before logging progress
+  valuableBlocks: [
+    'diamond_ore',
+    'emerald_ore',
+    'gold_ore',
+    'iron_ore',
+    'coal_ore',
+    'lapis_ore',
+    'redstone_ore',
+    'ancient_debris'
+  ]
+};
+
+// Batched logging helper
+class BatchedLogger {
+  private static batchedMessages: Map<string, number> = new Map();
+  private static batchTimeout: NodeJS.Timeout | null = null;
+  private static readonly FLUSH_INTERVAL = 5000; // 5 seconds
+
+  static log(message: string, count: number = 1) {
+    const currentCount = this.batchedMessages.get(message) || 0;
+    this.batchedMessages.set(message, currentCount + count);
+
+    if (!this.batchTimeout) {
+      this.batchTimeout = setTimeout(() => this.flush(), this.FLUSH_INTERVAL);
+    }
+  }
+
+  static flush() {
+    if (this.batchTimeout) {
+      clearTimeout(this.batchTimeout);
+      this.batchTimeout = null;
+    }
+
+    for (const [message, count] of this.batchedMessages.entries()) {
+      if (count > 1) {
+        logger.debug(`${message} (×${count})`);
+      } else {
+        logger.debug(message);
+      }
+    }
+
+    this.batchedMessages.clear();
+  }
+}
+
 // types
 
 export class WorldTracker {
