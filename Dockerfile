@@ -1,15 +1,13 @@
 # Build stage
-FROM --platform=linux/arm64 node:22.2.0 AS builder
+FROM node:20-bullseye AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY src/web/package*.json ./src/web/
 
 # Install dependencies
 RUN npm install
-RUN cd src/web && npm install
 
 # Copy source code
 COPY . .
@@ -17,8 +15,13 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
+# Build Next.js app
+WORKDIR /app/src/web
+RUN npm install
+RUN npm run build
+
 # Production stage
-FROM --platform=linux/arm64 node:22.2.0
+FROM node:20-bullseye-slim
 
 # Install required system libraries
 RUN apt-get update && apt-get install -y \
@@ -31,6 +34,7 @@ RUN apt-get update && apt-get install -y \
     libgif-dev \
     librsvg2-dev \
     pkg-config \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -40,32 +44,43 @@ WORKDIR /app
 
 # Copy package files and install production dependencies
 COPY package*.json ./
-COPY src/web/package*.json ./src/web/
-
-# Install production dependencies
-RUN npm install --only=production && \
-    cd src/web && \
-    npm install --only=production
+COPY tsconfig.json ./
+RUN npm install --production
+RUN npm install -g tsconfig-paths
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src/llm/prompts ./dist/llm/prompts
 
-# Copy environment file (if exists)
-COPY .env* ./
+# Copy Next.js build files to the correct location
+COPY --from=builder /app/src/web/.next ./src/web/.next
+COPY --from=builder /app/src/web/package*.json ./src/web/
 
-# Set proper permissions
+# Create public directory if it doesn't exist
+RUN mkdir -p ./src/web/public
+
+# Set ownership and permissions
 RUN chown -R appuser:appgroup /app
 
 # Switch to non-root user
 USER appuser
 
+# Set working directory back to /app
+WORKDIR /app
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV OLLAMA_HOST=http://host.docker.internal:11434
+ENV MINECRAFT_HOST=host.docker.internal
+ENV MINECRAFT_PORT=50000
+
 # Expose ports
-EXPOSE 3000 3001
+EXPOSE 3000
+EXPOSE 50000
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["node", "-r", "tsconfig-paths/register", "dist/index.js"] 

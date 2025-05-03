@@ -54,7 +54,7 @@ export class ConfigManager {
           "MINECRAFT_HOST=localhost",
           "MINECRAFT_PORT=50000",
           "MINECRAFT_USERNAME=bot",
-          "MINECRAFT_VERSION=1.21.5",
+          "MINECRAFT_VERSION=1.21.4",
           "",
           "# Bot Settings",
           "BOT_PREFIX=.bot",

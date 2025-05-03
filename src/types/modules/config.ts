@@ -28,7 +28,15 @@ export const baseConfigSchema = z.object({
   /** Password for Minecraft authentication (optional) */
   MINECRAFT_PASSWORD: z.string().optional(),
   /** Minecraft version to connect with */
-  MINECRAFT_VERSION: z.string().default('1.20.1'),
+  MINECRAFT_VERSION: z.string().default('1.21.4'),
+
+  // Web server configuration
+  /** Web server port number */
+  WEB_PORT: z.number().default(3000),
+  /** Web server hostname */
+  WEB_HOSTNAME: z.string().default('localhost'),
+  /** Whether to run in development mode */
+  NODE_ENV: z.string().default('production'),
 
   // Bot settings
   /** Command prefix for bot commands */

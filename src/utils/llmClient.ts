@@ -26,11 +26,11 @@ export class OllamaClient implements LLMClient {
   private timeout: number;
 
   constructor(
-    baseUrl: string = "http://localhost:11434",
-    model: string = "llama3.2:1b",
-    temperature: number = 0.7,
-    maxTokens: number = 1000,
-    timeout: number = 60000
+    baseUrl: string = process.env.OLLAMA_HOST ?? "http://localhost:11434",
+    model: string = process.env.OLLAMA_MODEL ?? "llama3.2:1b",
+    temperature: number = parseFloat(process.env.OLLAMA_TEMPERATURE ?? "0.7"),
+    maxTokens: number = parseInt(process.env.OLLAMA_MAX_TOKENS ?? "1000", 10),
+    timeout: number = parseInt(process.env.OLLAMA_TIMEOUT ?? "60000", 10)
   ) {
     this.baseUrl = baseUrl;
     this.model = model;
