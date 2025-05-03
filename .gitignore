@@ -45,3 +45,7 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+# Next.js
+.next/
+out/

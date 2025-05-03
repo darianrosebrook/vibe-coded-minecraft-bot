@@ -14,7 +14,8 @@ import { Vec3 } from "vec3";
 import { configManager } from "./config/configManager";
 import { Config } from "./config/config";
 import { initializeParser } from "./llm/parse";
-import { initializeWebServer } from "./web/server";
+import { initializeWebServer, shutdownWebServer } from "./web/server";
+import * as http from 'http';
 
 // Ensure buildLogs directory exists
 const buildLogsDir = path.join(process.cwd(), "buildLogs");
@@ -53,6 +54,61 @@ console.error = (...args) => {
 let bot: MinecraftBot | null = null;
 let commandHandler: CommandHandler | null = null;
 let worldTracker: WorldTracker | null = null;
+let webServer: http.Server | null = null;
+
+// Cleanup function to handle graceful shutdown
+async function cleanup() {
+  logger.info('Starting cleanup...');
+  
+  if (bot) {
+    logger.info('Shutting down bot...');
+    await bot.disconnect();
+    bot = null;
+  }
+
+  if (webServer) {
+    logger.info('Shutting down web server...');
+    await shutdownWebServer(webServer);
+    webServer = null;
+  }
+
+  if (commandHandler) {
+    logger.info('Shutting down command handler...');
+    commandHandler = null;
+  }
+
+  if (worldTracker) {
+    logger.info('Shutting down world tracker...');
+    worldTracker = null;
+  }
+
+  logger.info('Cleanup completed');
+}
+
+// Handle process termination
+process.on('SIGINT', async () => {
+  logger.info('Received SIGINT signal');
+  await cleanup();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  logger.info('Received SIGTERM signal');
+  await cleanup();
+  process.exit(0);
+});
+
+process.on('uncaughtException', async (error) => {
+  logger.error('Uncaught exception', { error });
+  await cleanup();
+  process.exit(1);
+});
+
+process.on('unhandledRejection', async (reason, promise) => {
+  logger.error('Unhandled promise rejection', { reason, promise });
+  await cleanup();
+  process.exit(1);
+});
 
 async function initializeBot(): Promise<void> {
   let config: Config | null = null;
@@ -139,7 +195,7 @@ async function initializeBot(): Promise<void> {
 
     // Initialize web server
     logger.info('Initializing web server...');
-    await initializeWebServer(bot);
+    webServer = await initializeWebServer(bot);
     logger.info('Web server initialized successfully');
 
     // Initialize world tracker
@@ -246,29 +302,15 @@ async function initializeBot(): Promise<void> {
     logger.info("Bot initialized successfully");
   } catch (error) {
     logger.error("Failed to initialize bot", {
-      error:
-        error instanceof Error
-          ? {
-              message: error.message,
-              stack: error.stack,
-              name: error.name,
-            }
-          : error,
-      config: {
-        host: config?.MINECRAFT_HOST,
-        port: config?.MINECRAFT_PORT,
-        username: config?.MINECRAFT_USERNAME,
-        version: config?.MINECRAFT_VERSION,
-      },
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
-    process.exit(1);
+    await cleanup();
+    throw error;
   }
 }
 
-// Initialize web server
-if (bot) {
-  // initializeWebServer(bot);
-}
+// Initialize bot with current configuration
+initializeBot();
 
 // Subscribe to configuration changes
 const unsubscribe = configManager.subscribe(async () => {
@@ -282,28 +324,4 @@ const unsubscribe = configManager.subscribe(async () => {
 
   // Initialize bot with new configuration
   await initializeBot();
-});
-
-// Initialize bot with current configuration
-initializeBot();
-
-// Handle process termination
-process.on("SIGINT", async () => {
-  logger.info("Shutting down...");
-
-  // Clean up bot
-  if (bot) {
-    await bot.disconnect();
-  }
-
-  // Clean up config manager
-  configManager.stop();
-
-  // Unsubscribe from config changes
-  unsubscribe();
-
-  // Close the build log stream
-  buildLogStream.end();
-
-  process.exit(0);
 });

@@ -1,12 +1,39 @@
-import { CommandExecutionResult, FailureAnalysis, ModelUpdates, ResourceUsage } from '@/ml/reinforcement/types';
-import { Bot } from 'mineflayer'; 
+import { CommandExecutionResult, FailureAnalysis, ModelUpdates, ResourceUsage, CommandContext, CommandMetrics, Vec3 } from '@/ml/reinforcement/types';
+import { Bot } from 'mineflayer';
+import { IMLFeedbackSystem } from '@/types/ml/interfaces';
+import logger from '@/utils/observability/logger';
 
-export class MLFeedbackSystem {
+interface FeedbackEntry {
+    timestamp: number;
+    state: {
+        botPosition: Vec3 | undefined;
+        inventory: any;
+        health: number;
+        food: number;
+    };
+    metrics: FeedbackMetrics;
+}
+
+interface FeedbackMetrics {
+    timestamp: number;
+    commandCount: number;
+    successRate: number;
+    averageExecutionTime: number;
+    resourceEfficiency: number;
+    modelAccuracy: number;
+    updateSuccess: boolean;
+    errors: string[];
+}
+
+export class MLFeedbackSystem implements IMLFeedbackSystem {
     private bot: Bot;
     private successTracker: SuccessTracker;
     private failureAnalyzer: FailureAnalyzer;
     private learningPipeline: LearningPipeline;
     private metrics: FeedbackMetrics;
+    private isInitialized: boolean = false;
+    private feedbackQueue: FeedbackEntry[] = [];
+    private processingInterval: NodeJS.Timeout | null = null;
 
     constructor(bot: Bot) {
         this.bot = bot;
@@ -135,6 +162,199 @@ export class MLFeedbackSystem {
     public getMetrics(): FeedbackMetrics {
         return { ...this.metrics };
     }
+
+    public async shutdown(): Promise<void> {
+        try {
+            // Clear the processing interval if it exists
+            if (this.processingInterval) {
+                clearInterval(this.processingInterval);
+                this.processingInterval = null;
+            }
+
+            // Process any remaining feedback in the queue
+            await this.processFeedbackQueue();
+            
+            // Clear the queue
+            this.feedbackQueue = [];
+            this.isInitialized = false;
+            
+            logger.info('MLFeedbackSystem shut down successfully');
+        } catch (error) {
+            logger.error('Failed to shutdown MLFeedbackSystem', { error });
+            throw error;
+        }
+    }
+
+    public async initialize(): Promise<void> {
+        try {
+            // Initialize feedback processing interval
+            this.processingInterval = setInterval(() => {
+                this.processFeedbackQueue().catch(error => {
+                    logger.error('Error processing feedback queue', { error });
+                });
+            }, 5000); // Process queue every 5 seconds
+            
+            this.isInitialized = true;
+            logger.info('MLFeedbackSystem initialized successfully');
+        } catch (error) {
+            logger.error('Failed to initialize MLFeedbackSystem', { error });
+            throw error;
+        }
+    }
+
+    private async processFeedbackQueue(): Promise<void> {
+        while (this.feedbackQueue.length > 0) {
+            const entry = this.feedbackQueue.shift();
+            if (entry) {
+                const result: CommandExecutionResult = {
+                    commandId: entry.timestamp.toString(),
+                    command: 'feedback_entry',
+                    context: this.createCommandContext(),
+                    startTime: entry.timestamp,
+                    endTime: Date.now(),
+                    success: true,
+                    resources: {
+                        cpu: { average: 0, peak: 0, duration: 0 },
+                        memory: { average: 0, peak: 0, leaks: 0 },
+                        network: { bytesSent: 0, bytesReceived: 0, latency: 0 }
+                    },
+                    metrics: {
+                        accuracy: entry.metrics.modelAccuracy,
+                        efficiency: entry.metrics.resourceEfficiency,
+                        satisfaction: entry.metrics.successRate
+                    }
+                };
+                await this.processExecution(result);
+            }
+        }
+    }
+
+    public async collectFeedback(): Promise<void> {
+        try {
+            // Add current execution to feedback queue
+            const currentState = {
+                botPosition: this.bot.entity?.position,
+                inventory: this.bot.inventory,
+                health: this.bot.health,
+                food: this.bot.food
+            };
+            
+            this.feedbackQueue.push({
+                timestamp: Date.now(),
+                state: currentState,
+                metrics: { ...this.metrics }
+            });
+            
+        } catch (error) {
+            logger.error('Failed to collect feedback', { error });
+            throw error;
+        }
+    }
+
+    public async trackSuccess(command: string, executionTime: number, resourceUsage: ResourceUsage): Promise<void> {
+        try {
+            const result: CommandExecutionResult = {
+                commandId: Date.now().toString(),
+                command,
+                context: this.createCommandContext(),
+                success: true,
+                startTime: Date.now() - executionTime,
+                endTime: Date.now(),
+                resources: resourceUsage,
+                metrics: {
+                    accuracy: 1,
+                    efficiency: 1,
+                    satisfaction: 1
+                }
+            };
+            await this.processExecution(result);
+        } catch (error) {
+            logger.error('Failed to track success', { error });
+            throw error;
+        }
+    }
+
+    private createCommandContext(): CommandContext {
+        return {
+            player: this.bot.username ?? 'unknown',
+            location: this.bot.entity?.position ?? { x: 0, y: 0, z: 0 },
+            time: Date.now(),
+            worldState: {
+                biome: 'unknown',
+                timeOfDay: 0,
+                weather: 'unknown',
+                nearbyEntities: [],
+                nearbyBlocks: []
+            }
+        };
+    }
+
+    public async trackFailure(error: Error, context: any): Promise<void> {
+        try {
+            const result: CommandExecutionResult = {
+                commandId: Date.now().toString(),
+                command: context.command,
+                context: this.createCommandContext(),
+                success: false,
+                startTime: context.startTime,
+                endTime: Date.now(),
+                resources: {
+                    cpu: { average: 0, peak: 0, duration: 0 },
+                    memory: { average: 0, peak: 0, leaks: 0 },
+                    network: { bytesSent: 0, bytesReceived: 0, latency: 0 }
+                },
+                metrics: {
+                    accuracy: 0,
+                    efficiency: 0,
+                    satisfaction: 0
+                },
+                errors: [{
+                    type: 'execution_error',
+                    message: error.message,
+                    severity: 'high',
+                    timestamp: Date.now()
+                }]
+            };
+            await this.processExecution(result);
+        } catch (error) {
+            logger.error('Failed to track failure', { error });
+            throw error;
+        }
+    }
+
+    public async analyzeFailures(): Promise<any> {
+        try {
+            const failures = this.metrics.errors;
+            const analysis = await this.failureAnalyzer.analyze({
+                commandId: Date.now().toString(),
+                command: 'analyze_failures',
+                context: this.createCommandContext(),
+                startTime: Date.now(),
+                endTime: Date.now(),
+                success: false,
+                resources: {
+                    cpu: { average: 0, peak: 0, duration: 0 },
+                    memory: { average: 0, peak: 0, leaks: 0 },
+                    network: { bytesSent: 0, bytesReceived: 0, latency: 0 }
+                },
+                metrics: {
+                    accuracy: 0,
+                    efficiency: 0,
+                    satisfaction: 0
+                },
+                errors: failures.map(error => ({
+                    type: 'error',
+                    message: error,
+                    severity: 'high',
+                    timestamp: Date.now()
+                }))
+            });
+            return analysis;
+        } catch (error) {
+            logger.error('Failed to analyze failures', { error });
+            throw error;
+        }
+    }
 }
 
 // Supporting classes and interfaces
@@ -183,15 +403,4 @@ class LearningPipeline {
             }
         };
     }
-}
-
-interface FeedbackMetrics {
-    timestamp: number;
-    commandCount: number;
-    successRate: number;
-    averageExecutionTime: number;
-    resourceEfficiency: number;
-    modelAccuracy: number;
-    updateSuccess: boolean;
-    errors: string[];
 } 

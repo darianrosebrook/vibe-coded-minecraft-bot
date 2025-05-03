@@ -29,31 +29,65 @@ const CHUNK_PROCESSING_CONFIG = {
 
 // Batched logging helper
 class BatchedLogger {
-  private static batchedMessages: Map<string, number> = new Map();
+  private static batchedMessages: Map<string, { count: number; level: 'debug' | 'info' }> = new Map();
   private static batchTimeout: NodeJS.Timeout | null = null;
-  private static readonly FLUSH_INTERVAL = 5000; // 5 seconds
+  private static readonly FLUSH_INTERVAL = 20000; // Reduced from 5s to 2s for more frequent updates
+  private static readonly MAX_BATCH_SIZE = 50; // Maximum number of unique messages to batch
 
-  static log(message: string, count: number = 1) {
-    const currentCount = this.batchedMessages.get(message) || 0;
-    this.batchedMessages.set(message, currentCount + count);
+  static log(message: string, level: 'debug' | 'info' = 'info', count: number = 1) {
+    const key = `${level}:${message}`;
+    const current = this.batchedMessages.get(key) || { count: 0, level };
+    this.batchedMessages.set(key, { count: current.count + count, level });
 
-    if (!this.batchTimeout) {
+    // Force flush if we have too many unique messages
+    if (this.batchedMessages.size >= this.MAX_BATCH_SIZE) {
+      this.flush(true);
+    } else if (!this.batchTimeout) {
       this.batchTimeout = setTimeout(() => this.flush(), this.FLUSH_INTERVAL);
     }
   }
 
-  static flush() {
+  static flush(force: boolean = false) {
     if (this.batchTimeout) {
       clearTimeout(this.batchTimeout);
       this.batchTimeout = null;
     }
 
-    for (const [message, count] of this.batchedMessages.entries()) {
-      if (count > 1) {
-        logger.debug(`${message} (×${count})`);
-      } else {
-        logger.debug(message);
+    // Group messages by type (chunk load vs processing)
+    const groupedMessages = new Map<string, { count: number; level: 'debug' | 'info' }>();
+    
+    for (const [key, { count, level }] of this.batchedMessages.entries()) {
+      const message = key.split(':').slice(1).join(':');
+      const isChunkLoad = message.includes('Chunk loaded at');
+      const isProcessing = message.includes('Starting to process chunk');
+      const isProgress = message.includes('Processed');
+      
+      let groupKey = 'other';
+      if (isChunkLoad) groupKey = 'chunk_load';
+      else if (isProcessing) groupKey = 'chunk_process';
+      else if (isProgress) groupKey = 'progress';
+      
+      const current = groupedMessages.get(groupKey) || { count: 0, level };
+      groupedMessages.set(groupKey, { count: current.count + count, level });
+    }
+
+    // Log grouped messages
+    for (const [group, { count, level }] of groupedMessages.entries()) {
+      let message = '';
+      switch (group) {
+        case 'chunk_load':
+          message = `Loaded ${count} chunks`;
+          break;
+        case 'chunk_process':
+          message = `Processing ${count} chunks`;
+          break;
+        case 'progress':
+          message = `Progress updates for ${count} chunks`;
+          break;
+        default:
+          message = `Other operations: ${count}`;
       }
+      logger[level](message);
     }
 
     this.batchedMessages.clear();
@@ -129,7 +163,13 @@ export class WorldTracker {
     this.mineflayerBot.on('chunkColumnLoad', (position: Vec3) => {
       const chunkX = position.x >> 4;
       const chunkZ = position.z >> 4;
-      logger.info(`Chunk loaded at (${chunkX}, ${chunkZ})`);
+      const worldChunkX = chunkX * 16;
+      const worldChunkZ = chunkZ * 16;
+      
+      // Batch both the chunk load and processing messages
+      BatchedLogger.log(`Chunk loaded at (${chunkX}, ${chunkZ})`, 'info');
+      BatchedLogger.log(`Starting to process chunk at (${worldChunkX}, ${worldChunkZ})`, 'info');
+      
       this.processChunkData(chunkX, chunkZ);
     });
   }
@@ -145,8 +185,6 @@ export class WorldTracker {
     const worldChunkZ = chunkZ * 16;
     let processedBlocks = 0;
     const totalBlocks = 16 * 16 * 256; // Total blocks in a chunk
-
-    logger.info(`Starting to process chunk at (${worldChunkX}, ${worldChunkZ})`);
     
     // Process each block in the chunk
     for (let x = 0; x < 16; x++) {
@@ -154,7 +192,7 @@ export class WorldTracker {
         for (let y = 0; y < 256; y++) {
           processedBlocks++;
           if (processedBlocks % 10000 === 0) {
-            logger.debug(`Processed ${processedBlocks}/${totalBlocks} blocks (${Math.round((processedBlocks / totalBlocks) * 100)}%)`);
+            BatchedLogger.log(`Processed ${processedBlocks}/${totalBlocks} blocks (${Math.round((processedBlocks / totalBlocks) * 100)}%) in chunk (${chunkX}, ${chunkZ})`, 'debug');
           }
           
           const block = this.mineflayerBot.world.getBlock(new Vec3(worldChunkX + x, y, worldChunkZ + z));

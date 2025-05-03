@@ -4,7 +4,7 @@ import { metrics } from '../utils/observability/metrics';
 import { OllamaClient } from '../utils/llmClient';
 import { PerformanceTracker } from '../utils/observability/performance';
 import { PerformanceEvent } from '../ml/performance/tracker';
-import { TaskType } from '@/types/task';
+import { TaskType } from '../types/task';
 import { TaskParser } from '../llm/parse';
 import { TaskParsingLogger } from '../llm/logging/logger';
 import { ToolManager } from '../bot/toolManager';
@@ -21,11 +21,13 @@ import logger from '../utils/observability/logger';
 import mineflayer from 'mineflayer';
 import { MLManager } from '../ml/manager';
 import { MLConfig } from '../ml/config';
+import { checkMinecraftServer } from '../utils/serverCheck';
 
 // Default configuration values
 const DEFAULT_CONFIG = {
   checkTimeoutInterval: 60_000,
   hideErrors: false,
+  version: '1.21.4',
   repairThreshold: 20,
   repairQueue: {
     maxQueueSize: 10,
@@ -177,15 +179,44 @@ export class MinecraftBot {
     try {
       // Initialize mineflayer bot
       this.performanceTracker.startTracking('bot_initialization');
+
+      // Check if Minecraft server is available
+      logger.info('Checking Minecraft server availability...', {
+        host: this.config.host,
+        port: this.config.port
+      });
+
+      const isServerAvailable = await checkMinecraftServer(this.config.host, this.config.port);
+      if (!isServerAvailable) {
+        const error = new Error('Minecraft server is not available');
+        logger.error('Failed to connect to Minecraft server', {
+          host: this.config.host,
+          port: this.config.port,
+          error: error.message
+        });
+        throw error;
+      }
+
+      logger.info('Minecraft server is available, initializing bot...');
       this.initializeBot();
 
       // Wait for spawn event before initializing other components
-      await new Promise<void>((resolve) => {
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Bot spawn timeout'));
+        }, this.config.checkTimeoutInterval);
+
         this.bot.once('spawn', () => {
+          clearTimeout(timeout);
           // Wait a short time for the bot to fully initialize
           setTimeout(() => {
             resolve();
           }, 1000);
+        });
+
+        this.bot.once('error', (error) => {
+          clearTimeout(timeout);
+          reject(error);
         });
       });
 
@@ -488,25 +519,39 @@ export class MinecraftBot {
   }
 
   public async disconnect(): Promise<void> {
-    // Remove all event listeners
-    for (const [event, listener] of this.eventListeners) {
-      this.bot?.off(event, listener);
-    }
-    this.eventListeners.clear();
+    try {
+      // Remove all event listeners
+      this.eventListeners.forEach((listener, event) => {
+        this.bot?.off(event, listener);
+      });
+      this.eventListeners.clear();
 
-    // Shutdown ML components
-    await this.mlManager.shutdown();
+      // Shutdown ML components
+      try {
+        await this.mlManager.shutdown();
+      } catch (error) {
+        logger.error('Failed to shutdown MLManager', {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        // Continue with disconnect even if MLManager shutdown fails
+      }
 
-    if (this.bot) {
-      await this.bot.quit();
+      if (this.bot) {
+        await this.bot.quit();
+      }
+    } catch (error) {
+      logger.error('Failed to disconnect bot', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
     }
   }
 
   private resetEventLoop(): void {
     // Clear existing event listeners
-    for (const [event, listener] of this.eventListeners) {
+    this.eventListeners.forEach((listener, event) => {
       this.bot.off(event, listener);
-    }
+    });
     this.eventListeners.clear();
 
     // Clear world tracker caches

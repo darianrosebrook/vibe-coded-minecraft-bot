@@ -129,23 +129,40 @@ export class MLManager implements IMLComponent {
   }
 
   private async cleanup(): Promise<void> {
-    try {
-      // Stop any ongoing background tasks first
-      this.isShuttingDown = true;
+    const errors: Error[] = [];
+
+    // Stop any ongoing background tasks first
+    this.isShuttingDown = true;
       
-      // Shutdown components in reverse order of initialization
-      await this.dataCollector.shutdown();
-      await this.trainingStorage.shutdown();
-      await this.dataManager.shutdown();
-      await this.modelTrainer.shutdown();
-      await this.feedbackSystem.shutdown();
-      await this.stateManager.shutdown();
+    // Shutdown components in reverse order of initialization
+    const components = [
+      { name: 'dataCollector', instance: this.dataCollector },
+      { name: 'trainingStorage', instance: this.trainingStorage },
+      { name: 'dataManager', instance: this.dataManager },
+      { name: 'modelTrainer', instance: this.modelTrainer },
+      { name: 'feedbackSystem', instance: this.feedbackSystem },
+      { name: 'stateManager', instance: this.stateManager }
+    ];
+
+    for (const { name, instance } of components) {
+      if (!instance) continue;
       
-      // Clear any remaining background tasks
-      this.backgroundTasks = [];
-    } catch (error) {
-      logger.error('Failed to cleanup MLManager', { error });
-      // Don't rethrow the error to allow shutdown to complete
+      try {
+        await instance.shutdown();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error(`Failed to shutdown ${name}`, { error: errorMessage });
+        errors.push(new Error(`${name} shutdown failed: ${errorMessage}`));
+      }
+    }
+      
+    // Clear any remaining background tasks
+    this.backgroundTasks = [];
+
+    // If any component failed to shutdown, throw an aggregated error
+    if (errors.length > 0) {
+      const errorMessages = errors.map(e => e.message).join('; ');
+      throw new Error(`MLManager cleanup failed: ${errorMessages}`);
     }
   }
 

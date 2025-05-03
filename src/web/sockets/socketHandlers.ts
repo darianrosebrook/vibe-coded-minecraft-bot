@@ -40,7 +40,7 @@ export function setupSocketHandlers(io: Server, bot: MinecraftBot) {
     // Handle chat messages
     socket.on('chat:message', async (message: string) => {
       try {
-        const response = await llmClient.chat(message);
+        const response = await llmClient.generate(message);
         socket.emit('chat:response', response);
 
         // If the response contains a command, execute it

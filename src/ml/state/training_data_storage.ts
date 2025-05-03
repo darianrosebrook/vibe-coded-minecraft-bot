@@ -5,6 +5,8 @@ import path from 'path';
 import { z } from 'zod';
 import { gzip, ungzip } from 'node-gzip';
 import { Buffer } from 'buffer';
+import logger from '@/utils/observability/logger';
+import { ITrainingDataStorage } from '@/types/ml/interfaces';
 
 const StorageConfigSchema = z.object({
   basePath: z.string(),
@@ -15,9 +17,11 @@ const StorageConfigSchema = z.object({
 
 export type StorageConfig = z.infer<typeof StorageConfigSchema>;
 
-export class TrainingDataStorage {
+export class TrainingDataStorage implements ITrainingDataStorage {
   private config: StorageConfig;
   private versionHistory: Map<string, number[]>;
+  private isInitialized: boolean = false;
+  private data: Map<string, any> = new Map();
 
   constructor(config: Partial<StorageConfig> = {}) {
     this.config = StorageConfigSchema.parse({
@@ -34,6 +38,7 @@ export class TrainingDataStorage {
     try {
       await fs.mkdir(this.config.basePath, { recursive: true });
       await this.loadVersionHistory();
+      this.isInitialized = true;
     } catch (error) {
       mlMetrics.stateUpdates.inc({ type: 'storage_init_error' });
       throw error;
@@ -377,5 +382,50 @@ export class TrainingDataStorage {
     }
     
     return value;
+  }
+
+  public async shutdown(): Promise<void> {
+    try {
+      // Clear any stored data
+      this.data.clear();
+      this.isInitialized = false;
+      logger.info('TrainingDataStorage shut down successfully');
+    } catch (error) {
+      logger.error('Failed to shutdown TrainingDataStorage', { error });
+      throw error;
+    }
+  }
+
+  public async cleanup(maxSize: number): Promise<void> {
+    try {
+      // Delete old files if total size exceeds maxSize
+      const files = await fs.readdir(this.config.basePath);
+      let totalSize = 0;
+      
+      for (const file of files) {
+        const filePath = path.join(this.config.basePath, file);
+        const stats = await fs.stat(filePath);
+        totalSize += stats.size;
+        
+        if (totalSize > maxSize) {
+          await fs.unlink(filePath);
+          mlMetrics.stateUpdates.inc({ type: 'file_deleted' });
+        }
+      }
+      
+      logger.info('TrainingDataStorage cleanup completed', { totalSize, maxSize });
+    } catch (error) {
+      logger.error('Failed to cleanup TrainingDataStorage', { error });
+      throw error;
+    }
+  }
+
+  public async getTrainingData(type: string): Promise<TrainingData | null> {
+    try {
+      return await this.loadTrainingData(type);
+    } catch (error) {
+      logger.error('Failed to get training data', { error, type });
+      return null;
+    }
   }
 } 

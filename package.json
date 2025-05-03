@@ -7,7 +7,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "tsc && tsc-alias && cp -r src/llm/prompts dist/llm/",
+    "build": "tsc && tsc-alias && mkdir -p dist/llm/prompts && cp -r src/llm/prompts/* dist/llm/prompts/",
+    "build:web": "cd src/web && npm install && npm run build",
+    "prestart": "npm run build",
     "start": "node dist/index.js",
     "start:dev": "docker-compose -f docker-compose.dev.yml up",
     "dev": "ts-node -r tsconfig-paths/register --project tsconfig.json src/index.ts",
@@ -19,7 +21,8 @@
     "test:coverage": "jest --coverage",
     "web": "node src/web/server.ts",
     "migrate-config": "ts-node src/scripts/migrateConfig.ts",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "postinstall": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi"
   },
   "keywords": [],
   "author": "",
@@ -42,15 +45,19 @@
     "mineflayer-pathfinder": "^2.4.5",
     "mineflayer-pvp": "^1.3.2",
     "mineflayer-tool": "^1.2.0",
+    "next": "^14.1.0",
     "node-gzip": "^1.1.2",
     "openai": "^4.28.4",
     "pino": "^8.19.0",
     "pino-pretty": "^10.3.1",
     "prismarine-viewer": "^1.25.0",
     "prom-client": "^15.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.8",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3",
     "uuid": "^9.0.0",
     "vec3": "^0.1.10",
@@ -61,9 +68,8 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/node": "^20.11.16",
     "@types/uuid": "^10.0.0",
-    "nodemon": "^3.0.3",
-    "tsconfig-paths": "^4.2.0"
+    "husky": "^9.0.11",
+    "nodemon": "^3.0.3"
   }
 }
