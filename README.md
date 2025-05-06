@@ -5,6 +5,18 @@ This project consists of two main components:
 1. **Bot** (`/bot`): The Minecraft bot implementation with LLM-powered task execution
 2. **Web** (`/web`): The web interface with ML dashboard
 
+It is almost entirely vibe coded. The goal here was to test two things, how well autonomous AI agents can handle large coding projects, and how well I can structure the project, planning documents, and how well I can keep an agent on task.
+
+There is a large disclaimer too that I know how to debug the output and set proper testing to ensure that the code is working properly, adjusting things or doing thorough enough code review to ask for specific changes.
+
+I don't like it, having something do all the work for me, as I derive a lot of pride and joy getting something to work on my own. But as for the state of the bot, it almost works.
+
+The biggest suggestion I have to anyone doing a lot of autonomous agent projects is to clearly lay out a plan for it, or ask it to create a planning document that will allow it to check off a list. Almost like task queueing. This will severely improve the time spent on task, instead of it going off in different directions. Have the agent check off the things it has completed.
+
+If you want to take a look at my Cursor ruleset, you can see that at the bottom of this Readme.
+
+
+
 ## Project Structure
 
 ```
@@ -956,5 +968,149 @@ LLM Output: {
     "animalType": "cow",
     "quantity": 2
   }
+}
+```
+
+---
+# LLM Rule set for adding to prompts.
+In cursor, you can set rules for the llm, you can use these as individual rules scoped to certain extensions, or you can add them as global rulesets. I chose for global because cursor had inconsistent application and it broke code consistency without it being global.
+
+## Rule: Document Typescript and Javascript in JSDoc format
+When documenting the functionality of code, prioritize JSDoc format for consistent in-file documentation. Additional '//' inline documentation is still fine for supplemental information
+
+## Rule: Update planning documentation from @/plans for current feature as you make progress
+We want to create markdown files when working on major features, refactors, or bug fixes that outline what it is we're working on.
+e.g.
+`# Interaction Context Refactor Plan
+
+> **Status:**
+> All interaction logic is now unified in [...] is updated and passing build/lint.
+
+## Goal
+
+Unify all user interaction tracking[...]and interaction patterns.
+
+---
+
+## Current State
+
+### 1. Mouse Events
+
+- **File:** `context/MouseEventContext.tsx` (**Removed**; logic unified in `InteractionContext.tsx`)
+- **Uses:** GSAP Observer for mouse, pointer, wheel, scroll events.
+- **Provides:** Mouse position, velocity, pressed/dragging state.
+
+---
+
+## Problems Identified
+
+- **Duplication:** Mouse and reduced motion logic in both context and hooks. (**Resolved**)
+
+---
+
+## Refactor Plan
+
+### 1. Unify Reduced Motion
+- [x] Use only `context/ReducedMotionContext.tsx`.
+[...]
+- [x] Update all imports to use context version.
+
+---
+
+## Code References
+
+- **MouseEventContext:**
+  - Uses GSAP Observer: `import { Observer } from 'gsap/Observer';`
+[...]
+  - Provides: `getPosition`, `isPressed`, `isDragging` (now unified)
+
+---
+
+## Implementation Steps
+
+1. **Create/expand `InteractionContext.tsx`**
+   - [x] Use GSAP Observer for all relevant events.
+   - [x] Provide unified context value.
+`
+
+
+## Rule: Review, Test, and Build once finished with major changes
+As you progress on planning and implementation, make sure that you run a test, checking for linting errors, iterating until fixed. If it passes, run a finished build for production, update planning docs.
+
+## Rule: Iterate implementing fixes on errors until resolved
+
+## Rule: Check current node version in console if versions are mismatched
+
+## Rule: Check folder in console if you're having trouble finding the .env file
+
+## Rule: Prioritize and utilize '@' aliased imports for local typescript and tsx modules
+Utilize aliased '@' imports for relative imports from 'src'
+
+## Rule: Prioritize a single source of truth for typescript types
+Our types are in the src/types, update those as we progress. If a type doesn't exist, we should prioritize and check within that src/types folder first. Duplicate declarations can cause further problems so we want to condense where possible.
+
+## Rule: Safe Defaults & Fail-Fast Guards
+
+> **Purpose**
+>
+> 1. Prevent `undefined`/`null` errors by supplying defaults.
+> 2. Exit early from any conditional when prerequisites aren’t met, keeping main logic flat.
+> 3. **Encourage defaults in signatures**: catches missing data even before you enter the function.
+
+### 1. Nullish Coalescing + Optional Chaining
+
+- **Guard deep property access**: always use `?.` before you touch a potentially missing object.
+- **Supply a default with `??`**: whenever a value could be `null`/`undefined`, fall back immediately.
+- **Declare defaults in signatures**: for function params that might be omitted.
+
+```ts
+// ✔️ Safe property access + default
+const username = response.user?.name ?? "guest";
+
+// ✔️ Default param
+function send(message: string, options: SendOptions = {}) {
+  const retries = options.retries ?? 3;
+  // …
+}
+```
+
+### 2. Early Return / Guard Clauses
+
+- At the top of **any** block—functions, loops, `if`/`else`, `switch` cases—check your preconditions and return (or throw) immediately on failure.
+- This “fail-fast” style:
+  1. Avoids deeply nested logic
+  2. Makes it impossible to run downstream code on bad inputs
+  3. Signals exactly where you handled the invalid state
+
+```ts
+function processOrder(order?: Order) {
+  @nullish-coalescing.mdc
+  if (!order) {
+    console.error('No order provided');
+    return;                  // ← early return
+  }
+
+  // Now safe to use order.id, order.items, etc.
+  const count = order.items?.length ?? 0;
+  // …
+}
+
+// In loops:
+for (let i = 0, len = items?.length ?? 0; i < len; i++) {
+  if (!items[i].price) {
+    @nullish-coalescing.mdc
+    continue;                // skip malformed entry
+  }
+  // …
+}
+
+// In switch:
+switch (status) {
+  case 'ready':
+    // …
+    break;
+  default:
+    @nullish-coalescing.mdc
+    return handleUnknown(status);
 }
 ```
